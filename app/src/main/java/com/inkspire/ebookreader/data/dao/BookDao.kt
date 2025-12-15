@@ -23,7 +23,7 @@ interface BookDao {
 
     @Transaction
     @Query("SELECT * FROM books WHERE bookId = :bookId LIMIT 1")
-    fun getBookAsFlow(bookId: String): Flow<BookEntity>
+    fun getBookAsFlow(bookId: String): Flow<BookEntity?>
 
     @Query("SELECT * FROM books WHERE isRecentRead > 0 ORDER BY isRecentRead ASC")
     fun getTop5RecentBooksFlow(): Flow<List<BookEntity>>

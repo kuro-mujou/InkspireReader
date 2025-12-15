@@ -26,9 +26,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation3.runtime.NavKey
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.BookImporter
+import com.inkspire.ebookreader.domain.model.MiniFabItem
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.ui.composable.ExpandableFab
-import com.inkspire.ebookreader.ui.composable.MiniFabItems
 
 @Composable
 fun LibraryScreen(
@@ -52,7 +52,7 @@ fun LibraryScreen(
     }
 
     val fabItems = listOf(
-        MiniFabItems(
+        MiniFabItem(
             icon = R.drawable.ic_add_epub,
             title = "Import EPUB",
             tint = if (isSystemInDarkTheme())
@@ -65,7 +65,7 @@ fun LibraryScreen(
                 importBookLauncher.launch(arrayOf("application/epub+zip"))
             }
         ),
-        MiniFabItems(
+        MiniFabItem(
             icon = R.drawable.ic_add_epub,
             title = "Import CBZ",
             tint = if (isSystemInDarkTheme())
@@ -78,7 +78,7 @@ fun LibraryScreen(
                 importBookLauncher.launch(arrayOf("application/vnd.comicbook+zip", "application/octet-stream"))
             }
         ),
-        MiniFabItems(
+        MiniFabItem(
             icon = R.drawable.ic_add_epub,
             title = "Import PDF with page render",
             tint = if (isSystemInDarkTheme())
@@ -93,7 +93,7 @@ fun LibraryScreen(
                 )
             }
         ),
-        MiniFabItems(
+        MiniFabItem(
             icon = R.drawable.ic_add_epub,
             title = "Import PDF with text/image extraction",
             tint = if (isSystemInDarkTheme())
@@ -108,7 +108,7 @@ fun LibraryScreen(
                 )
             }
         ),
-        MiniFabItems(
+        MiniFabItem(
             icon = R.drawable.ic_add_epub,
             title = "Import EPUB via Google Drive",
             tint = if (isSystemInDarkTheme())
@@ -121,7 +121,7 @@ fun LibraryScreen(
                 showDriveInputLinkDialog = true
             }
         ),
-        MiniFabItems(
+        MiniFabItem(
             icon = R.drawable.ic_write_ebook,
             title = "Write new Book",
             tint = if (isSystemInDarkTheme())

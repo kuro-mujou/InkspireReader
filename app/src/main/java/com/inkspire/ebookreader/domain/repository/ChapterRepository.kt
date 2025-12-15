@@ -12,5 +12,5 @@ interface ChapterRepository {
     suspend fun updateChapterIndexOnDelete(bookId: String, tocId: Int)
     suspend fun updateChapterIndexOnInsert(bookId: String, tocId: Int)
     suspend fun swapTocIndex(bookId: String, chapterContentId: Int, from: Int, to: Int)
-    fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<Chapter>
+    fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<Chapter?>
 }

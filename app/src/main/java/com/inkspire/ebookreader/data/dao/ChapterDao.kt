@@ -68,5 +68,5 @@ interface ChapterDao {
     }
 
     @Query("SELECT * FROM chapter_content WHERE bookId = :bookId AND tocId = :chapterIndex ORDER BY tocId ASC")
-    fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<ChapterContentEntity>
+    fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<ChapterContentEntity?>
 }

@@ -25,11 +25,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -46,11 +44,12 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.inkspire.ebookreader.R
+import com.inkspire.ebookreader.domain.model.MiniFabItem
 import kotlin.collections.forEach
 
 @Composable
 fun ExpandableFab(
-    items: List<MiniFabItems>,
+    items: List<MiniFabItem>,
     expanded: Boolean,
     onToggle: () -> Unit,
     onDismiss: () -> Unit,
@@ -100,7 +99,7 @@ fun ExpandableFab(
                     ) {
                         items.forEach { fabItems ->
                             key(fabItems.title) {
-                                MiniFabItemsUi(item = fabItems)
+                                MyFabItem(item = fabItems)
                             }
                         }
                     }
@@ -137,29 +136,3 @@ fun ExpandableFab(
         }
     }
 }
-
-@Composable
-fun MiniFabItemsUi(
-    item: MiniFabItems,
-) {
-    ExtendedFloatingActionButton(
-        onClick = {
-            item.onClick()
-        },
-        content = {
-            Icon(
-                imageVector = ImageVector.vectorResource(item.icon),
-                contentDescription = null,
-                tint = item.tint
-            )
-            Text(text = item.title)
-        }
-    )
-}
-
-data class MiniFabItems(
-    val icon: Int,
-    val title: String,
-    val tint: Color,
-    val onClick: () -> Unit
-)

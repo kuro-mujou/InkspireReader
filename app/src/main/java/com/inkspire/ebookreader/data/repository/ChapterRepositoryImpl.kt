@@ -50,8 +50,8 @@ class ChapterRepositoryImpl(
         )
     }
 
-    override fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<Chapter> {
+    override fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<Chapter?> {
         return chapterDao.getChapterContentFlow(bookId, chapterIndex)
-            .map { it.toDataClass() }
+            .map { it?.toDataClass() }
     }
 }

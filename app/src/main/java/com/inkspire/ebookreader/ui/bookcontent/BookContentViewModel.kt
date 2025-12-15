@@ -35,7 +35,11 @@ class BookContentViewModel(
     init {
         bookRepository.getBookAsFlow(bookId)
             .map { book ->
-                _uiState.update { it.copy (bookState = UiState.Success(book)) }
+                if (book == null) {
+                    _uiState.update { it.copy(bookState = UiState.Empty) }
+                } else {
+                    _uiState.update { it.copy(bookState = UiState.Success(book)) }
+                }
             }
             .onStart {
                 _uiState.update { it.copy(bookState = UiState.Loading) }
@@ -48,23 +52,26 @@ class BookContentViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun updateRecentChapter(newChapter: Int) {
+    fun updateRecentChapter(chapterIndex: Int) {
         viewModelScope.launch {
-            bookRepository.saveBookInfoChapterIndex(bookId, newChapter)
+            bookRepository.saveBookInfoChapterIndex(bookId, chapterIndex)
         }
     }
 
     fun getChapterContent(chapterIndex: Int): Flow<UiState<Chapter>> {
         return chapterRepository.getChapterContentFlow(bookId, chapterIndex)
-            .map { chapter -> UiState.Success(chapter) as UiState<Chapter>  }
+            .map { chapter ->
+                if (chapter == null) {
+                    UiState.Empty
+                } else
+                    UiState.Success(chapter)
+            }
             .onStart { emit(UiState.Loading) }
             .catch { emit(UiState.Error(it)) }
     }
 
     fun updateRecentParagraph(paragraphIndex: Int) {
         viewModelScope.launch {
-            // You might need to update both recentChapter and recentParagraph
-            // depending on your DB structure
             bookRepository.saveBookInfoParagraphIndex(bookId, paragraphIndex)
         }
     }

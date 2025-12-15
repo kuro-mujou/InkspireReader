@@ -22,10 +22,10 @@ class BookRepositoryImpl(
         return bookDao.isBookExist(title) != null
     }
 
-    override fun getBookAsFlow(bookId: String): Flow<Book> {
+    override fun getBookAsFlow(bookId: String): Flow<Book?> {
         return bookDao
             .getBookAsFlow(bookId)
-            .map { it.toDataClass() }
+            .map { it?.toDataClass() }
     }
 
     override fun getBookListForMainScreen(): Flow<List<Book>> {
