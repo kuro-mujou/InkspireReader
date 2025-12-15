@@ -30,6 +30,7 @@ coilCompose = "2.7.0"
 richeditorCompose = "1.0.0-rc13"
 paletteKtx = "1.0.0"
 mokoPermissionsCompose = "0.20.1"
+sqliteBundled = "2.6.2"
 
 [libraries]
 junit = { module = "junit:junit", version.ref = "junit" }
@@ -58,6 +59,7 @@ androidx-palette-ktx = { module = "androidx.palette:palette-ktx", version.ref = 
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-sqlite-bundled = { group = "androidx.sqlite", name = "sqlite-bundled", version.ref = "sqliteBundled" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }

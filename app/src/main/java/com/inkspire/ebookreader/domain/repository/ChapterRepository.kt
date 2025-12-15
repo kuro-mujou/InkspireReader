@@ -2,6 +2,7 @@ package com.inkspire.ebookreader.domain.repository
 
 import com.inkspire.ebookreader.data.model.ChapterContentEntity
 import com.inkspire.ebookreader.domain.model.Chapter
+import kotlinx.coroutines.flow.Flow
 
 interface ChapterRepository {
     suspend fun getChapterContent(bookId: String, tocId: Int): Chapter?
@@ -11,4 +12,5 @@ interface ChapterRepository {
     suspend fun updateChapterIndexOnDelete(bookId: String, tocId: Int)
     suspend fun updateChapterIndexOnInsert(bookId: String, tocId: Int)
     suspend fun swapTocIndex(bookId: String, chapterContentId: Int, from: Int, to: Int)
+    fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<Chapter>
 }

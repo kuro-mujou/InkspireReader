@@ -12,12 +12,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import com.inkspire.ebookreader.common.BookImporter
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
 import com.inkspire.ebookreader.ui.bookcontent.BookContentScreen
@@ -110,5 +112,18 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIncomingFile(intent)
+    }
+
+    private fun handleIncomingFile(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_VIEW) {
+            val uri = intent.data
+            if (uri != null) {
+                BookImporter(
+                    context = this,
+                    scope = this.lifecycleScope,
+                    specialIntent = "null"
+                ).processIntentUri(uri)
+            }
+        }
     }
 }

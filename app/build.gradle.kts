@@ -68,6 +68,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.sqlite.bundled)
+    ksp(libs.androidx.room.compiler)
     annotationProcessor(libs.androidx.room.compiler)
 
     implementation(libs.androidx.navigation3.runtime)

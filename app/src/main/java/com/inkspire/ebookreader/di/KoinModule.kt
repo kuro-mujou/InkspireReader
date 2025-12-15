@@ -18,7 +18,9 @@ import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import com.inkspire.ebookreader.domain.repository.NoteRepository
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
 import com.inkspire.ebookreader.service.TTSServiceHandler
+import com.inkspire.ebookreader.ui.bookcontent.BookContentViewModel
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookViewModel
+import com.inkspire.ebookreader.ui.sharedviewmodel.AsyncImportBookViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.android.Android
@@ -64,13 +66,13 @@ object KoinModule {
 
     val viewModelModule = module {
 //        viewModelOf(::BookListViewModel)
-//        viewModelOf(::AsyncImportBookViewModel)
+        viewModelOf(::AsyncImportBookViewModel)
 //        viewModelOf(::BookDetailViewModel)
 //        viewModelOf(::MainViewModel)
 //        viewModelOf(::SettingViewModel)
 //        viewModelOf(::BottomBarViewModel)
 //        viewModelOf(::AutoScrollViewModel)
-//        viewModelOf(::ContentViewModel)
+        viewModelOf(::BookContentViewModel)
 //        viewModelOf(::DrawerContainerViewModel)
 //        viewModelOf(::TopBarViewModel)
 //        viewModelOf(::ColorPaletteViewModel)

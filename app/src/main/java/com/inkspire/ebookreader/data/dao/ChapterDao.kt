@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.inkspire.ebookreader.data.model.ChapterContentEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChapterDao {
@@ -65,4 +66,7 @@ interface ChapterDao {
 
         updateDraggedItem(chapterContentId, endIndex)
     }
+
+    @Query("SELECT * FROM chapter_content WHERE bookId = :bookId AND tocId = :chapterIndex ORDER BY tocId ASC")
+    fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<ChapterContentEntity>
 }

@@ -5,6 +5,8 @@ import com.inkspire.ebookreader.data.model.ChapterContentEntity
 import com.inkspire.ebookreader.domain.mapper.toDataClass
 import com.inkspire.ebookreader.domain.model.Chapter
 import com.inkspire.ebookreader.domain.repository.ChapterRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class ChapterRepositoryImpl(
     private val chapterDao: ChapterDao
@@ -46,5 +48,10 @@ class ChapterRepositoryImpl(
             startIndex = from,
             endIndex = to
         )
+    }
+
+    override fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<Chapter> {
+        return chapterDao.getChapterContentFlow(bookId, chapterIndex)
+            .map { it.toDataClass() }
     }
 }
