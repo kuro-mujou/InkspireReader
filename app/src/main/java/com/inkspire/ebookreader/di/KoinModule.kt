@@ -24,6 +24,8 @@ import com.inkspire.ebookreader.service.TTSServiceHandler
 import com.inkspire.ebookreader.ui.bookcontent.BookContentViewModel
 import com.inkspire.ebookreader.ui.home.libary.LibraryViewModel
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookViewModel
+import com.inkspire.ebookreader.ui.music.MusicViewModel
+import com.inkspire.ebookreader.ui.setting.SettingViewModel
 import com.inkspire.ebookreader.ui.sharedviewmodel.AsyncImportBookViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -74,14 +76,14 @@ object KoinModule {
         viewModelOf(::LibraryViewModel)
         viewModelOf(::AsyncImportBookViewModel)
 //        viewModelOf(::BookDetailViewModel)
-//        viewModelOf(::SettingViewModel)
+        viewModelOf(::SettingViewModel)
 //        viewModelOf(::BottomBarViewModel)
 //        viewModelOf(::AutoScrollViewModel)
 //        viewModelOf(::BookContentViewModel)
 //        viewModelOf(::DrawerContainerViewModel)
 //        viewModelOf(::TopBarViewModel)
 //        viewModelOf(::ColorPaletteViewModel)
-//        viewModelOf(::MusicViewModel)
+        viewModelOf(::MusicViewModel)
 //        viewModelOf(::BookWriterViewModel)
         viewModelOf(::RecentBookViewModel)
         viewModel{
@@ -100,6 +102,6 @@ object KoinModule {
     @UnstableApi
     val ttsModule = module {
         single { TTSServiceHandler(context = androidContext()) }
-        single { TTSManager(context = androidContext()) }
+        single<TTSManager>(createdAtStart = true) { TTSManager(context = androidContext()) }
     }
 }

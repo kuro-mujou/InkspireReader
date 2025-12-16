@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.ui.setting
 
-import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.speech.tts.Voice
 import com.inkspire.ebookreader.common.BookmarkStyle
@@ -9,14 +8,12 @@ import java.util.Locale
 
 sealed interface SettingAction {
     data class OpenTTSVoiceMenu(val open: Boolean) : SettingAction
-    data object LoadTTSSetting : SettingAction
     data class KeepScreenOn(val keepScreenOn: Boolean) : SettingAction
     data class UpdateLanguage(val language: Locale?) : SettingAction
     data class UpdateVoice(val voice: Voice?) : SettingAction
     data class UpdateSpeed(val speed: Float) : SettingAction
     data class UpdatePitch(val pitch: Float) : SettingAction
     data class FixNullVoice(val tts: TextToSpeech) : SettingAction
-    data class SetupTTS(val context: Context) : SettingAction
     data class OpenAutoScrollMenu(val open: Boolean) : SettingAction
     data class UpdateScrollSpeed(val speed: Int) : SettingAction
     data class UpdateDelayAtStart(val delay: Int) : SettingAction

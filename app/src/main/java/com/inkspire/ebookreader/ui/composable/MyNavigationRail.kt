@@ -43,8 +43,7 @@ fun MyNavigationRail(
                 selected = currentTab == item.route,
                 onClick = {
                     navigator.switchTab(item.route)
-                },
-                alwaysShowLabel = false
+                }
             )
         }
         Spacer(Modifier.weight(1f))

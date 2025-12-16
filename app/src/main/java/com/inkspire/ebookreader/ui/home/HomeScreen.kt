@@ -57,8 +57,7 @@ fun HomeScreen(
                     )
                 }
                 entry<Route.Home.Settings> {
-                    SettingScreen(
-                    )
+                    SettingScreen()
                 }
             }
         )

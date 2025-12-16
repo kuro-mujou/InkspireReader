@@ -70,7 +70,6 @@ class TTSManager(
     private fun initializeTts() {
         textToSpeech = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                textToSpeech?.language = Locale.getDefault()
                 _state.update { it.copy(isLoading = false) }
             }
         }
@@ -237,6 +236,7 @@ class TTSManager(
     fun updateSpeed(rate: Float) { textToSpeech?.setSpeechRate(rate) }
     fun updatePitch(pitch: Float) { textToSpeech?.setPitch(pitch) }
     fun updateVoice(voice: Voice) { textToSpeech?.voice = voice }
+    fun getTTS(): TextToSpeech? { return textToSpeech }
 
     fun shutdown() {
         textToSpeech?.shutdown()

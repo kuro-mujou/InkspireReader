@@ -1,8 +1,10 @@
 package com.inkspire.ebookreader.ui.root
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +14,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
@@ -26,7 +30,7 @@ import com.inkspire.ebookreader.ui.bookcontent.BookContentScreen
 import com.inkspire.ebookreader.ui.bookdetail.BookDetailScreen
 import com.inkspire.ebookreader.ui.bookwriter.BookWriterScreen
 import com.inkspire.ebookreader.ui.home.HomeScreen
-import com.inkspire.ebookreader.ui.theme.Bookshelf3Theme
+import com.inkspire.ebookreader.ui.theme.BookShelfTheme
 import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
@@ -39,10 +43,18 @@ import kotlinx.serialization.modules.subclass
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            navigationBarStyle = SystemBarStyle.auto(
+                Color.Transparent.toArgb(),
+                Color.Transparent.toArgb()
+            )
+        )
+        if (Build.VERSION.SDK_INT >= 29) {
+            window.isNavigationBarContrastEnforced = false
+        }
         handleIncomingFile(intent)
         setContent {
-            Bookshelf3Theme {
+            BookShelfTheme {
                 val factory = rememberPermissionsControllerFactory()
                 val controller = remember(factory) { factory.createPermissionsController() }
                 val coroutineScope = rememberCoroutineScope()

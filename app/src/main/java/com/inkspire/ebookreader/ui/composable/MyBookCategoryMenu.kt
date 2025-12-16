@@ -1,4 +1,4 @@
-package com.capstone.bookshelf.presentation.home_screen.setting_screen.component
+package com.inkspire.ebookreader.ui.composable
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -47,12 +47,11 @@ import androidx.compose.ui.unit.sp
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.Category
 import com.inkspire.ebookreader.domain.model.SettingState
-import com.inkspire.ebookreader.ui.composable.MyBookChip
 import com.inkspire.ebookreader.ui.setting.SettingAction
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun BookCategoryMenu(
+fun MyBookCategoryMenu(
     settingState: SettingState,
     onAction: (SettingAction) -> Unit
 ) {
@@ -167,7 +166,7 @@ fun BookCategoryMenu(
         AnimatedVisibility(
             visible = isImeVisible
         ) {
-            ColorRails(
+            MyColorRails(
                 selectedColorSet = selectedColorSet,
                 onClick = { index, color ->
                     selectedColorSet = index

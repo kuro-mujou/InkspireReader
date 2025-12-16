@@ -1,4 +1,4 @@
-package com.capstone.bookshelf.presentation.home_screen.setting_screen.component
+package com.inkspire.ebookreader.ui.composable
 
 import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.background
@@ -43,17 +43,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.capstone.bookshelf.presentation.home_screen.setting_screen.SettingAction
-import com.capstone.bookshelf.presentation.home_screen.setting_screen.SettingState
-import com.capstone.bookshelf.util.DataStoreManager
+import com.inkspire.ebookreader.domain.model.SettingState
+import com.inkspire.ebookreader.ui.setting.SettingAction
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VoiceSetting(
+fun MyVoiceSetting(
     tts: TextToSpeech?,
     settingState: SettingState,
-    dataStoreManager: DataStoreManager,
     onDismiss: () -> Unit,
     testVoiceButtonClicked: () -> Unit,
     onAction: (SettingAction) -> Unit,
