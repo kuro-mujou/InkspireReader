@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -36,12 +35,13 @@ import com.inkspire.ebookreader.domain.model.Chapter
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun BookContentScreen(
-    paddingValues: PaddingValues
+    bookId: String
 ) {
-    val viewModel = koinViewModel<BookContentViewModel>()
+    val viewModel = koinViewModel<BookContentViewModel>(parameters = { parametersOf(bookId) })
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (val state = uiState.bookState) {
         is UiState.Loading -> {

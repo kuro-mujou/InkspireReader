@@ -12,11 +12,10 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun BookWriterScreen(
-    paddingValues: PaddingValues
+    bookId: String,
 ) {
     Column(
         modifier = Modifier
-            .padding(paddingValues)
             .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

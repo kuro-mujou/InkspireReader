@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.service
 
-
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -24,62 +23,39 @@ import org.koin.android.ext.android.inject
 
 @UnstableApi
 class TTSService : MediaSessionService() {
-    private val serviceHandler by inject<TTSServiceHandler>()
+
+    private val ttsManager by inject<TTSManager>()
+
+    private var mediaSession: MediaSession? = null
+
     private val customCommandStop = SessionCommand(ACTION_STOP, Bundle.EMPTY)
     private val customCommandNext = SessionCommand(ACTION_NEXT, Bundle.EMPTY)
     private val customCommandPrevious = SessionCommand(ACTION_PREVIOUS, Bundle.EMPTY)
-    private var mediaSession: MediaSession? = null
-    private var audioFocusChangeListener =
-        AudioManager.OnAudioFocusChangeListener { focusChange ->
-            when (focusChange) {
-                AudioManager.AUDIOFOCUS_GAIN -> {
-                    serviceHandler.resumeReading()
-                }
-
-                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                    serviceHandler.pauseReading(
-                        isByAudioFocus = true
-                    )
-                }
-
-                AudioManager.AUDIOFOCUS_LOSS -> {
-                    serviceHandler.pauseReading(
-                        isByAudioFocus = true
-                    )
-                }
-
-                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-                    serviceHandler.pauseReading(
-                        isByAudioFocus = true
-                    )
-                }
-            }
-        }
 
     override fun onCreate() {
         super.onCreate()
-        val stopButton =
-            CommandButton.Builder(CommandButton.ICON_STOP)
-                .setCustomIconResId(R.drawable.ic_notification_stop)
-                .setDisplayName("Stop")
-                .setSessionCommand(customCommandStop)
-                .build()
-        val nextButton =
-            CommandButton.Builder(CommandButton.ICON_SKIP_FORWARD)
-                .setCustomIconResId(R.drawable.ic_notification_skip_to_next)
-                .setDisplayName("Next Chapter")
-                .setSessionCommand(customCommandNext)
-                .build()
-        val previousButton =
-            CommandButton.Builder(CommandButton.ICON_SKIP_BACK)
-                .setCustomIconResId(R.drawable.ic_notification_skip_to_back)
-                .setDisplayName("Previous Chapter")
-                .setSessionCommand(customCommandPrevious)
-                .build()
+
+        val stopButton = CommandButton.Builder(CommandButton.ICON_STOP)
+            .setCustomIconResId(R.drawable.ic_notification_stop)
+            .setDisplayName("Stop")
+            .setSessionCommand(customCommandStop)
+            .build()
+        val nextButton = CommandButton.Builder(CommandButton.ICON_SKIP_FORWARD)
+            .setCustomIconResId(R.drawable.ic_notification_skip_to_next)
+            .setDisplayName("Next Chapter")
+            .setSessionCommand(customCommandNext)
+            .build()
+        val previousButton = CommandButton.Builder(CommandButton.ICON_SKIP_BACK)
+            .setCustomIconResId(R.drawable.ic_notification_skip_to_back)
+            .setDisplayName("Previous Chapter")
+            .setSessionCommand(customCommandPrevious)
+            .build()
+
         val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
             .setUsage(C.USAGE_MEDIA)
             .build()
+
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(audioAttributes, false)
             .setHandleAudioBecomingNoisy(true)
@@ -88,50 +64,50 @@ class TTSService : MediaSessionService() {
             .apply {
                 repeatMode = Player.REPEAT_MODE_ALL
                 shuffleModeEnabled = true
-                addListener(serviceHandler)
             }
-        val forwardingPlayer =
-            object : ForwardingPlayer(player) {
-                override fun getAvailableCommands(): Player.Commands {
-                    return super.getAvailableCommands()
-                        .buildUpon()
-                        .remove(COMMAND_SEEK_TO_NEXT)
-                        .remove(COMMAND_SEEK_TO_PREVIOUS)
-                        .remove(COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
-                        .build()
-                }
+
+        val forwardingPlayer = object : ForwardingPlayer(player) {
+            override fun getAvailableCommands(): Player.Commands {
+                return super.getAvailableCommands()
+                    .buildUpon()
+                    .remove(COMMAND_SEEK_TO_NEXT)
+                    .remove(COMMAND_SEEK_TO_PREVIOUS)
+                    .remove(COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
+                    .build()
             }
-        mediaSession =
-            MediaSession.Builder(this, forwardingPlayer)
-                .setCallback(MyCallback())
-                .setCustomLayout(
-                    ImmutableList.of(
-                        previousButton, nextButton, stopButton
-                    )
-                )
-                .build()
-        val audioManager = this.getSystemService(AUDIO_SERVICE) as AudioManager
-        val playbackAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_MEDIA)
-            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+
+            override fun play() {
+                ttsManager.resumeReading()
+            }
+
+            override fun pause() {
+                ttsManager.pauseReading(abandonFocus = false)
+            }
+
+            override fun seekToNext() {
+                ttsManager.nextChapter()
+            }
+
+            override fun seekToPrevious() {
+                ttsManager.prevChapter()
+            }
+
+            override fun stop() {
+                ttsManager.stopReading()
+            }
+        }
+
+        mediaSession = MediaSession.Builder(this, forwardingPlayer)
+            .setCallback(MyCallback())
+            .setCustomLayout(
+                ImmutableList.of(previousButton, nextButton, stopButton)
+            )
             .build()
-        val focusRequest =
-            AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
-                .setAudioAttributes(playbackAttributes!!)
-                .setAcceptsDelayedFocusGain(true)
-                .setOnAudioFocusChangeListener(audioFocusChangeListener)
-                .build()
-        serviceHandler.initializeTts()
-        serviceHandler.initSystem(
-            mediaSession?.player,
-            audioManager,
-            focusRequest
-        )
+        ttsManager.attachSystemComponents(mediaSession?.player)
     }
 
     override fun onDestroy() {
-        serviceHandler.shutdown()
-        stopSelf()
+        ttsManager.stopReading()
         mediaSession?.run {
             player.release()
             release()
@@ -145,7 +121,8 @@ class TTSService : MediaSessionService() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        pauseAllPlayersAndStopSelf()
+        ttsManager.stopReading()
+        stopSelf()
     }
 
     private inner class MyCallback : MediaSession.Callback {
@@ -181,17 +158,17 @@ class TTSService : MediaSessionService() {
         ): ListenableFuture<SessionResult> {
             return when (customCommand.customAction) {
                 ACTION_STOP -> {
-                    serviceHandler.stopReading()
+                    ttsManager.stopReading()
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 
                 ACTION_NEXT -> {
-                    serviceHandler.moveToNextChapterOrStop()
+                    ttsManager.nextChapter()
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 
                 ACTION_PREVIOUS -> {
-                    serviceHandler.moveToPreviousChapterOrStop()
+                    ttsManager.prevChapter()
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 

@@ -19,6 +19,7 @@ import com.inkspire.ebookreader.domain.repository.ImagePathRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import com.inkspire.ebookreader.domain.repository.NoteRepository
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
+import com.inkspire.ebookreader.service.TTSManager
 import com.inkspire.ebookreader.service.TTSServiceHandler
 import com.inkspire.ebookreader.ui.bookcontent.BookContentViewModel
 import com.inkspire.ebookreader.ui.home.libary.LibraryViewModel
@@ -29,6 +30,7 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.android.Android
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -75,13 +77,20 @@ object KoinModule {
 //        viewModelOf(::SettingViewModel)
 //        viewModelOf(::BottomBarViewModel)
 //        viewModelOf(::AutoScrollViewModel)
-        viewModelOf(::BookContentViewModel)
+//        viewModelOf(::BookContentViewModel)
 //        viewModelOf(::DrawerContainerViewModel)
 //        viewModelOf(::TopBarViewModel)
 //        viewModelOf(::ColorPaletteViewModel)
 //        viewModelOf(::MusicViewModel)
 //        viewModelOf(::BookWriterViewModel)
         viewModelOf(::RecentBookViewModel)
+        viewModel{
+            BookContentViewModel(
+                bookId = it.get(),
+                bookRepository = get(),
+                chapterRepository = get()
+            )
+        }
     }
 
     val dataStoreModule = module {
@@ -90,8 +99,7 @@ object KoinModule {
 
     @UnstableApi
     val ttsModule = module {
-        single {
-            TTSServiceHandler(context = androidContext())
-        }
+        single { TTSServiceHandler(context = androidContext()) }
+        single { TTSManager(context = androidContext()) }
     }
 }

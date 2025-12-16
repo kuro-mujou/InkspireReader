@@ -99,7 +99,7 @@ fun LibraryScreen(
     val focusManager = LocalFocusManager.current
     val isKeyboardVisible = WindowInsets.isImeVisible
     val scope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val gridState = rememberLazyStaggeredGridState()
     val listState = rememberLazyListState()
     val searchState = rememberTextFieldState()

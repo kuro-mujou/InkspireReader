@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
                 }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                ) { paddingValues ->
+                ) { _ ->
                     NavDisplay(
                         backStack = navigator.backStack,
                         entryDecorators = listOf(
@@ -87,19 +87,19 @@ class MainActivity : ComponentActivity() {
                                     parentNavigator = navigator
                                 )
                             }
-                            entry<Route.BookContent> {
+                            entry<Route.BookContent> { entry ->
                                 BookContentScreen(
-                                    paddingValues = paddingValues
+                                    bookId = entry.bookId
                                 )
                             }
-                            entry<Route.BookDetail> {
+                            entry<Route.BookDetail> { entry ->
                                 BookDetailScreen(
-                                    paddingValues = paddingValues
+                                    bookId = entry.bookId
                                 )
                             }
-                            entry<Route.BookWriter> {
+                            entry<Route.BookWriter> { entry ->
                                 BookWriterScreen(
-                                    paddingValues = paddingValues
+                                    bookId = entry.bookId
                                 )
                             }
                         }

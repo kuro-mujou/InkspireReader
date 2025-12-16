@@ -21,10 +21,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class BookContentViewModel(
+    private val bookId: String,
     private val bookRepository: BookRepository,
     private val chapterRepository: ChapterRepository
 ): ViewModel() {
-    private val bookId: String = "52fbd0f613ebbdcbac27278a1bd5a9bb"
     private val _uiState = MutableStateFlow(BookContentState())
     val uiState: StateFlow<BookContentState> = _uiState.stateIn(
         scope = viewModelScope,
