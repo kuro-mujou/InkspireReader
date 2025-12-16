@@ -42,9 +42,9 @@ class BookRepositoryImpl(
             }
     }
 
-    override fun readAllBooks(): Flow<List<Book>> {
+    override fun getAllBooks(): Flow<List<Book>> {
         return bookDao
-            .readAllBooks()
+            .getAllBooks()
             .map { bookEntity ->
                 bookEntity.map { it.toDataClass() }
             }

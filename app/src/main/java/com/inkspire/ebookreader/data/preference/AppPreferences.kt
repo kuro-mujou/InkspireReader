@@ -120,7 +120,7 @@ class AppPreferences(private val context: Context) {
         val raw = preferences[BOOKMARK_STYLE] ?: BookmarkStyle.WAVE_WITH_BIRDS.name
         try {
             BookmarkStyle.valueOf(raw)
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             BookmarkStyle.WAVE_WITH_BIRDS
         }
     }

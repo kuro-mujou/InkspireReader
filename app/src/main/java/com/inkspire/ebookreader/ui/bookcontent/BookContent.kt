@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Chapter
+import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -43,7 +45,7 @@ fun BookContentScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (val state = uiState.bookState) {
         is UiState.Loading -> {
-            CircularProgressIndicator()
+            MyLoadingAnimation()
         }
         is UiState.Error -> {
             Text(text = "Error loading book content")
@@ -133,9 +135,7 @@ fun SingleChapterPage(
 
     when (val state = chapterUiState) {
         is UiState.Loading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            MyLoadingAnimation()
         }
         is UiState.Error -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -171,9 +171,9 @@ fun SingleChapterPage(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp)
             ) {
-                items(paragraphs.size) { index ->
+                items(paragraphs) { paragraph ->
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = paragraphs[index])
+                    Text(text = paragraph)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }

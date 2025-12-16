@@ -12,7 +12,7 @@ import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
 import com.inkspire.ebookreader.ui.composable.MyNavigationSuiteScaffold
-import com.inkspire.ebookreader.ui.home.libary.LibraryScreen
+import com.inkspire.ebookreader.ui.home.libary.LibraryRootScreen
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookScreen
 import com.inkspire.ebookreader.ui.home.setting.SettingScreen
 import kotlinx.serialization.modules.SerializersModule
@@ -34,12 +34,12 @@ fun HomeScreen(
             }
         }
     }
-    val navigator = rememberNavigator(config, Route.Home.RecentBooks)
+    val homeNavigator = rememberNavigator(config, Route.Home.RecentBooks)
     MyNavigationSuiteScaffold(
-        navigator = navigator
-    ) { paddingValues ->
+        homeNavigator = homeNavigator
+    ) {
         NavDisplay(
-            backStack = navigator.backStack,
+            backStack = homeNavigator.backStack,
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator(),
@@ -47,18 +47,17 @@ fun HomeScreen(
             entryProvider = entryProvider {
                 entry<Route.Home.RecentBooks> {
                     RecentBookScreen(
-                        paddingValues = paddingValues
+                        parentNavigatorAction = parentNavigator::navigateTo,
+                        homeNavigatorAction = homeNavigator::navigateTo,
                     )
                 }
                 entry<Route.Home.Library> {
-                    LibraryScreen(
-                        paddingValues = paddingValues,
-                        onClick = parentNavigator::navigateTo
+                    LibraryRootScreen(
+                        parentNavigatorAction = parentNavigator::navigateTo
                     )
                 }
                 entry<Route.Home.Settings> {
                     SettingScreen(
-                        paddingValues = paddingValues
                     )
                 }
             }

@@ -5,12 +5,14 @@ import androidx.room.Room
 import com.inkspire.ebookreader.data.database.LocalBookDatabase
 import com.inkspire.ebookreader.data.network.HttpClientFactory
 import com.inkspire.ebookreader.data.preference.AppPreferences
+import com.inkspire.ebookreader.data.repository.AppPreferencesRepositoryImpl
 import com.inkspire.ebookreader.data.repository.BookRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ChapterRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ImagePathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.MusicPathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.NoteRepositoryImpl
 import com.inkspire.ebookreader.data.repository.TableOfContentRepositoryImpl
+import com.inkspire.ebookreader.domain.repository.AppPreferencesRepository
 import com.inkspire.ebookreader.domain.repository.BookRepository
 import com.inkspire.ebookreader.domain.repository.ChapterRepository
 import com.inkspire.ebookreader.domain.repository.ImagePathRepository
@@ -19,6 +21,7 @@ import com.inkspire.ebookreader.domain.repository.NoteRepository
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
 import com.inkspire.ebookreader.service.TTSServiceHandler
 import com.inkspire.ebookreader.ui.bookcontent.BookContentViewModel
+import com.inkspire.ebookreader.ui.home.libary.LibraryViewModel
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookViewModel
 import com.inkspire.ebookreader.ui.sharedviewmodel.AsyncImportBookViewModel
 import io.ktor.client.HttpClient
@@ -62,13 +65,13 @@ object KoinModule {
         singleOf(::ImagePathRepositoryImpl).bind<ImagePathRepository>()
         singleOf(::MusicPathRepositoryImpl).bind<MusicPathRepository>()
         singleOf(::NoteRepositoryImpl).bind<NoteRepository>()
+        singleOf(::AppPreferencesRepositoryImpl).bind<AppPreferencesRepository>()
     }
 
     val viewModelModule = module {
-//        viewModelOf(::BookListViewModel)
+        viewModelOf(::LibraryViewModel)
         viewModelOf(::AsyncImportBookViewModel)
 //        viewModelOf(::BookDetailViewModel)
-//        viewModelOf(::MainViewModel)
 //        viewModelOf(::SettingViewModel)
 //        viewModelOf(::BottomBarViewModel)
 //        viewModelOf(::AutoScrollViewModel)

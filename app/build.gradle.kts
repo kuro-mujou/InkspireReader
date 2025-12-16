@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotzilla)
 }
 
 android {
@@ -64,6 +65,7 @@ dependencies {
     implementation(libs.androidx.compose.adaptive)
 
     implementation(libs.androidx.palette.ktx)
+    implementation(libs.lottie.compose)
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)
@@ -85,6 +87,7 @@ dependencies {
     implementation(libs.moko.permissions.compose)
     implementation(libs.moko.permissions.notification)
 
+    implementation(libs.kotzilla.sdk)
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.compose)

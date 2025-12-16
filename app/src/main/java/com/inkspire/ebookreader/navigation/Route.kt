@@ -22,7 +22,7 @@ sealed interface Route : NavKey {
     data class BookDetail(val bookId: String) : Route, NavKey
 
     @Serializable
-    data class BookContent(val bookId: String, val chapterId: Int) : Route, NavKey
+    data class BookContent(val bookId: String) : Route, NavKey
 
     @Serializable
     data class BookWriter(val bookId: String) : Route, NavKey
