@@ -86,14 +86,14 @@ object KoinModule {
         viewModelOf(::MusicViewModel)
 //        viewModelOf(::BookWriterViewModel)
         viewModelOf(::RecentBookViewModel)
-        viewModel{
+        viewModel {
             BookContentViewModel(
                 bookId = it.get(),
                 bookRepository = get(),
                 chapterRepository = get()
             )
         }
-        viewModel{
+        viewModel {
             BookDetailViewModel(
                 bookId = it.get(),
                 bookRepository = get(),

@@ -13,8 +13,8 @@ import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
 import com.inkspire.ebookreader.ui.composable.MyNavigationSuiteScaffold
 import com.inkspire.ebookreader.ui.home.libary.LibraryRootScreen
-import com.inkspire.ebookreader.ui.home.recentbook.RecentBookScreen
-import com.inkspire.ebookreader.ui.home.setting.SettingScreen
+import com.inkspire.ebookreader.ui.home.recentbook.RecentBookRootScreen
+import com.inkspire.ebookreader.ui.home.setting.SettingRootScreen
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
@@ -46,7 +46,7 @@ fun HomeScreen(
             ),
             entryProvider = entryProvider {
                 entry<Route.Home.RecentBooks> {
-                    RecentBookScreen(
+                    RecentBookRootScreen(
                         parentNavigatorAction = parentNavigator::navigateTo,
                         homeNavigatorAction = homeNavigator::navigateTo,
                     )
@@ -57,7 +57,7 @@ fun HomeScreen(
                     )
                 }
                 entry<Route.Home.Settings> {
-                    SettingScreen()
+                    SettingRootScreen()
                 }
             }
         )

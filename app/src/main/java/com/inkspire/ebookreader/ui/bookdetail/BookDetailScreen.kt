@@ -41,6 +41,7 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -77,6 +78,7 @@ import androidx.navigation3.runtime.NavKey
 import coil.compose.AsyncImage
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.ContentPattern
+import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.ui.composable.MyBookChip
 import dev.chrisbanes.haze.HazeState
@@ -98,455 +100,54 @@ fun BookDetailScreen(
     onBack: () -> Unit,
     onNavigate: (NavKey) -> Unit,
 ) {
-    val view = LocalView.current
-    val context = LocalContext.current
-    val focusManager = LocalFocusManager.current
-    val isImeVisible = WindowInsets.isImeVisible
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
-    val chapterListState = rememberLazyListState()
-    val isSystemLight = !isSystemInDarkTheme()
-    val hazeState = remember { HazeState() }
-    val hazeStyle = HazeMaterials.ultraThin(Color(0xFF181C20))
-
-    var canvasHeight by remember { mutableFloatStateOf(0f) }
-
-    var searchInput by remember { mutableStateOf("") }
-    var targetSearchIndex by remember { mutableIntStateOf(-1) }
-    var flag by remember { mutableStateOf(false) }
-    var enableSearch by remember { mutableStateOf(false) }
-    var showCategoryMenu by remember { mutableStateOf(false) }
-
-    LaunchedEffect(flag) {
-        if (flag) {
-            chapterListState.scrollToItem(targetSearchIndex)
-            searchInput = ""
-            flag = false
-        }
-    }
-    LaunchedEffect(isImeVisible) {
-        if (!isImeVisible) {
-            focusManager.clearFocus()
-        }
-    }
-
-    DisposableEffect(Unit) {
-        val window = (context as? Activity)?.window ?: return@DisposableEffect onDispose {}
-        val insetsController = WindowCompat.getInsetsController(window, view)
-        insetsController.isAppearanceLightStatusBars = false
-        insetsController.isAppearanceLightNavigationBars = false
-
-        onDispose {
-            insetsController.isAppearanceLightStatusBars = isSystemLight
-            insetsController.isAppearanceLightNavigationBars = isSystemLight
-        }
-    }
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(with(LocalDensity.current) { canvasHeight.toDp() })
-                    .clip(RoundedCornerShape(bottomEnd = 30.dp, bottomStart = 30.dp))
+    when (val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)) {
+        DeviceConfiguration.PHONE_PORTRAIT,
+        DeviceConfiguration.TABLET_PORTRAIT -> {
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                AsyncImage(
-                    model = if (state.bookWithCategories?.book?.coverImagePath == "error")
-                        R.drawable.book_cover_not_available
-                    else
-                        state.bookWithCategories?.book?.coverImagePath,
-                    contentDescription = null,
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                Modifier
-                                    .hazeSource(state = hazeState)
-                            } else
-                                Modifier
-                        )
+                BookDetailHeader(
+                    state = state,
+                    deviceConfiguration = deviceConfiguration,
+                    onAction = onAction,
+                    onNavigate = onNavigate,
+                    onBack = onBack
                 )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.75f))
+                BookDetailFooter(
+                    state = state,
+                    deviceConfiguration = deviceConfiguration,
+                    onAction = onAction,
+                    onNavigate = onNavigate
                 )
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .clip(RoundedCornerShape(bottomEnd = 30.dp, bottomStart = 30.dp))
-                    .onGloballyPositioned {
-                        canvasHeight = it.size.height.toFloat()
-                    }
+        }
+        DeviceConfiguration.PHONE_LANDSCAPE,
+        DeviceConfiguration.TABLET_LANDSCAPE -> {
+            Row(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Column(
-                    modifier = Modifier
-                        .statusBarsPadding()
-                        .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
-                        .wrapContentHeight()
-                        .fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        IconButton(
-                            onClick = onBack,
-                        ) {
-                            Icon(
-                                imageVector = ImageVector.vectorResource(R.drawable.ic_arrow),
-                                contentDescription = null,
-                                tint = Color.White
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                onAction(BookDetailAction.OnBookMarkClick)
-                            },
-                        ) {
-                            Icon(
-                                imageVector = if (state.isSortedByFavorite)
-                                    ImageVector.vectorResource(R.drawable.ic_bookmark_filled)
-                                else
-                                    ImageVector.vectorResource(R.drawable.ic_bookmark),
-                                contentDescription = null,
-                                tint = if (state.isSortedByFavorite)
-                                    Color(155, 212, 161)
-                                else
-                                    Color.White,
-                            )
-                        }
-                    }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .width(125.dp)
-                                .clip(
-                                    RoundedCornerShape(
-                                        topStart = 8.dp,
-                                        topEnd = 8.dp,
-                                        bottomStart = 30.dp,
-                                        bottomEnd = 8.dp
-                                    )
-                                )
-                        ) {
-                            AsyncImage(
-                                model = if (state.bookWithCategories?.book?.coverImagePath == "error")
-                                    R.drawable.book_cover_not_available
-                                else
-                                    state.bookWithCategories?.book?.coverImagePath,
-                                contentDescription = null,
-                                contentScale = ContentScale.FillWidth,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight()
-                                    .clip(
-                                        RoundedCornerShape(
-                                            topStart = 8.dp,
-                                            topEnd = 8.dp,
-                                            bottomStart = 30.dp,
-                                            bottomEnd = 8.dp
-                                        )
-                                    )
-                            )
-                        }
-                        Column(
-                            modifier = Modifier
-                                .padding(start = 8.dp)
-                                .fillMaxWidth()
-                                .clip(
-                                    RoundedCornerShape(
-                                        topStart = 8.dp,
-                                        topEnd = 8.dp,
-                                        bottomStart = 8.dp,
-                                        bottomEnd = 30.dp
-                                    )
-                                )
-                                .then(
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                        Modifier
-                                            .background(Color.Transparent)
-                                            .hazeEffect(
-                                                state = hazeState,
-                                                style = hazeStyle
-                                            )
-                                    } else {
-                                        Modifier
-                                    }
-                                )
-                        ) {
-                            Text(
-                                modifier = Modifier.padding(4.dp),
-                                text = state.bookWithCategories?.book?.title ?: "",
-                                maxLines = 4,
-                                overflow = TextOverflow.Ellipsis,
-                                style = TextStyle(
-                                    color = Color.White,
-                                    fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-                                    fontWeight = FontWeight.Medium
-                                ),
-                            )
-                            Text(
-                                modifier = Modifier.padding(4.dp),
-                                text = state.bookWithCategories?.book?.authors?.joinToString(",")
-                                    ?: "",
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                style = TextStyle(
-                                    color = Color.White,
-                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                                ),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxSize(),
-            state = chapterListState,
-        ) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Category",
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        style = TextStyle(
-                            textAlign = TextAlign.Center,
-                            fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
-                    IconButton(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd),
-                        onClick = {
-                            showCategoryMenu = true
-                        }
-                    ) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.ic_add_music),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                }
-                if (state.bookWithCategories?.categories?.isNotEmpty() == true) {
-                    FlowRow(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        state.bookWithCategories.categories.forEach {
-                            MyBookChip(
-                                selected = false,
-                                onClick = {},
-                                color = Color(it.color)
-                            ) {
-                                Text(text = it.name)
-                            }
-                        }
-                    }
-                } else {
-                    Text(
-                        text = "no category available",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = TextStyle(
-                            textIndent = TextIndent(firstLine = 20.sp),
-                            textAlign = TextAlign.Justify,
-                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                        )
-                    )
-                }
-                Text(
-                    text = "Description",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp, bottom = 4.dp, start = 8.dp, end = 8.dp),
-                    style = TextStyle(
-                        textAlign = TextAlign.Center,
-                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                        fontWeight = FontWeight.Medium
-                    )
+                BookDetailHeader(
+                    state = state,
+                    deviceConfiguration = deviceConfiguration,
+                    onAction = onAction,
+                    onNavigate = onNavigate,
+                    onBack = onBack
                 )
-                Text(
-                    text = state.bookWithCategories?.book?.description?.let {
-                        ContentPattern.htmlTagPattern.replace(it, replacement = "")
-                    } ?: "no description available",
-                    modifier = Modifier.padding(
-                        top = 4.dp,
-                        bottom = 4.dp,
-                        start = 8.dp,
-                        end = 8.dp
-                    ),
-                    style = TextStyle(
-                        textIndent = TextIndent(firstLine = 20.sp),
-                        textAlign = TextAlign.Justify,
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                    )
+                BookDetailFooter(
+                    state = state,
+                    deviceConfiguration = deviceConfiguration,
+                    onAction = onAction,
+                    onNavigate = onNavigate
                 )
             }
-            stickyHeader {
-                Column(
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .fillMaxWidth()
-                    ) {
-                        IconButton(
-                            onClick = {
-                                enableSearch = !enableSearch
-                            },
-                            modifier = Modifier.align(Alignment.CenterEnd)
-                        ) {
-                            Icon(
-                                imageVector = if (enableSearch)
-                                    ImageVector.vectorResource(R.drawable.ic_up)
-                                else
-                                    ImageVector.vectorResource(R.drawable.ic_down),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                        Text(
-                            text = "Table of Content",
-                            modifier = Modifier.align(Alignment.Center),
-                            style = TextStyle(
-                                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                                fontWeight = FontWeight.Medium
-                            )
-                        )
-                    }
-                    AnimatedVisibility(
-                        visible = enableSearch
-                    ) {
-                        OutlinedTextField(
-                            value = searchInput,
-                            onValueChange = { newValue ->
-                                if (newValue.all { it.isDigit() }) {
-                                    searchInput = newValue
-                                }
-                            },
-                            label = {
-                                Text(
-                                    text = "Enter a chapter number",
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    val chapterIndex = searchInput.toIntOrNull()
-                                    if (chapterIndex != null) {
-                                        targetSearchIndex =
-                                            if (chapterIndex < state.tableOfContents.size)
-                                                chapterIndex
-                                            else
-                                                state.tableOfContents.size - 1
-                                        flag = true
-                                        focusManager.clearFocus()
-                                    }
-                                }
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                        )
-                    }
-                }
-            }
-            itemsIndexed(
-                items = state.tableOfContents,
-                key = { _, tocItem -> tocItem.index }
-            ) { index, tocItem ->
-                NavigationDrawerItem(
-                    label = {
-                        Text(
-                            text = tocItem.title,
-                            style =
-                                if (state.tableOfContents.indexOf(tocItem) == targetSearchIndex) {
-                                    TextStyle(
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
-                                    )
-                                } else {
-                                    TextStyle(
-                                        fontSize = 14.sp,
-                                        fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
-                                    )
-                                },
-                        )
-                    },
-                    selected = state.tableOfContents.indexOf(tocItem) == targetSearchIndex,
-                    onClick = {
-                        onAction(BookDetailAction.OnDrawerItemClick(index))
-                    },
-                    modifier = Modifier
-                        .padding(4.dp, 2.dp, 4.dp, 2.dp)
-                        .wrapContentHeight(),
-                    colors = NavigationDrawerItemDefaults.colors(
-                        selectedContainerColor = if (state.tableOfContents.indexOf(tocItem) == targetSearchIndex) {
-                            MaterialTheme.colorScheme.secondaryContainer
-                        } else {
-                            Color.Transparent
-                        },
-                        selectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        unselectedTextColor = MaterialTheme.colorScheme.onBackground,
-                    ),
-                )
-            }
-        }
-        Button(
-            onClick = {
-                onNavigate(Route.BookContent(bookId = state.bookWithCategories?.book?.bookId ?: ""))
-            },
-            modifier = Modifier
-                .padding(16.dp)
-                .navigationBarsPadding()
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text(
-                text = "Read Book",
-                style = TextStyle(
-                    fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                    fontWeight = FontWeight.Medium
-                )
-            )
         }
     }
-    if (showCategoryMenu) {
+    if (state.isShowCategoryMenu) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ModalBottomSheet(
-            onDismissRequest = { showCategoryMenu = false },
+            onDismissRequest = { onAction(BookDetailAction.ChangeCategoryMenuVisibility) },
             sheetState = sheetState,
         ) {
             Column(

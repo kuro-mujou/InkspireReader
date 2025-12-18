@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
@@ -44,13 +45,14 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.inkspire.ebookreader.R
+import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.domain.model.MiniFabItem
-import kotlin.collections.forEach
 
 @Composable
-fun ExpandableFab(
+fun MyExpandableFab(
     items: List<MiniFabItem>,
     expanded: Boolean,
+    deviceConfiguration: DeviceConfiguration,
     onToggle: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -123,7 +125,14 @@ fun ExpandableFab(
                             .only(WindowInsetsSides.End)
                             .asPaddingValues()
                             .calculateEndPadding(LayoutDirection.Ltr),
-                        bottom = 16.dp
+                        bottom = 16.dp + if (deviceConfiguration == DeviceConfiguration.PHONE_LANDSCAPE
+                            || deviceConfiguration == DeviceConfiguration.TABLET_LANDSCAPE)
+                            WindowInsets.navigationBars
+                                .asPaddingValues()
+                                .calculateBottomPadding()
+                        else
+                            0.dp
+
                     )
                     .alpha(alpha)
             ) {

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
@@ -54,11 +55,11 @@ import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun RecentBookScreen(
-    viewModel: RecentBookViewModel = koinViewModel<RecentBookViewModel>(),
+fun RecentBookRootScreen(
     parentNavigatorAction: (NavKey) -> Unit,
     homeNavigatorAction: (NavKey) -> Unit,
 ) {
+    val viewModel = koinViewModel<RecentBookViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     Column(
@@ -254,7 +255,9 @@ fun RecentBookScreen(
                         }
 
                         MyPagerIndicator(
-                            modifier = Modifier.padding(bottom = 24.dp, top = 8.dp),
+                            modifier = Modifier
+                                .padding(bottom = 24.dp, top = 8.dp)
+                                .navigationBarsPadding(),
                             pagerState = indicatorPagerState,
                         )
                     }

@@ -6,8 +6,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -65,7 +63,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
@@ -79,10 +76,10 @@ import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.MiniFabItem
 import com.inkspire.ebookreader.navigation.Route
-import com.inkspire.ebookreader.ui.composable.ExpandableFab
 import com.inkspire.ebookreader.ui.composable.MyBookChip
 import com.inkspire.ebookreader.ui.composable.MyBookMenuBottomSheet
 import com.inkspire.ebookreader.ui.composable.MyDriveInputLinkDialog
+import com.inkspire.ebookreader.ui.composable.MyExpandableFab
 import com.inkspire.ebookreader.ui.composable.MyGridBookView
 import com.inkspire.ebookreader.ui.composable.MyListBookView
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
@@ -96,7 +93,7 @@ fun LibraryScreen(
     parentNavigatorAction: (NavKey) -> Unit
 ) {
     val context = LocalContext.current
-    val focusManager = LocalFocusManager.current
+//    val focusManager = LocalFocusManager.current
     val isKeyboardVisible = WindowInsets.isImeVisible
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -116,11 +113,12 @@ fun LibraryScreen(
     val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
     val columnsStaggeredGridCount by remember(deviceConfiguration) {
         mutableStateOf(
-            if (deviceConfiguration == DeviceConfiguration.PHONE_PORTRAIT
-                || deviceConfiguration == DeviceConfiguration.TABLET_PORTRAIT)
-                StaggeredGridCells.Fixed(2)
-            else
-                StaggeredGridCells.Fixed(3)
+            when (deviceConfiguration) {
+                DeviceConfiguration.PHONE_PORTRAIT -> StaggeredGridCells.Fixed(2)
+                DeviceConfiguration.TABLET_PORTRAIT -> StaggeredGridCells.Fixed(3)
+                DeviceConfiguration.PHONE_LANDSCAPE -> StaggeredGridCells.Fixed(3)
+                DeviceConfiguration.TABLET_LANDSCAPE -> StaggeredGridCells.Fixed(4)
+            }
         )
     }
     val importBookLauncher = rememberLauncherForActivityResult(
@@ -217,11 +215,14 @@ fun LibraryScreen(
         )
     )
 
-    LaunchedEffect(isKeyboardVisible) {
-        if (!isKeyboardVisible) {
-            focusManager.clearFocus()
-        }
-    }
+//    LaunchedEffect(Unit) {
+//        focusManager.clearFocus()
+//    }
+//    LaunchedEffect(isKeyboardVisible) {
+//        if (!isKeyboardVisible) {
+//            focusManager.clearFocus()
+//        }
+//    }
     LaunchedEffect(drawerState.currentValue) {
         fabState = drawerState.isClosed
     }
@@ -307,12 +308,14 @@ fun LibraryScreen(
                                     .only(WindowInsetsSides.End)
                                     .asPaddingValues()
                                     .calculateEndPadding(LayoutDirection.Ltr)
-                            )
-                            .clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() },
-                                onClick = { focusManager.clearFocus() }
                             ),
+
+
+//                        .clickable(
+//                            indication = null,
+//                    interactionSource = remember { MutableInteractionSource() },
+//                    onClick = { focusManager.clearFocus() }
+//                    )
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Crossfade(state.isOnDeletingBooks) { isDeleting ->
@@ -490,7 +493,6 @@ fun LibraryScreen(
                                             Box(modifier = Modifier.fillMaxSize())
                                         }
                                         0 -> {
-
                                             LazyColumn(
                                                 state = listState,
                                                 modifier = Modifier
@@ -640,9 +642,10 @@ fun LibraryScreen(
         enter = fadeIn(),
         exit = fadeOut()
     ) {
-        ExpandableFab(
+        MyExpandableFab(
             items = fabItems,
             expanded = fabExpandedState,
+            deviceConfiguration = deviceConfiguration,
             onToggle = { fabExpandedState = !fabExpandedState },
             onDismiss = { fabExpandedState = false }
         )

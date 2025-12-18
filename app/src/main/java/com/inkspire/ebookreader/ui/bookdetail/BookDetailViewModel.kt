@@ -40,15 +40,6 @@ class BookDetailViewModel(
                 }
         }
         viewModelScope.launch {
-            bookRepository
-                .getBookAsFlow(bookId)
-                .collectLatest { book ->
-                    book?.let {
-                        _state.update { it.copy( isSortedByFavorite = it.isFavorite )}
-                    }
-                }
-        }
-        viewModelScope.launch {
             bookRepository.getFlowBookWithCategories(bookId).collectLatest { book ->
                 _state.update { it.copy( bookWithCategories = book )}
             }
@@ -71,7 +62,7 @@ class BookDetailViewModel(
 
             is BookDetailAction.OnBookMarkClick -> {
                 viewModelScope.launch {
-                    bookRepository.setBookAsFavorite(bookId, !_state.value.isSortedByFavorite)
+                    _state.value.bookWithCategories?.book?.isFavorite?.let { bookRepository.setBookAsFavorite(bookId, !it) }
                 }
             }
 
@@ -93,6 +84,10 @@ class BookDetailViewModel(
                         categories = _state.value.categories
                     )
                 }
+            }
+
+            BookDetailAction.ChangeCategoryMenuVisibility -> {
+                _state.update { it.copy(isShowCategoryMenu = !it.isShowCategoryMenu) }
             }
         }
     }

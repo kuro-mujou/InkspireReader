@@ -15,13 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.inkspire.ebookreader.ui.setting.Setting
+import com.inkspire.ebookreader.ui.setting.SettingScreen
 import com.inkspire.ebookreader.ui.setting.SettingViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun SettingScreen(
-) {
+fun SettingRootScreen() {
     val viewModel = koinViewModel<SettingViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     Column(
@@ -30,7 +29,7 @@ fun SettingScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Setting(
+        SettingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(

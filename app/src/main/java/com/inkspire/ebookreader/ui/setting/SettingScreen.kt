@@ -46,7 +46,7 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Setting(
+fun SettingScreen(
     modifier: Modifier = Modifier,
     settingState: SettingState,
     onAction: (SettingAction) -> Unit,
