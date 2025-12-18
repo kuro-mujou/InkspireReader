@@ -22,6 +22,7 @@ import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
 import com.inkspire.ebookreader.service.TTSManager
 import com.inkspire.ebookreader.service.TTSServiceHandler
 import com.inkspire.ebookreader.ui.bookcontent.BookContentViewModel
+import com.inkspire.ebookreader.ui.bookdetail.BookDetailViewModel
 import com.inkspire.ebookreader.ui.home.libary.LibraryViewModel
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookViewModel
 import com.inkspire.ebookreader.ui.music.MusicViewModel
@@ -75,7 +76,6 @@ object KoinModule {
     val viewModelModule = module {
         viewModelOf(::LibraryViewModel)
         viewModelOf(::AsyncImportBookViewModel)
-//        viewModelOf(::BookDetailViewModel)
         viewModelOf(::SettingViewModel)
 //        viewModelOf(::BottomBarViewModel)
 //        viewModelOf(::AutoScrollViewModel)
@@ -91,6 +91,13 @@ object KoinModule {
                 bookId = it.get(),
                 bookRepository = get(),
                 chapterRepository = get()
+            )
+        }
+        viewModel{
+            BookDetailViewModel(
+                bookId = it.get(),
+                bookRepository = get(),
+                tableOfContentRepository = get()
             )
         }
     }

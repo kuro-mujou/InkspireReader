@@ -27,7 +27,7 @@ import com.inkspire.ebookreader.common.BookImporter
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
 import com.inkspire.ebookreader.ui.bookcontent.BookContentScreen
-import com.inkspire.ebookreader.ui.bookdetail.BookDetailScreen
+import com.inkspire.ebookreader.ui.bookdetail.BookDetailScreenRoot
 import com.inkspire.ebookreader.ui.bookwriter.BookWriterScreen
 import com.inkspire.ebookreader.ui.home.HomeScreen
 import com.inkspire.ebookreader.ui.theme.BookShelfTheme
@@ -101,16 +101,19 @@ class MainActivity : ComponentActivity() {
                             }
                             entry<Route.BookContent> { entry ->
                                 BookContentScreen(
+                                    parentNavigator = navigator,
                                     bookId = entry.bookId
                                 )
                             }
                             entry<Route.BookDetail> { entry ->
-                                BookDetailScreen(
+                                BookDetailScreenRoot(
+                                    parentNavigator = navigator,
                                     bookId = entry.bookId
                                 )
                             }
                             entry<Route.BookWriter> { entry ->
                                 BookWriterScreen(
+                                    parentNavigator = navigator,
                                     bookId = entry.bookId
                                 )
                             }

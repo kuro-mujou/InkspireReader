@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.ui.bookcontent
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.common.UiState
@@ -25,9 +24,6 @@ class BookContentViewModel(
     private val bookRepository: BookRepository,
     private val chapterRepository: ChapterRepository
 ): ViewModel() {
-    companion object {
-        const val TAG = "BookContentViewModel"
-    }
     private val _uiState = MutableStateFlow(BookContentState())
     val uiState: StateFlow<BookContentState> = _uiState.stateIn(
         scope = viewModelScope,
@@ -48,7 +44,6 @@ class BookContentViewModel(
                 _uiState.update { it.copy(bookState = UiState.Loading) }
             }
             .catch { exception ->
-                Log.e(TAG, "Error loading book", exception)
                 _uiState.update { it.copy(bookState = UiState.Error(exception)) }
             }
             .distinctUntilChanged()

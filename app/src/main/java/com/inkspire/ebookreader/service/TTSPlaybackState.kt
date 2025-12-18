@@ -1,6 +1,6 @@
 package com.inkspire.ebookreader.service
 
-data class TtsPlaybackState(
+data class TTSPlaybackState(
     val chapterIndex: Int = -1,
     val paragraphIndex: Int = -1,
     val charOffset: Int = 0,

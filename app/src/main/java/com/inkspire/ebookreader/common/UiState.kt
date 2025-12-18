@@ -1,6 +1,7 @@
 package com.inkspire.ebookreader.common
 
 sealed interface UiState<out T> {
+    data object None : UiState<Nothing>
 
     data object Loading : UiState<Nothing>
 

@@ -24,9 +24,6 @@ class LibraryViewModel(
     private val imagePathRepository: ImagePathRepository,
     private val appPreferencesRepository: AppPreferencesRepository,
 ): ViewModel() {
-    companion object {
-        private const val TAG = "LibraryViewModel"
-    }
 
     private val _state = MutableStateFlow(LibraryState())
     val state = _state
@@ -65,7 +62,6 @@ class LibraryViewModel(
                     _state.update { it.copy(bookList = UiState.Loading) }
                 }
                 .catch { exception ->
-                    Log.e(TAG, "Error: $exception")
                     _state.update { it.copy(bookList = UiState.Error(exception)) }
                 }
                 .stateIn(viewModelScope)

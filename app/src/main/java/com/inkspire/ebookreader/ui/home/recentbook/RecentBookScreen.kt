@@ -21,7 +21,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -69,6 +68,9 @@ fun RecentBookScreen(
         verticalArrangement = Arrangement.Center
     ) {
         when(val state = state.recentBookState){
+            is UiState.None -> {
+
+            }
             is UiState.Loading -> {
                 MyLoadingAnimation()
             }

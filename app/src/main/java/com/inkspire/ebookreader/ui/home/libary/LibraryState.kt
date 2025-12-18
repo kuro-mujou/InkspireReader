@@ -9,7 +9,7 @@ data class LibraryState(
     val listViewType: Int = -1,
     val isOnDeletingBooks: Boolean = false,
 
-    val bookList: UiState<List<Book>> = UiState.Loading,
+    val bookList: UiState<List<Book>> = UiState.None,
     val selectedBookList: List<Book> = emptyList(),
     val categories: List<Category> = emptyList(),
 )

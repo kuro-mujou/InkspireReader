@@ -460,6 +460,9 @@ fun LibraryScreen(
                             }
                         }
                         when(val bookListState = state.bookList) {
+                            is UiState.None -> {
+
+                            }
                             is UiState.Loading -> {
                                 MyLoadingAnimation()
                             }

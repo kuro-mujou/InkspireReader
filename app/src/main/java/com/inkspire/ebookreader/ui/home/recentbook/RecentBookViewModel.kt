@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.ui.home.recentbook
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.common.UiState
@@ -18,9 +17,6 @@ import kotlinx.coroutines.launch
 class RecentBookViewModel(
     private val bookRepository: BookRepository
 ) : ViewModel() {
-    companion object {
-        private const val TAG = "RecentBookViewModel"
-    }
     private val _state = MutableStateFlow(RecentBookState())
     val state = _state
         .stateIn(
@@ -43,7 +39,6 @@ class RecentBookViewModel(
                     _state.update { it.copy(recentBookState = UiState.Loading) }
                 }
                 .catch { exception ->
-                    Log.e(TAG, "Error: $exception")
                     _state.update { it.copy(recentBookState = UiState.Error(exception)) }
                 }
                 .launchIn(viewModelScope)

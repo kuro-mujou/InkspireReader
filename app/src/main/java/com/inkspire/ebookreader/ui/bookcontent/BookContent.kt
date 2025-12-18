@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Chapter
+import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
@@ -39,11 +40,15 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 fun BookContentScreen(
-    bookId: String
+    bookId: String,
+    parentNavigator: Navigator
 ) {
     val viewModel = koinViewModel<BookContentViewModel>(parameters = { parametersOf(bookId) })
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (val state = uiState.bookState) {
+        is UiState.None -> {
+
+        }
         is UiState.Loading -> {
             MyLoadingAnimation()
         }
@@ -129,11 +134,14 @@ fun SingleChapterPage(
     onListStateLoaded: (LazyListState) -> Unit,
     onDispose: () -> Unit
 ) {
-    val chapterUiState by produceState<UiState<Chapter>>(initialValue = UiState.Loading, key1 = chapterIndex) {
+    val chapterUiState by produceState<UiState<Chapter>>(initialValue = UiState.None, key1 = chapterIndex) {
         viewModel.getChapterContent(chapterIndex).collect { value = it }
     }
 
     when (val state = chapterUiState) {
+        UiState.None -> {
+
+        }
         is UiState.Loading -> {
             MyLoadingAnimation()
         }

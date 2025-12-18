@@ -53,6 +53,7 @@ class SettingViewModel(
                 viewModelScope.launch {
                     if (action.voice != null) {
                         appPreferencesRepository.setTTSVoice(action.voice.name)
+                        ttsManager.updateVoice(action.voice)
                     }
                     _state.update {
                         it.copy(currentVoice = action.voice)
@@ -63,6 +64,7 @@ class SettingViewModel(
             is SettingAction.UpdateLanguage -> {
                 viewModelScope.launch {
                     appPreferencesRepository.setTTSLocale(action.language?.displayName.toString())
+                    ttsManager.updateLanguage(action.language ?: Locale.getDefault())
                     _state.update {
                         it.copy(currentLanguage = action.language)
                     }
@@ -72,12 +74,14 @@ class SettingViewModel(
             is SettingAction.UpdateSpeed -> {
                 viewModelScope.launch {
                     appPreferencesRepository.setTTSSpeed(action.speed)
+                    ttsManager.updateSpeed(action.speed)
                 }
             }
 
             is SettingAction.UpdatePitch -> {
                 viewModelScope.launch {
                     appPreferencesRepository.setTTSPitch(action.pitch)
+                    ttsManager.updatePitch(action.pitch)
                 }
             }
 
@@ -200,6 +204,7 @@ class SettingViewModel(
                 } ?: textToSpeech.defaultVoice
             }
             appPreferencesRepository.setTTSVoice(selectedVoice.name)
+            ttsManager.updateVoice(selectedVoice)
             _state.update {
                 it.copy(currentVoice = selectedVoice)
             }
