@@ -36,7 +36,7 @@ class TableOfContentRepositoryImpl(
         return tableOfContentDao.getTableOfContent(bookId, tocId)?.toDataClass()
     }
 
-    override suspend fun addChapter(bookId: String, chapter: TableOfContent) {
+    override suspend fun addChapter(chapter: TableOfContent) {
         tableOfContentDao.insertTableOfContent(chapter.toEntity())
     }
 

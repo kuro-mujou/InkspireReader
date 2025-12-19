@@ -14,4 +14,8 @@ sealed interface LibraryAction {
     data object UpdateSortState: LibraryAction
     data object UpdateDeletingState: LibraryAction
     data object ConfirmDeleteBooks: LibraryAction
+    data object ChangeBottomSheetVisibility: LibraryAction
+    data object ChangeDriveDialogVisibility: LibraryAction
+    data class ChangeFabVisibility(val visibility: Boolean): LibraryAction
+    data class ChangeFabExpandState(val visibility: Boolean): LibraryAction
 }

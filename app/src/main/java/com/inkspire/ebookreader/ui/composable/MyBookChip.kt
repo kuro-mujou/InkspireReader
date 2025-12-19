@@ -17,7 +17,6 @@ import com.inkspire.ebookreader.util.ColorUtil.darken
 
 @Composable
 fun MyBookChip(
-    modifier: Modifier = Modifier,
     selected: Boolean,
     color: Color,
     onClick: () -> Unit,

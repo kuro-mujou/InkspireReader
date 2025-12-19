@@ -1,12 +1,12 @@
 package com.inkspire.ebookreader.ui.home.libary
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.repository.AppPreferencesRepository
-import com.inkspire.ebookreader.domain.repository.BookRepository
+import com.inkspire.ebookreader.domain.repository.CategoryRepository
 import com.inkspire.ebookreader.domain.repository.ImagePathRepository
+import com.inkspire.ebookreader.domain.repository.LibraryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -20,7 +20,8 @@ import kotlinx.coroutines.yield
 import java.io.File
 
 class LibraryViewModel(
-    private val bookRepository: BookRepository,
+    private val libraryRepository: LibraryRepository,
+    private val categoryRepository: CategoryRepository,
     private val imagePathRepository: ImagePathRepository,
     private val appPreferencesRepository: AppPreferencesRepository,
 ): ViewModel() {
@@ -45,12 +46,12 @@ class LibraryViewModel(
             }
         }
         viewModelScope.launch {
-            bookRepository.getBookCategory().collectLatest { categories->
+            categoryRepository.getBookCategoryFlow().collectLatest { categories->
                 _state.update { it.copy(categories = categories) }
             }
         }
         viewModelScope.launch {
-            bookRepository.getAllBooks()
+            libraryRepository.getAllBooksFlow()
                 .map { bookList ->
                     if (bookList.isEmpty()) {
                         _state.update { it.copy(bookList = UiState.Empty) }
@@ -88,7 +89,7 @@ class LibraryViewModel(
             }
             is LibraryAction.ConfirmDeleteBooks -> {
                 viewModelScope.launch {
-                    bookRepository.deleteBooks(_state.value.selectedBookList)
+                    libraryRepository.deleteBooks(_state.value.selectedBookList)
                     yield()
                     processDeleteImages(_state.value.selectedBookList.map { it.id })
                     _state.update { it.copy(selectedBookList = emptyList()) }
@@ -96,7 +97,7 @@ class LibraryViewModel(
             }
             is LibraryAction.DeleteSelectedBooks -> {
                 viewModelScope.launch {
-                    bookRepository.deleteBooks(listOf(action.book))
+                    libraryRepository.deleteBooks(listOf(action.book))
                     yield()
                     processDeleteImages(listOf(action.book).map { it.id })
                 }
@@ -115,7 +116,7 @@ class LibraryViewModel(
             }
             is LibraryAction.UpdateBookFavoriteState -> {
                 viewModelScope.launch {
-                    bookRepository.setBookAsFavorite(action.book.id, !action.book.isFavorite)
+                    libraryRepository.setBookAsFavorite(action.book.id, !action.book.isFavorite)
                 }
             }
             is LibraryAction.UpdateBookListType -> {
@@ -134,6 +135,18 @@ class LibraryViewModel(
                 viewModelScope.launch {
                     appPreferencesRepository.setSortByFavorite(!_state.value.isSortedByFavorite)
                 }
+            }
+            is LibraryAction.ChangeBottomSheetVisibility -> {
+                _state.update { it.copy(bottomSheetVisibility = !_state.value.bottomSheetVisibility) }
+            }
+            is LibraryAction.ChangeDriveDialogVisibility -> {
+                _state.update { it.copy(driveDialogVisibility = !_state.value.driveDialogVisibility) }
+            }
+            is LibraryAction.ChangeFabVisibility -> {
+                _state.update { it.copy(fabVisibility = action.visibility) }
+            }
+            is LibraryAction.ChangeFabExpandState -> {
+                _state.update { it.copy(fabExpanded = action.visibility) }
             }
         }
     }

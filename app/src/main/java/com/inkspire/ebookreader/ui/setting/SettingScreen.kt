@@ -22,10 +22,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -34,13 +30,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.capstone.bookshelf.presentation.home_screen.setting_screen.component.MyAutoScrollSetting
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.SettingState
 import com.inkspire.ebookreader.service.TTSManager
+import com.inkspire.ebookreader.ui.composable.MyAutoScrollSetting
 import com.inkspire.ebookreader.ui.composable.MyBookCategoryMenu
 import com.inkspire.ebookreader.ui.composable.MyBookmarkMenu
 import com.inkspire.ebookreader.ui.composable.MyMusicMenu
+import com.inkspire.ebookreader.ui.composable.MySpecialCodeDialog
 import com.inkspire.ebookreader.ui.composable.MyVoiceSetting
 import org.koin.compose.koinInject
 
@@ -56,10 +53,6 @@ fun SettingScreen(
     val musicMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val bookmarkMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val categoryMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var openBackgroundMusicMenu by remember { mutableStateOf(false) }
-    var openBookmarkThemeMenu by remember { mutableStateOf(false) }
-    var openCategoryMenu by remember { mutableStateOf(false) }
-    var openSpecialCodeDialog by remember { mutableStateOf(false) }
 
     if (settingState.openTTSVoiceMenu) {
         MyVoiceSetting(
@@ -182,7 +175,7 @@ fun SettingScreen(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clickable {
-                        openBackgroundMusicMenu = true
+                        onAction(SettingAction.OpenBackgroundMusicMenu(true))
                     },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -215,7 +208,7 @@ fun SettingScreen(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clickable {
-                        openBookmarkThemeMenu = true
+                        onAction(SettingAction.OpenBookmarkThemeMenu(true))
                     },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -313,7 +306,7 @@ fun SettingScreen(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clickable {
-                        openCategoryMenu = true
+                        onAction(SettingAction.OpenCategoryMenu(true))
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -345,7 +338,7 @@ fun SettingScreen(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clickable {
-                        openSpecialCodeDialog = true
+                        onAction(SettingAction.OpenSpecialCodeDialog(true))
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -373,11 +366,11 @@ fun SettingScreen(
             }
         }
     }
-    if (openBackgroundMusicMenu) {
+    if (settingState.openBackgroundMusicMenu) {
         ModalBottomSheet(
             modifier = Modifier.fillMaxSize(),
             sheetState = musicMenuSheetState,
-            onDismissRequest = { openBackgroundMusicMenu = false },
+            onDismissRequest = { onAction(SettingAction.OpenBackgroundMusicMenu(false)) },
         ) {
             MyMusicMenu(
                 settingState = settingState,
@@ -385,11 +378,11 @@ fun SettingScreen(
             )
         }
     }
-    if (openBookmarkThemeMenu) {
+    if (settingState.openBookmarkThemeMenu) {
         ModalBottomSheet(
             modifier = Modifier.fillMaxSize(),
             sheetState = bookmarkMenuSheetState,
-            onDismissRequest = { openBookmarkThemeMenu = false },
+            onDismissRequest = { onAction(SettingAction.OpenBookmarkThemeMenu(false)) },
         ) {
             MyBookmarkMenu(
                 settingState = settingState,
@@ -397,12 +390,12 @@ fun SettingScreen(
             )
         }
     }
-    if (openCategoryMenu) {
+    if (settingState.openCategoryMenu) {
         ModalBottomSheet(
             modifier = Modifier.fillMaxSize(),
             sheetState = categoryMenuSheetState,
             onDismissRequest = {
-                openCategoryMenu = false
+                onAction(SettingAction.OpenCategoryMenu(false))
                 onAction(SettingAction.ResetChipState)
             },
         ) {
@@ -412,14 +405,14 @@ fun SettingScreen(
             )
         }
     }
-    if (openSpecialCodeDialog) {
-//        MySpecialCodeDialog(
-//            onSuccess = {
-//                onAction(SettingAction.OpenSpecialCodeSuccess)
-//            },
-//            onDismiss = {
-//                openSpecialCodeDialog = false
-//            }
-//        )
+    if (settingState.specialCodeDialog) {
+        MySpecialCodeDialog(
+            onSuccess = {
+                onAction(SettingAction.OpenSpecialCodeSuccess)
+            },
+            onDismiss = {
+                onAction(SettingAction.OpenSpecialCodeDialog(false))
+            }
+        )
     }
 }

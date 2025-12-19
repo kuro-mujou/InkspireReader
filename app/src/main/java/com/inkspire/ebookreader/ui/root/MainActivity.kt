@@ -9,7 +9,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -84,9 +84,9 @@ class MainActivity : ComponentActivity() {
                 BackHandler(enabled = true) {
                     if (!navigator.handleBack()) finish()
                 }
-                Scaffold(
+                Surface (
                     modifier = Modifier.fillMaxSize(),
-                ) { _ ->
+                ) {
                     NavDisplay(
                         backStack = navigator.backStack,
                         entryDecorators = listOf(

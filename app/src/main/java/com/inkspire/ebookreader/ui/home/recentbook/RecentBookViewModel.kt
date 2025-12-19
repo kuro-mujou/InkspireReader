@@ -3,7 +3,7 @@ package com.inkspire.ebookreader.ui.home.recentbook
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.common.UiState
-import com.inkspire.ebookreader.domain.repository.BookRepository
+import com.inkspire.ebookreader.domain.repository.RecentBookRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class RecentBookViewModel(
-    private val bookRepository: BookRepository
+    private val recentBookRepository: RecentBookRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(RecentBookState())
     val state = _state
@@ -27,7 +27,7 @@ class RecentBookViewModel(
 
     init {
         viewModelScope.launch {
-            bookRepository.getBookListForMainScreen()
+            recentBookRepository.getRecentBookList()
                 .map { books ->
                     if (books.isEmpty()) {
                         _state.update { it.copy(recentBookState = UiState.Empty) }

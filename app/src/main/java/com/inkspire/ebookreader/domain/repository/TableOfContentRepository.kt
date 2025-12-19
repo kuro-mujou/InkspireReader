@@ -9,7 +9,7 @@ interface TableOfContentRepository {
     suspend fun getFlowTableOfContents(bookId: String): Flow<List<TableOfContent>>
     suspend fun getTableOfContents(bookId: String): List<TableOfContent>
     suspend fun getTableOfContent(bookId: String, tocId: Int): TableOfContent?
-    suspend fun addChapter(bookId: String, chapter: TableOfContent)
+    suspend fun addChapter(chapter: TableOfContent)
     suspend fun updateTableOfContentFavoriteStatus(bookId: String, index: Int, isFavorite: Boolean)
     suspend fun updateTableOfContentTitle(bookId: String, index: Int, chapterTitle: String)
     suspend fun deleteTableOfContent(bookId: String, tocId: Int)

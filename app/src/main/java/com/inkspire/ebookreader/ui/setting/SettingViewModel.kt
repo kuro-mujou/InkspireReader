@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.domain.model.SettingState
 import com.inkspire.ebookreader.domain.repository.AppPreferencesRepository
-import com.inkspire.ebookreader.domain.repository.BookRepository
+import com.inkspire.ebookreader.domain.repository.CategoryRepository
 import com.inkspire.ebookreader.service.TTSManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 class SettingViewModel(
-    private val bookRepository: BookRepository,
+    private val categoryRepository: CategoryRepository,
     private val appPreferencesRepository: AppPreferencesRepository,
     private val ttsManager: TTSManager
 ) : ViewModel() {
@@ -32,15 +32,11 @@ class SettingViewModel(
     fun onAction(action: SettingAction) {
         when (action) {
             is SettingAction.OpenTTSVoiceMenu -> {
-                _state.update {
-                    it.copy(openTTSVoiceMenu = action.open)
-                }
+                _state.update { it.copy(openTTSVoiceMenu = action.open) }
             }
 
             is SettingAction.OpenAutoScrollMenu -> {
-                _state.update {
-                    it.copy(openAutoScrollMenu = action.open)
-                }
+                _state.update { it.copy(openAutoScrollMenu = action.open) }
             }
 
             is SettingAction.KeepScreenOn -> {
@@ -153,16 +149,14 @@ class SettingViewModel(
 
             is SettingAction.AddCategory -> {
                 viewModelScope.launch {
-                    bookRepository.insertCategory(action.category)
+                    categoryRepository.insertCategory(action.category)
                 }
             }
 
             is SettingAction.DeleteCategory -> {
                 viewModelScope.launch {
-                    bookRepository.deleteCategory(
-                        _state.value.bookCategories.filter {
-                            it.isSelected
-                        }
+                    categoryRepository.deleteCategory(
+                        _state.value.bookCategories.filter { it.isSelected }
                     )
                 }
             }
@@ -190,6 +184,19 @@ class SettingViewModel(
                     appPreferencesRepository.setEnableSpecialArt(action.enable)
                 }
             }
+
+            is SettingAction.OpenBackgroundMusicMenu -> {
+                _state.update { it.copy(openBackgroundMusicMenu = action.open) }
+            }
+            is SettingAction.OpenBookmarkThemeMenu -> {
+                _state.update { it.copy(openBookmarkThemeMenu = action.open) }
+            }
+            is SettingAction.OpenCategoryMenu -> {
+                _state.update { it.copy(openCategoryMenu = action.open) }
+            }
+            is SettingAction.OpenSpecialCodeDialog -> {
+                _state.update { it.copy(specialCodeDialog = action.open) }
+            }
         }
     }
 
@@ -214,86 +221,62 @@ class SettingViewModel(
     init {
         viewModelScope.launch {
             appPreferencesRepository.getKeepScreenOn().collectLatest { keepScreenOn ->
-                _state.update {
-                    it.copy(keepScreenOn = keepScreenOn)
-                }
+                _state.update { it.copy(keepScreenOn = keepScreenOn) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getTtsPitch().collectLatest { ttsPitch ->
-                _state.update {
-                    it.copy(currentPitch = ttsPitch)
-                }
+                _state.update { it.copy(currentPitch = ttsPitch) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getTtsSpeed().collectLatest { ttsSpeed ->
-                _state.update {
-                    it.copy(currentSpeed = ttsSpeed)
-                }
+                _state.update { it.copy(currentSpeed = ttsSpeed) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getBookmarkStyle().collectLatest { bookmarkStyle ->
-                _state.update {
-                    it.copy(selectedBookmarkStyle = bookmarkStyle)
-                }
+                _state.update { it.copy(selectedBookmarkStyle = bookmarkStyle) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getEnableBackgroundMusic().collectLatest { enableBackgroundMusic ->
-                _state.update {
-                    it.copy(enableBackgroundMusic = enableBackgroundMusic)
-                }
+                _state.update { it.copy(enableBackgroundMusic = enableBackgroundMusic) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getAutoScrollSpeed().collectLatest { speed ->
-                _state.update {
-                    it.copy(currentScrollSpeed = speed)
-                }
+                _state.update { it.copy(currentScrollSpeed = speed) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getAutoScrollResumeMode().collectLatest { autoScrollResumeMode ->
-                _state.update {
-                    it.copy(isAutoResumeScrollMode = autoScrollResumeMode)
-                }
+                _state.update { it.copy(isAutoResumeScrollMode = autoScrollResumeMode) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getAutoScrollResumeDelayTime().collectLatest { delay ->
-                _state.update {
-                    it.copy(delayResumeMode = delay)
-                }
+                _state.update { it.copy(delayResumeMode = delay) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getDelayTimeAtEnd().collectLatest { delay ->
-                _state.update {
-                    it.copy(delayAtEnd = delay)
-                }
+                _state.update { it.copy(delayAtEnd = delay) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getDelayTimeAtStart().collectLatest { delay ->
-                _state.update {
-                    it.copy(delayAtStart = delay)
-                }
+                _state.update { it.copy(delayAtStart = delay) }
             }
         }
         viewModelScope.launch {
-            bookRepository.getBookCategory().collectLatest { categories ->
-                _state.update {
-                    it.copy(bookCategories = categories)
-                }
+            categoryRepository.getBookCategoryFlow().collectLatest { categories ->
+                _state.update { it.copy(bookCategories = categories) }
             }
         }
         viewModelScope.launch {
             appPreferencesRepository.getUnlockSpecialCodeStatus().collectLatest { status->
-                _state.update {
-                    it.copy(unlockSpecialCodeStatus = status)
-                }
+                _state.update { it.copy(unlockSpecialCodeStatus = status) }
             }
         }
         viewModelScope.launch {

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.domain.model.Category
 import com.inkspire.ebookreader.domain.repository.BookRepository
+import com.inkspire.ebookreader.domain.repository.CategoryRepository
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 class BookDetailViewModel(
     private val bookId: String,
     private val bookRepository: BookRepository,
+    private val categoryRepository: CategoryRepository,
     private val tableOfContentRepository: TableOfContentRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(BookDetailState())
@@ -40,7 +42,7 @@ class BookDetailViewModel(
                 }
         }
         viewModelScope.launch {
-            bookRepository.getFlowBookWithCategories(bookId).collectLatest { book ->
+            categoryRepository.getFlowBookWithCategories(bookId).collectLatest { book ->
                 _state.update { it.copy( bookWithCategories = book )}
             }
         }
@@ -79,7 +81,7 @@ class BookDetailViewModel(
                     )
                 }
                 viewModelScope.launch {
-                    bookRepository.updateBookCategory(
+                    categoryRepository.updateBookCategory(
                         bookId = bookId,
                         categories = _state.value.categories
                     )
@@ -93,8 +95,8 @@ class BookDetailViewModel(
     }
 
     fun getSelectableCategoriesForBook(bookId: String): Flow<List<Category>> {
-        val bookWithCategoriesFlow = bookRepository.getFlowBookWithCategories(bookId)
-        val allCategoriesFlow = bookRepository.getBookCategory()
+        val bookWithCategoriesFlow = categoryRepository.getFlowBookWithCategories(bookId)
+        val allCategoriesFlow = categoryRepository.getBookCategoryFlow()
 
         return combine(bookWithCategoriesFlow, allCategoriesFlow) { bookWithCategories, allCategories ->
             val bookCategoryIds = bookWithCategories.categories.map { it.categoryId }.toSet()

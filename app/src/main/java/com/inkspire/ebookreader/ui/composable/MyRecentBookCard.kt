@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,31 +42,27 @@ fun MyRecentBookCard(
     onDoubleClick: () -> Unit
 ) {
     val cardShape = RoundedCornerShape(16.dp)
-    val pageOffset = ((pagerState.currentPage - pageIndex) + pagerState.currentPageOffsetFraction)
-        .absoluteValue.coerceIn(0f, 1f)
-    val density = LocalDensity.current
-    val scale = lerp(start = 0.85f, stop = 1f, fraction = 1f - pageOffset)
-    val alpha = lerp(start = 0.6f, stop = 1f, fraction = 1f - pageOffset)
-    val shadow = lerp(
-        start = with(density) { 4.dp.toPx() },
-        stop = with(density) { 12.dp.toPx() },
-        fraction = 1f - pageOffset
-    )
+
     Box(
         modifier = Modifier
             .combinedClickable(
-                onClick = {
-                    onClick()
-                },
-                onDoubleClick = {
-                    onDoubleClick()
-                }
+                onClick = onClick,
+                onDoubleClick = onDoubleClick
             )
             .graphicsLayer {
-                this.scaleX = scale
-                this.scaleY = scale
-                this.alpha = alpha
-                this.shadowElevation = shadow
+                val pageOffset = ((pagerState.currentPage - pageIndex) + pagerState.currentPageOffsetFraction)
+                    .absoluteValue.coerceIn(0f, 1f)
+
+                val lerpFraction = 1f - pageOffset
+
+                val targetScale = lerp(0.85f, 1f, lerpFraction)
+                val targetAlpha = lerp(0.6f, 1f, lerpFraction)
+                val targetShadow = lerp(4.dp.toPx(), 12.dp.toPx(), lerpFraction)
+
+                this.scaleX = targetScale
+                this.scaleY = targetScale
+                this.alpha = targetAlpha
+                this.shadowElevation = targetShadow
                 this.shape = cardShape
                 this.clip = true
             }
@@ -87,17 +82,12 @@ fun MyRecentBookCard(
                     .wrapContentHeight()
             ) {
                 AsyncImage(
-                    model = if (book.coverImagePath == "error") {
-                        R.drawable.book_cover_not_available
-                    } else {
-                        book.coverImagePath
-                    },
+                    model = if (book.coverImagePath == "error") R.drawable.book_cover_not_available else book.coverImagePath,
                     contentDescription = book.title,
                     contentScale = ContentScale.FillWidth,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
+                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                 )
+
                 Box(
                     modifier = Modifier
                         .clip(cardShape)
@@ -113,9 +103,8 @@ fun MyRecentBookCard(
                             text = book.title,
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
-                            style = TextStyle(
+                            style = MaterialTheme.typography.titleLarge.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = MaterialTheme.typography.titleLarge.fontSize,
                                 fontWeight = FontWeight.Medium
                             ),
                         )
@@ -124,9 +113,8 @@ fun MyRecentBookCard(
                             text = book.authors.joinToString(","),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            style = TextStyle(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         )
                         Spacer(Modifier.height(12.dp))
@@ -134,9 +122,7 @@ fun MyRecentBookCard(
                             color = MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                             progress = { (book.currentChapter + 1).toFloat() / book.totalChapter.toFloat() },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp),
+                            modifier = Modifier.fillMaxWidth().height(6.dp),
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(

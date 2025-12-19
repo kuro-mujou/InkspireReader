@@ -1,4 +1,4 @@
-package com.capstone.bookshelf.presentation.home_screen.setting_screen.component
+package com.inkspire.ebookreader.ui.composable
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

@@ -129,7 +129,7 @@ class MusicViewModel(
         }
     }
 
-    private fun getFileName(context: Context, uri: android.net.Uri): String {
+    private fun getFileName(context: Context, uri: Uri): String {
         var fileName = "unknown"
         context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
             if (cursor.moveToFirst()) {

@@ -1,5 +1,6 @@
 package com.inkspire.ebookreader.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -35,6 +36,9 @@ fun HomeScreen(
         }
     }
     val homeNavigator = rememberNavigator(config, Route.Home.RecentBooks)
+    BackHandler(enabled = homeNavigator.currentTab != Route.Home.RecentBooks) {
+        homeNavigator.handleBack()
+    }
     MyNavigationSuiteScaffold(
         homeNavigator = homeNavigator
     ) {

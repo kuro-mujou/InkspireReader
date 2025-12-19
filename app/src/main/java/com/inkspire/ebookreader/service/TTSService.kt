@@ -1,9 +1,6 @@
 package com.inkspire.ebookreader.service
 
 import android.content.Intent
-import android.media.AudioAttributes
-import android.media.AudioFocusRequest
-import android.media.AudioManager
 import android.os.Bundle
 import androidx.media3.common.C
 import androidx.media3.common.ForwardingPlayer

@@ -7,17 +7,23 @@ import com.inkspire.ebookreader.data.network.HttpClientFactory
 import com.inkspire.ebookreader.data.preference.AppPreferences
 import com.inkspire.ebookreader.data.repository.AppPreferencesRepositoryImpl
 import com.inkspire.ebookreader.data.repository.BookRepositoryImpl
+import com.inkspire.ebookreader.data.repository.CategoryRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ChapterRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ImagePathRepositoryImpl
+import com.inkspire.ebookreader.data.repository.LibraryRepositoryImpl
 import com.inkspire.ebookreader.data.repository.MusicPathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.NoteRepositoryImpl
+import com.inkspire.ebookreader.data.repository.RecentBookRepositoryImpl
 import com.inkspire.ebookreader.data.repository.TableOfContentRepositoryImpl
 import com.inkspire.ebookreader.domain.repository.AppPreferencesRepository
 import com.inkspire.ebookreader.domain.repository.BookRepository
+import com.inkspire.ebookreader.domain.repository.CategoryRepository
 import com.inkspire.ebookreader.domain.repository.ChapterRepository
 import com.inkspire.ebookreader.domain.repository.ImagePathRepository
+import com.inkspire.ebookreader.domain.repository.LibraryRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import com.inkspire.ebookreader.domain.repository.NoteRepository
+import com.inkspire.ebookreader.domain.repository.RecentBookRepository
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
 import com.inkspire.ebookreader.service.TTSManager
 import com.inkspire.ebookreader.service.TTSServiceHandler
@@ -45,7 +51,7 @@ object KoinModule {
     }
 
     val databaseModule = module {
-        single {
+        single(createdAtStart = true) {
             Room
                 .databaseBuilder(
                     context = get(),
@@ -56,6 +62,9 @@ object KoinModule {
                 .build()
         }
         single { get<LocalBookDatabase>().bookDao }
+        single { get<LocalBookDatabase>().recentBookDao }
+        single { get<LocalBookDatabase>().libraryDao }
+        single { get<LocalBookDatabase>().categoryDao }
         single { get<LocalBookDatabase>().chapterDao }
         single { get<LocalBookDatabase>().tableOfContentDao }
         single { get<LocalBookDatabase>().imagePathDao }
@@ -65,6 +74,9 @@ object KoinModule {
 
     val repositoryModule = module {
         singleOf(::BookRepositoryImpl).bind<BookRepository>()
+        singleOf(::RecentBookRepositoryImpl).bind<RecentBookRepository>()
+        singleOf(::LibraryRepositoryImpl).bind<LibraryRepository>()
+        singleOf(::CategoryRepositoryImpl).bind<CategoryRepository>()
         singleOf(::ChapterRepositoryImpl).bind<ChapterRepository>()
         singleOf(::TableOfContentRepositoryImpl).bind<TableOfContentRepository>()
         singleOf(::ImagePathRepositoryImpl).bind<ImagePathRepository>()
@@ -97,6 +109,7 @@ object KoinModule {
             BookDetailViewModel(
                 bookId = it.get(),
                 bookRepository = get(),
+                categoryRepository = get(),
                 tableOfContentRepository = get()
             )
         }

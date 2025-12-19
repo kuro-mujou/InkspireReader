@@ -63,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
@@ -93,7 +94,7 @@ fun LibraryScreen(
     parentNavigatorAction: (NavKey) -> Unit
 ) {
     val context = LocalContext.current
-//    val focusManager = LocalFocusManager.current
+    val focusManager = LocalFocusManager.current
     val isKeyboardVisible = WindowInsets.isImeVisible
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -103,11 +104,7 @@ fun LibraryScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     var specialIntent by remember { mutableStateOf("null") }
-    var fabState by remember { mutableStateOf(true) }
-    var fabExpandedState by remember { mutableStateOf(false) }
     var dropdownMenuState by remember { mutableStateOf(false) }
-    var driveDialogState by remember { mutableStateOf(false) }
-    var bottomSheetState by remember { mutableStateOf(false) }
 
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
@@ -141,7 +138,7 @@ fun LibraryScreen(
                 Color(131, 105, 83),
             onClick = {
                 specialIntent = "null"
-                fabExpandedState = false
+                onAction(LibraryAction.ChangeFabExpandState(false))
                 importBookLauncher.launch(arrayOf("application/epub+zip"))
             }
         ),
@@ -154,7 +151,7 @@ fun LibraryScreen(
                 Color(131, 105, 83),
             onClick = {
                 specialIntent = "null"
-                fabExpandedState = false
+                onAction(LibraryAction.ChangeFabExpandState(false))
                 importBookLauncher.launch(arrayOf("application/vnd.comicbook+zip", "application/octet-stream"))
             }
         ),
@@ -167,7 +164,7 @@ fun LibraryScreen(
                 Color(131, 105, 83),
             onClick = {
                 specialIntent = "PAGE"
-                fabExpandedState = false
+                onAction(LibraryAction.ChangeFabExpandState(false))
                 importBookLauncher.launch(
                     arrayOf("application/pdf")
                 )
@@ -182,7 +179,7 @@ fun LibraryScreen(
                 Color(131, 105, 83),
             onClick = {
                 specialIntent = "TEXT"
-                fabExpandedState = false
+                onAction(LibraryAction.ChangeFabExpandState(false))
                 importBookLauncher.launch(
                     arrayOf("application/pdf")
                 )
@@ -197,8 +194,8 @@ fun LibraryScreen(
                 Color(131, 105, 83),
             onClick = {
                 specialIntent = "null"
-                fabExpandedState = false
-                driveDialogState = true
+                onAction(LibraryAction.ChangeFabExpandState(false))
+                onAction(LibraryAction.ChangeDriveDialogVisibility)
             }
         ),
         MiniFabItem(
@@ -209,22 +206,19 @@ fun LibraryScreen(
             else
                 Color(52, 105, 63),
             onClick = {
-                fabExpandedState = false
+                onAction(LibraryAction.ChangeFabExpandState(false))
                 parentNavigatorAction(Route.BookWriter(""))
             }
         )
     )
 
-//    LaunchedEffect(Unit) {
-//        focusManager.clearFocus()
-//    }
-//    LaunchedEffect(isKeyboardVisible) {
-//        if (!isKeyboardVisible) {
-//            focusManager.clearFocus()
-//        }
-//    }
+    LaunchedEffect(isKeyboardVisible) {
+        if (!isKeyboardVisible) {
+            focusManager.clearFocus()
+        }
+    }
     LaunchedEffect(drawerState.currentValue) {
-        fabState = drawerState.isClosed
+        onAction(LibraryAction.ChangeFabVisibility(drawerState.isClosed))
     }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl ) {
@@ -513,7 +507,7 @@ fun LibraryScreen(
                                                         onItemLongClick = {
                                                             if (!state.isOnDeletingBooks) {
                                                                 onAction(LibraryAction.AddSelectedBook(it))
-                                                                bottomSheetState = true
+                                                                onAction(LibraryAction.ChangeBottomSheetVisibility)
                                                                 scope.launch {
                                                                     sheetState.show()
                                                                 }
@@ -562,7 +556,7 @@ fun LibraryScreen(
                                                             onItemLongClick = {
                                                                 if (!state.isOnDeletingBooks) {
                                                                     onAction(LibraryAction.AddSelectedBook(it))
-                                                                    bottomSheetState = true
+                                                                    onAction(LibraryAction.ChangeBottomSheetVisibility)
                                                                     scope.launch {
                                                                         sheetState.show()
                                                                     }
@@ -598,7 +592,7 @@ fun LibraryScreen(
     }
 
     AnimatedVisibility(
-        visible = bottomSheetState,
+        visible = state.bottomSheetVisibility,
         enter = fadeIn(),
         exit = fadeOut()
     ) {
@@ -606,7 +600,7 @@ fun LibraryScreen(
             book = state.selectedBookList.firstOrNull(),
             sheetState = sheetState,
             onDismiss = {
-                bottomSheetState = false
+                onAction(LibraryAction.ChangeBottomSheetVisibility)
                 onAction(LibraryAction.RemoveSelectedBook(it))
             },
             onViewBookDetails = {
@@ -621,12 +615,12 @@ fun LibraryScreen(
     }
 
     AnimatedVisibility(
-        visible = driveDialogState,
+        visible = state.driveDialogVisibility,
         enter = fadeIn(),
         exit = fadeOut()
     ) {
         MyDriveInputLinkDialog(
-            onDismiss = { driveDialogState = false },
+            onDismiss = { onAction(LibraryAction.ChangeDriveDialogVisibility) },
             onConfirm = { link ->
                 BookImporter(
                     context = context,
@@ -638,16 +632,16 @@ fun LibraryScreen(
     }
 
     AnimatedVisibility(
-        visible = fabState,
+        visible = state.fabVisibility,
         enter = fadeIn(),
         exit = fadeOut()
     ) {
         MyExpandableFab(
             items = fabItems,
-            expanded = fabExpandedState,
+            expanded = state.fabExpanded,
             deviceConfiguration = deviceConfiguration,
-            onToggle = { fabExpandedState = !fabExpandedState },
-            onDismiss = { fabExpandedState = false }
+            onToggle = { onAction(LibraryAction.ChangeFabExpandState(!state.fabExpanded)) },
+            onDismiss = { onAction(LibraryAction.ChangeFabExpandState(false)) }
         )
     }
 }

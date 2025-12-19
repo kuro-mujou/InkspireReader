@@ -11,7 +11,7 @@ data class HomeNavItem(
 
 val homeNavItems = listOf(
     HomeNavItem(
-        label = "Recent Books",
+        label = "Recents",
         icon = R.drawable.ic_home,
         route = Route.Home.RecentBooks
     ),

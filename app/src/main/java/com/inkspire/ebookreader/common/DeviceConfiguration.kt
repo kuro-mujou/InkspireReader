@@ -14,17 +14,17 @@ enum class DeviceConfiguration {
             val height = windowSizeClass.minHeightDp
 
             return when {
-                width >= WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND -> {
+                width >= WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND -> {
                     when {
-                        height < WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LOWER_BOUND ->
+                        height < WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND ->
                             PHONE_LANDSCAPE
                         else ->
                             TABLET_LANDSCAPE
                     }
                 }
-                width >= WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND -> {
+                width >= WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND -> {
                     when {
-                        height < WindowSizeClass.Companion.HEIGHT_DP_MEDIUM_LOWER_BOUND ->
+                        height < WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND ->
                             PHONE_LANDSCAPE
                         else ->
                             TABLET_PORTRAIT
