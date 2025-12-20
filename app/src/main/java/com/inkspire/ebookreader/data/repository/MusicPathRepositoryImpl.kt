@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 class MusicPathRepositoryImpl(
     private val musicDao: MusicPathDao,
 ) : MusicPathRepository {
-    override suspend fun getMusicPaths(): Flow<List<MusicItem>> {
+    override fun getMusicPaths(): Flow<List<MusicItem>> {
         return musicDao.getMusicPaths().map { musicEntity ->
             musicEntity.map { it.toDataClass() }
         }

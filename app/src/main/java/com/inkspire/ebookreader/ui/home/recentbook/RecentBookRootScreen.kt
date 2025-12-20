@@ -49,8 +49,8 @@ import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
-import com.inkspire.ebookreader.ui.composable.MyPagerIndicator
-import com.inkspire.ebookreader.ui.composable.MyRecentBookCard
+import com.inkspire.ebookreader.ui.home.recentbook.composable.MyPagerIndicator
+import com.inkspire.ebookreader.ui.home.recentbook.composable.MyRecentBookCard
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 

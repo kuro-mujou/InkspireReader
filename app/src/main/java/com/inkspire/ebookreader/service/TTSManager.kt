@@ -9,7 +9,6 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
 import androidx.media3.common.Player
-import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,7 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.koin.java.KoinJavaComponent.inject
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 class TTSManager(
@@ -25,7 +24,6 @@ class TTSManager(
 ) {
     private val _state = MutableStateFlow(TTSPlaybackState())
     val state = _state.asStateFlow()
-    private val datastoreRepository by inject<DatastoreRepository>(DatastoreRepository::class.java)
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private var textToSpeech: TextToSpeech? = null
@@ -126,7 +124,7 @@ class TTSManager(
         _state.update { it.copy(isPaused = true, isSpeaking = false) }
 
         if (abandonFocus) {
-            audioManager?.abandonAudioFocusRequest(focusRequest!!)
+            audioManager?.abandonAudioFocusRequest(focusRequest)
         }
     }
 
@@ -146,7 +144,7 @@ class TTSManager(
     fun stopReading() {
         textToSpeech?.stop()
         exoPlayer?.stop()
-        audioManager?.abandonAudioFocusRequest(focusRequest!!)
+        audioManager?.abandonAudioFocusRequest(focusRequest)
         _state.update {
             it.copy(isSpeaking = false, isPaused = false, paragraphIndex = -1, charOffset = 0)
         }
@@ -231,8 +229,15 @@ class TTSManager(
     }
 
     private fun requestAudioFocus(): Boolean {
-        val res = audioManager?.requestAudioFocus(focusRequest!!)
+        val res = audioManager?.requestAudioFocus(focusRequest)
         return res == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+    }
+
+    suspend fun getAvailableVoicesAndLanguages() = withContext(Dispatchers.IO) {
+        val tts = textToSpeech ?: return@withContext emptyList<Locale>() to emptyList<Voice>()
+        val languages = tts.availableLanguages?.toList()?.sortedBy { it.displayName } ?: emptyList()
+        val voices = tts.voices?.filter { !it.isNetworkConnectionRequired }?.sortedBy { it.name } ?: emptyList()
+        languages to voices
     }
 
     fun updateLanguage(locale: Locale) { textToSpeech?.language = locale }

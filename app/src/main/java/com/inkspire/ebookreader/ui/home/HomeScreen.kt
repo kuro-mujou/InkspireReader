@@ -12,7 +12,7 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
-import com.inkspire.ebookreader.ui.composable.MyNavigationSuiteScaffold
+import com.inkspire.ebookreader.ui.home.composable.MyNavigationSuiteScaffold
 import com.inkspire.ebookreader.ui.home.libary.LibraryRootScreen
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookRootScreen
 import com.inkspire.ebookreader.ui.home.setting.SettingRootScreen

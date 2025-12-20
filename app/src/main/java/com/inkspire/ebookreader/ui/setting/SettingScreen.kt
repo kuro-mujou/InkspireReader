@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.ui.setting
 
-import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,15 +30,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.domain.model.SettingState
-import com.inkspire.ebookreader.service.TTSManager
-import com.inkspire.ebookreader.ui.composable.MyAutoScrollSetting
-import com.inkspire.ebookreader.ui.composable.MyBookCategoryMenu
-import com.inkspire.ebookreader.ui.composable.MyBookmarkMenu
-import com.inkspire.ebookreader.ui.composable.MyMusicMenu
-import com.inkspire.ebookreader.ui.composable.MySpecialCodeDialog
-import com.inkspire.ebookreader.ui.composable.MyVoiceSetting
-import org.koin.compose.koinInject
+import com.inkspire.ebookreader.ui.setting.autoscroll.MyAutoScrollSetting
+import com.inkspire.ebookreader.ui.setting.bookcategory.MyBookCategorySetting
+import com.inkspire.ebookreader.ui.setting.bookmark.MyBookmarkSetting
+import com.inkspire.ebookreader.ui.setting.composable.MySpecialCodeDialog
+import com.inkspire.ebookreader.ui.setting.music.MyMusicSetting
+import com.inkspire.ebookreader.ui.setting.tts.MyVoiceSetting
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,39 +44,22 @@ fun SettingScreen(
     settingState: SettingState,
     onAction: (SettingAction) -> Unit,
 ) {
-    val ttsManager = koinInject<TTSManager>()
-    val tts = ttsManager.getTTS()
     val musicMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val bookmarkMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val categoryMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     if (settingState.openTTSVoiceMenu) {
         MyVoiceSetting(
-            tts = tts,
-            settingState = settingState,
             onDismiss = {
                 onAction(SettingAction.OpenTTSVoiceMenu(false))
-                if (settingState.currentVoice == null) {
-                    tts?.let { onAction(SettingAction.FixNullVoice(it)) }
-                }
             },
-            testVoiceButtonClicked = {
-                tts?.language = settingState.currentLanguage
-                tts?.voice = settingState.currentVoice
-                settingState.currentPitch.let { tts?.setPitch(it) }
-                settingState.currentSpeed.let { tts?.setSpeechRate(it) }
-                tts?.speak("xin chào", TextToSpeech.QUEUE_FLUSH, null, "utteranceId")
-            },
-            onAction = onAction
         )
     }
     if (settingState.openAutoScrollMenu) {
         MyAutoScrollSetting(
-            settingState = settingState,
             onDismissRequest = {
                 onAction(SettingAction.OpenAutoScrollMenu(false))
-            },
-            onAction = onAction,
+            }
         )
     }
     Column(
@@ -372,10 +351,7 @@ fun SettingScreen(
             sheetState = musicMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBackgroundMusicMenu(false)) },
         ) {
-            MyMusicMenu(
-                settingState = settingState,
-                onAction = onAction
-            )
+            MyMusicSetting()
         }
     }
     if (settingState.openBookmarkThemeMenu) {
@@ -384,10 +360,7 @@ fun SettingScreen(
             sheetState = bookmarkMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBookmarkThemeMenu(false)) },
         ) {
-            MyBookmarkMenu(
-                settingState = settingState,
-                onAction = onAction
-            )
+            MyBookmarkSetting()
         }
     }
     if (settingState.openCategoryMenu) {
@@ -396,16 +369,12 @@ fun SettingScreen(
             sheetState = categoryMenuSheetState,
             onDismissRequest = {
                 onAction(SettingAction.OpenCategoryMenu(false))
-                onAction(SettingAction.ResetChipState)
             },
         ) {
-            MyBookCategoryMenu(
-                settingState = settingState,
-                onAction = onAction
-            )
+            MyBookCategorySetting()
         }
     }
-    if (settingState.specialCodeDialog) {
+    if (settingState.openSpecialCodeDialog) {
         MySpecialCodeDialog(
             onSuccess = {
                 onAction(SettingAction.OpenSpecialCodeSuccess)

@@ -19,20 +19,30 @@ import com.inkspire.ebookreader.domain.repository.ImagePathRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import com.inkspire.ebookreader.domain.repository.NoteRepository
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
+import com.inkspire.ebookreader.domain.usecase.AutoScrollSettingDatastoreUseCase
+import com.inkspire.ebookreader.domain.usecase.BookCategorySettingUseCase
+import com.inkspire.ebookreader.domain.usecase.BookContentUseCase
 import com.inkspire.ebookreader.domain.usecase.BookDetailUseCase
+import com.inkspire.ebookreader.domain.usecase.BookmarkSettingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.LibraryDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.LibraryUseCase
+import com.inkspire.ebookreader.domain.usecase.MusicSettingDatastoreUseCase
+import com.inkspire.ebookreader.domain.usecase.MusicSettingUseCase
 import com.inkspire.ebookreader.domain.usecase.RecentBookUseCase
 import com.inkspire.ebookreader.domain.usecase.SettingDatastoreUseCase
-import com.inkspire.ebookreader.domain.usecase.SettingUseCase
+import com.inkspire.ebookreader.domain.usecase.TTSSettingDataStoreUseCase
 import com.inkspire.ebookreader.service.TTSManager
 import com.inkspire.ebookreader.service.TTSServiceHandler
 import com.inkspire.ebookreader.ui.bookcontent.BookContentViewModel
 import com.inkspire.ebookreader.ui.bookdetail.BookDetailViewModel
 import com.inkspire.ebookreader.ui.home.libary.LibraryViewModel
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookViewModel
-import com.inkspire.ebookreader.ui.music.MusicViewModel
 import com.inkspire.ebookreader.ui.setting.SettingViewModel
+import com.inkspire.ebookreader.ui.setting.autoscroll.AutoScrollSettingViewModel
+import com.inkspire.ebookreader.ui.setting.bookcategory.BookCategorySettingViewModel
+import com.inkspire.ebookreader.ui.setting.bookmark.BookmarkSettingViewModel
+import com.inkspire.ebookreader.ui.setting.music.MusicSettingViewModel
+import com.inkspire.ebookreader.ui.setting.tts.TTSSettingViewModel
 import com.inkspire.ebookreader.ui.sharedviewmodel.AsyncImportBookViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -85,29 +95,31 @@ object KoinModule {
         factoryOf(::RecentBookUseCase)
         factoryOf(::LibraryUseCase)
         factoryOf(::LibraryDatastoreUseCase)
-        factoryOf(::SettingUseCase)
         factoryOf(::SettingDatastoreUseCase)
+        factoryOf(::AutoScrollSettingDatastoreUseCase)
+        factoryOf(::TTSSettingDataStoreUseCase)
+        factoryOf(::BookCategorySettingUseCase)
+        factoryOf(::BookmarkSettingDatastoreUseCase)
+        factoryOf(::MusicSettingUseCase)
+        factoryOf(::MusicSettingDatastoreUseCase)
         factoryOf(::BookDetailUseCase)
+        factoryOf(::BookContentUseCase)
     }
 
     val viewModelModule = module {
         viewModelOf(::LibraryViewModel)
         viewModelOf(::AsyncImportBookViewModel)
         viewModelOf(::SettingViewModel)
-//        viewModelOf(::BottomBarViewModel)
-//        viewModelOf(::AutoScrollViewModel)
-//        viewModelOf(::BookContentViewModel)
-//        viewModelOf(::DrawerContainerViewModel)
-//        viewModelOf(::TopBarViewModel)
-//        viewModelOf(::ColorPaletteViewModel)
-        viewModelOf(::MusicViewModel)
-//        viewModelOf(::BookWriterViewModel)
+        viewModelOf(::AutoScrollSettingViewModel)
+        viewModelOf(::TTSSettingViewModel)
+        viewModelOf(::BookCategorySettingViewModel)
+        viewModelOf(::BookmarkSettingViewModel)
+        viewModelOf(::MusicSettingViewModel)
         viewModelOf(::RecentBookViewModel)
         viewModel {
             BookContentViewModel(
                 bookId = it.get(),
-                bookRepository = get(),
-                chapterRepository = get()
+                bookContentUseCase = get()
             )
         }
         viewModel {
@@ -119,7 +131,7 @@ object KoinModule {
     }
 
     val dataStoreModule = module {
-        single { DatastoreManager(androidContext()) }
+        single(createdAtStart = true) { DatastoreManager(androidContext()) }
     }
 
     @UnstableApi

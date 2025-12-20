@@ -14,13 +14,13 @@ class App : Application() {
             androidContext(this@App)
             analytics()
             modules(
+                KoinModule.ttsModule,
                 KoinModule.networkModule,
                 KoinModule.databaseModule,
+                KoinModule.dataStoreModule,
                 KoinModule.repositoryModule,
                 KoinModule.useCaseModule,
                 KoinModule.viewModelModule,
-                KoinModule.dataStoreModule,
-                KoinModule.ttsModule
             )
         }
         PDFBoxResourceLoader.init(this@App)

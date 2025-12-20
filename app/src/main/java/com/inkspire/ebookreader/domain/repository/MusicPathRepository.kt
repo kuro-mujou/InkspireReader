@@ -4,7 +4,7 @@ import com.inkspire.ebookreader.domain.model.MusicItem
 import kotlinx.coroutines.flow.Flow
 
 interface MusicPathRepository {
-    suspend fun getMusicPaths(): Flow<List<MusicItem>>
+    fun getMusicPaths(): Flow<List<MusicItem>>
     suspend fun getSelectedMusicPaths(): List<MusicItem>
     suspend fun deleteByName(names: List<String>)
     suspend fun saveMusicPaths(musicPathEntity: List<MusicItem>)

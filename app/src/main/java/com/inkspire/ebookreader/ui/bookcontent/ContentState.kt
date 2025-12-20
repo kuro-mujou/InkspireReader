@@ -1,17 +1,13 @@
 package com.inkspire.ebookreader.ui.bookcontent
 
-import android.speech.tts.TextToSpeech
 import android.speech.tts.Voice
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.BookmarkStyle
-import com.inkspire.ebookreader.domain.model.Book
 import java.util.Locale
 
 data class ContentState(
-    val book: Book? = null,
-    val tts: TextToSpeech? = null,
     val enableScaffoldBar: Boolean = true,
     val enablePagerScroll: Boolean = true,
     val enableUndoButton: Boolean = false,
@@ -77,4 +73,5 @@ data class ContentState(
     val keepScreenOn: Boolean = false,
     val selectedBookmarkStyle: BookmarkStyle = BookmarkStyle.WAVE_WITH_BIRDS,
     val unlockSpecialCodeStatus: Boolean = false,
-    val enableSpecialArt: Boolean = false,)
+    val enableSpecialArt: Boolean = false
+)
