@@ -1,8 +1,8 @@
 package com.inkspire.ebookreader.data.repository
 
-import com.inkspire.ebookreader.data.dao.MusicPathDao
-import com.inkspire.ebookreader.domain.mapper.toDataClass
-import com.inkspire.ebookreader.domain.mapper.toEntity
+import com.inkspire.ebookreader.data.database.dao.MusicPathDao
+import com.inkspire.ebookreader.data.mapper.toDataClass
+import com.inkspire.ebookreader.data.mapper.toEntity
 import com.inkspire.ebookreader.domain.model.MusicItem
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import kotlinx.coroutines.flow.Flow

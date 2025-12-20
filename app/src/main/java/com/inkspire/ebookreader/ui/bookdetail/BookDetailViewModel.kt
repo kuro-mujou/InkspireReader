@@ -3,9 +3,7 @@ package com.inkspire.ebookreader.ui.bookdetail
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.domain.model.Category
-import com.inkspire.ebookreader.domain.repository.BookRepository
-import com.inkspire.ebookreader.domain.repository.CategoryRepository
-import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
+import com.inkspire.ebookreader.domain.usecase.BookDetailUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,9 +15,7 @@ import kotlinx.coroutines.launch
 
 class BookDetailViewModel(
     private val bookId: String,
-    private val bookRepository: BookRepository,
-    private val categoryRepository: CategoryRepository,
-    private val tableOfContentRepository: TableOfContentRepository,
+    private val bookDetailUseCase: BookDetailUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(BookDetailState())
     val state = _state
@@ -31,7 +27,7 @@ class BookDetailViewModel(
 
     init {
         viewModelScope.launch {
-            tableOfContentRepository
+            bookDetailUseCase
                 .getFlowTableOfContents(bookId)
                 .collectLatest { tableOfContents ->
                     _state.update {
@@ -42,7 +38,7 @@ class BookDetailViewModel(
                 }
         }
         viewModelScope.launch {
-            categoryRepository.getFlowBookWithCategories(bookId).collectLatest { book ->
+            bookDetailUseCase.getFlowBookWithCategories(bookId).collectLatest { book ->
                 _state.update { it.copy( bookWithCategories = book )}
             }
         }
@@ -57,14 +53,16 @@ class BookDetailViewModel(
         when (action) {
             is BookDetailAction.OnDrawerItemClick -> {
                 viewModelScope.launch {
-                    bookRepository.saveBookInfoChapterIndex(bookId, action.index)
-                    bookRepository.saveBookInfoParagraphIndex(bookId, 0)
+                    bookDetailUseCase.saveBookInfoChapterIndex(bookId, action.index)
+                    bookDetailUseCase.saveBookInfoParagraphIndex(bookId, 0)
                 }
             }
 
             is BookDetailAction.OnBookMarkClick -> {
                 viewModelScope.launch {
-                    _state.value.bookWithCategories?.book?.isFavorite?.let { bookRepository.setBookAsFavorite(bookId, !it) }
+                    _state.value.bookWithCategories?.book?.isFavorite?.let {
+                        bookDetailUseCase.setBookAsFavorite(bookId, !it)
+                    }
                 }
             }
 
@@ -81,7 +79,7 @@ class BookDetailViewModel(
                     )
                 }
                 viewModelScope.launch {
-                    categoryRepository.updateBookCategory(
+                    bookDetailUseCase.updateBookCategory(
                         bookId = bookId,
                         categories = _state.value.categories
                     )
@@ -95,8 +93,8 @@ class BookDetailViewModel(
     }
 
     fun getSelectableCategoriesForBook(bookId: String): Flow<List<Category>> {
-        val bookWithCategoriesFlow = categoryRepository.getFlowBookWithCategories(bookId)
-        val allCategoriesFlow = categoryRepository.getBookCategoryFlow()
+        val bookWithCategoriesFlow = bookDetailUseCase.getFlowBookWithCategories(bookId)
+        val allCategoriesFlow = bookDetailUseCase.getBookCategoryFlow()
 
         return combine(bookWithCategoriesFlow, allCategoriesFlow) { bookWithCategories, allCategories ->
             val bookCategoryIds = bookWithCategories.categories.map { it.categoryId }.toSet()

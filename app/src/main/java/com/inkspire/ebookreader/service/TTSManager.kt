@@ -9,7 +9,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
 import androidx.media3.common.Player
-import com.inkspire.ebookreader.domain.repository.AppPreferencesRepository
+import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,7 +25,7 @@ class TTSManager(
 ) {
     private val _state = MutableStateFlow(TTSPlaybackState())
     val state = _state.asStateFlow()
-    private val appPreferencesRepository by inject<AppPreferencesRepository>(AppPreferencesRepository::class.java)
+    private val datastoreRepository by inject<DatastoreRepository>(DatastoreRepository::class.java)
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private var textToSpeech: TextToSpeech? = null

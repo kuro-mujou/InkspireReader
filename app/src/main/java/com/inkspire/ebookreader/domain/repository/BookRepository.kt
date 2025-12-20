@@ -1,12 +1,19 @@
 package com.inkspire.ebookreader.domain.repository
 
-import com.inkspire.ebookreader.data.model.BookEntity
+import com.inkspire.ebookreader.data.database.model.BookEntity
+import com.inkspire.ebookreader.data.database.model.BookWithCategories
 import com.inkspire.ebookreader.domain.model.Book
+import com.inkspire.ebookreader.domain.model.Category
 import kotlinx.coroutines.flow.Flow
 
 interface BookRepository {
+    fun getAllBooks(): Flow<List<Book>>
     fun readAllBooksSortByFavorite(): Flow<List<Book>>
+    fun getBookListForMainScreen(): Flow<List<Book>>
     fun getBookAsFlow(bookId: String): Flow<Book?>
+    fun getBookCategory(): Flow<List<Category>>
+    fun getFlowBookWithCategories(bookId: String): Flow<BookWithCategories>
+    fun getBooksMatchingAnySelectedCategory(selectedCategoryIds: List<Int>): Flow<List<Book>>
     suspend fun getBook(bookId: String): Book?
     suspend fun insertBook(book: BookEntity): Long
     suspend fun isBookExist(title: String): Boolean
@@ -17,5 +24,10 @@ interface BookRepository {
     suspend fun saveBookInfoTotalChapter(bookId: String, totalChapter: Int)
     suspend fun saveBookInfoTitle(bookId: String, title: String)
     suspend fun saveBookInfoAuthors(bookId: String, authors: List<String>)
+    suspend fun deleteBooks(books: List<Book>)
     suspend fun updateCurrentChapterIndexOnDelete(bookId: String, deleteIndex: Int)
+    suspend fun addCategoryToBook(bookId: String, category: Category)
+    suspend fun insertCategory(category: Category): Long
+    suspend fun deleteCategory(categories: List<Category>)
+    suspend fun updateBookCategory(bookId: String,categories: List<Category>)
 }

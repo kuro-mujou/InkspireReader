@@ -1,6 +1,6 @@
 package com.inkspire.ebookreader.domain.repository
 
-import com.inkspire.ebookreader.data.model.ChapterContentEntity
+import com.inkspire.ebookreader.data.database.model.ChapterContentEntity
 import com.inkspire.ebookreader.domain.model.Chapter
 import kotlinx.coroutines.flow.Flow
 

@@ -3,28 +3,28 @@ package com.inkspire.ebookreader.di
 import androidx.media3.common.util.UnstableApi
 import androidx.room.Room
 import com.inkspire.ebookreader.data.database.LocalBookDatabase
+import com.inkspire.ebookreader.data.datastore.DatastoreManager
 import com.inkspire.ebookreader.data.network.HttpClientFactory
-import com.inkspire.ebookreader.data.preference.AppPreferences
-import com.inkspire.ebookreader.data.repository.AppPreferencesRepositoryImpl
 import com.inkspire.ebookreader.data.repository.BookRepositoryImpl
-import com.inkspire.ebookreader.data.repository.CategoryRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ChapterRepositoryImpl
+import com.inkspire.ebookreader.data.repository.DatastoreRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ImagePathRepositoryImpl
-import com.inkspire.ebookreader.data.repository.LibraryRepositoryImpl
 import com.inkspire.ebookreader.data.repository.MusicPathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.NoteRepositoryImpl
-import com.inkspire.ebookreader.data.repository.RecentBookRepositoryImpl
 import com.inkspire.ebookreader.data.repository.TableOfContentRepositoryImpl
-import com.inkspire.ebookreader.domain.repository.AppPreferencesRepository
 import com.inkspire.ebookreader.domain.repository.BookRepository
-import com.inkspire.ebookreader.domain.repository.CategoryRepository
 import com.inkspire.ebookreader.domain.repository.ChapterRepository
+import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 import com.inkspire.ebookreader.domain.repository.ImagePathRepository
-import com.inkspire.ebookreader.domain.repository.LibraryRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import com.inkspire.ebookreader.domain.repository.NoteRepository
-import com.inkspire.ebookreader.domain.repository.RecentBookRepository
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
+import com.inkspire.ebookreader.domain.usecase.BookDetailUseCase
+import com.inkspire.ebookreader.domain.usecase.LibraryDatastoreUseCase
+import com.inkspire.ebookreader.domain.usecase.LibraryUseCase
+import com.inkspire.ebookreader.domain.usecase.RecentBookUseCase
+import com.inkspire.ebookreader.domain.usecase.SettingDatastoreUseCase
+import com.inkspire.ebookreader.domain.usecase.SettingUseCase
 import com.inkspire.ebookreader.service.TTSManager
 import com.inkspire.ebookreader.service.TTSServiceHandler
 import com.inkspire.ebookreader.ui.bookcontent.BookContentViewModel
@@ -38,6 +38,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.android.Android
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -62,9 +63,7 @@ object KoinModule {
                 .build()
         }
         single { get<LocalBookDatabase>().bookDao }
-        single { get<LocalBookDatabase>().recentBookDao }
         single { get<LocalBookDatabase>().libraryDao }
-        single { get<LocalBookDatabase>().categoryDao }
         single { get<LocalBookDatabase>().chapterDao }
         single { get<LocalBookDatabase>().tableOfContentDao }
         single { get<LocalBookDatabase>().imagePathDao }
@@ -74,15 +73,21 @@ object KoinModule {
 
     val repositoryModule = module {
         singleOf(::BookRepositoryImpl).bind<BookRepository>()
-        singleOf(::RecentBookRepositoryImpl).bind<RecentBookRepository>()
-        singleOf(::LibraryRepositoryImpl).bind<LibraryRepository>()
-        singleOf(::CategoryRepositoryImpl).bind<CategoryRepository>()
         singleOf(::ChapterRepositoryImpl).bind<ChapterRepository>()
         singleOf(::TableOfContentRepositoryImpl).bind<TableOfContentRepository>()
         singleOf(::ImagePathRepositoryImpl).bind<ImagePathRepository>()
         singleOf(::MusicPathRepositoryImpl).bind<MusicPathRepository>()
         singleOf(::NoteRepositoryImpl).bind<NoteRepository>()
-        singleOf(::AppPreferencesRepositoryImpl).bind<AppPreferencesRepository>()
+        singleOf(::DatastoreRepositoryImpl).bind<DatastoreRepository>()
+    }
+
+    val useCaseModule = module {
+        factoryOf(::RecentBookUseCase)
+        factoryOf(::LibraryUseCase)
+        factoryOf(::LibraryDatastoreUseCase)
+        factoryOf(::SettingUseCase)
+        factoryOf(::SettingDatastoreUseCase)
+        factoryOf(::BookDetailUseCase)
     }
 
     val viewModelModule = module {
@@ -108,15 +113,13 @@ object KoinModule {
         viewModel {
             BookDetailViewModel(
                 bookId = it.get(),
-                bookRepository = get(),
-                categoryRepository = get(),
-                tableOfContentRepository = get()
+                bookDetailUseCase = get()
             )
         }
     }
 
     val dataStoreModule = module {
-        single { AppPreferences(androidContext()) }
+        single { DatastoreManager(androidContext()) }
     }
 
     @UnstableApi

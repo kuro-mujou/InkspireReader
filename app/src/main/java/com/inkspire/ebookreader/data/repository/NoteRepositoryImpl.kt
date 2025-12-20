@@ -1,8 +1,8 @@
 package com.inkspire.ebookreader.data.repository
 
-import com.inkspire.ebookreader.data.dao.NoteDao
-import com.inkspire.ebookreader.domain.mapper.toDataClass
-import com.inkspire.ebookreader.domain.mapper.toEntity
+import com.inkspire.ebookreader.data.database.dao.NoteDao
+import com.inkspire.ebookreader.data.mapper.toDataClass
+import com.inkspire.ebookreader.data.mapper.toEntity
 import com.inkspire.ebookreader.domain.model.Note
 import com.inkspire.ebookreader.domain.repository.NoteRepository
 import kotlinx.coroutines.flow.Flow

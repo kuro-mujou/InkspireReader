@@ -16,9 +16,9 @@ import androidx.work.WorkerParameters
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.DataError
 import com.inkspire.ebookreader.common.MyResult
-import com.inkspire.ebookreader.data.model.BookEntity
-import com.inkspire.ebookreader.data.model.ChapterContentEntity
-import com.inkspire.ebookreader.data.model.TableOfContentEntity
+import com.inkspire.ebookreader.data.database.model.BookEntity
+import com.inkspire.ebookreader.data.database.model.ChapterContentEntity
+import com.inkspire.ebookreader.data.database.model.TableOfContentEntity
 import com.inkspire.ebookreader.data.network.mapHttpStatusToDataError
 import com.inkspire.ebookreader.domain.repository.BookRepository
 import com.inkspire.ebookreader.domain.repository.ChapterRepository

@@ -1,12 +1,12 @@
 package com.inkspire.ebookreader.domain.repository
 
-import com.inkspire.ebookreader.data.model.TableOfContentEntity
+import com.inkspire.ebookreader.data.database.model.TableOfContentEntity
 import com.inkspire.ebookreader.domain.model.TableOfContent
 import kotlinx.coroutines.flow.Flow
 
 interface TableOfContentRepository {
     suspend fun saveTableOfContent(tocEntity: TableOfContentEntity): Long
-    suspend fun getFlowTableOfContents(bookId: String): Flow<List<TableOfContent>>
+    fun getFlowTableOfContents(bookId: String): Flow<List<TableOfContent>>
     suspend fun getTableOfContents(bookId: String): List<TableOfContent>
     suspend fun getTableOfContent(bookId: String, tocId: Int): TableOfContent?
     suspend fun addChapter(chapter: TableOfContent)

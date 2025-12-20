@@ -14,9 +14,9 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.data.model.BookEntity
-import com.inkspire.ebookreader.data.model.ChapterContentEntity
-import com.inkspire.ebookreader.data.model.TableOfContentEntity
+import com.inkspire.ebookreader.data.database.model.BookEntity
+import com.inkspire.ebookreader.data.database.model.ChapterContentEntity
+import com.inkspire.ebookreader.data.database.model.TableOfContentEntity
 import com.inkspire.ebookreader.domain.repository.BookRepository
 import com.inkspire.ebookreader.domain.repository.ChapterRepository
 import com.inkspire.ebookreader.domain.repository.ImagePathRepository

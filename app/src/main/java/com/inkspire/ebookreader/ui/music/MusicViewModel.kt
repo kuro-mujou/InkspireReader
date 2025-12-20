@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.domain.model.MusicItem
 import com.inkspire.ebookreader.domain.model.MusicState
-import com.inkspire.ebookreader.domain.repository.AppPreferencesRepository
+import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +22,7 @@ import java.io.InputStream
 
 class MusicViewModel(
     private val musicRepository: MusicPathRepository,
-    private val appPreferencesRepository: AppPreferencesRepository
+    private val datastoreRepository: DatastoreRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(MusicState())
     val state = _state
@@ -44,7 +44,7 @@ class MusicViewModel(
                 }
         }
         viewModelScope.launch {
-            appPreferencesRepository.getPlayerVolume().collectLatest { volume ->
+            datastoreRepository.getPlayerVolume().collectLatest { volume ->
                 _state.update {
                     it.copy(
                         playerVolume = volume
@@ -107,7 +107,7 @@ class MusicViewModel(
                             playerVolume = event.volume
                         )
                     }
-                    appPreferencesRepository.setPlayerVolume(event.volume)
+                    datastoreRepository.setPlayerVolume(event.volume)
                 }
             }
         }

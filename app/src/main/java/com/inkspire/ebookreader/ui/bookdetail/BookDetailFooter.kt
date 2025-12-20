@@ -242,6 +242,7 @@ fun BookDetailFooter(
                     selected = state.tableOfContents.indexOf(tocItem) == targetSearchIndex,
                     onClick = {
                         onAction(BookDetailAction.OnDrawerItemClick(tocItem.index))
+                        onNavigate(Route.BookContent(bookId = state.bookWithCategories?.book?.bookId ?: ""))
                     },
                     modifier = Modifier
                         .padding(4.dp, 2.dp, 4.dp, 2.dp)

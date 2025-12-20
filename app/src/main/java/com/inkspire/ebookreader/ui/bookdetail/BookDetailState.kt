@@ -1,6 +1,6 @@
 package com.inkspire.ebookreader.ui.bookdetail
 
-import com.inkspire.ebookreader.data.model.BookWithCategories
+import com.inkspire.ebookreader.data.database.model.BookWithCategories
 import com.inkspire.ebookreader.domain.model.Category
 import com.inkspire.ebookreader.domain.model.TableOfContent
 

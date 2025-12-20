@@ -1,9 +1,9 @@
 package com.inkspire.ebookreader.data.repository
 
-import com.inkspire.ebookreader.data.dao.TableOfContentDao
-import com.inkspire.ebookreader.data.model.TableOfContentEntity
-import com.inkspire.ebookreader.domain.mapper.toDataClass
-import com.inkspire.ebookreader.domain.mapper.toEntity
+import com.inkspire.ebookreader.data.database.dao.TableOfContentDao
+import com.inkspire.ebookreader.data.database.model.TableOfContentEntity
+import com.inkspire.ebookreader.data.mapper.toDataClass
+import com.inkspire.ebookreader.data.mapper.toEntity
 import com.inkspire.ebookreader.domain.model.TableOfContent
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +16,7 @@ class TableOfContentRepositoryImpl(
         return tableOfContentDao.insertTableOfContent(tocEntity)
     }
 
-    override suspend fun getFlowTableOfContents(bookId: String): Flow<List<TableOfContent>> {
+    override fun getFlowTableOfContents(bookId: String): Flow<List<TableOfContent>> {
         return tableOfContentDao
             .getFlowTableOfContents(bookId)
             .map { entity ->

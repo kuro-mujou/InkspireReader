@@ -17,6 +17,7 @@ class App : Application() {
                 KoinModule.networkModule,
                 KoinModule.databaseModule,
                 KoinModule.repositoryModule,
+                KoinModule.useCaseModule,
                 KoinModule.viewModelModule,
                 KoinModule.dataStoreModule,
                 KoinModule.ttsModule
