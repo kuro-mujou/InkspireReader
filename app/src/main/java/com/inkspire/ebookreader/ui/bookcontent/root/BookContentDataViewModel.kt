@@ -1,10 +1,8 @@
-package com.inkspire.ebookreader.ui.bookcontent
+package com.inkspire.ebookreader.ui.bookcontent.root
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.common.UiState
-import com.inkspire.ebookreader.common.UiState.Error
-import com.inkspire.ebookreader.common.UiState.Success
 import com.inkspire.ebookreader.domain.model.Chapter
 import com.inkspire.ebookreader.domain.usecase.BookContentUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,80 +18,81 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class BookContentViewModel(
+class BookContentDataViewModel(
     private val bookId: String,
     private val bookContentUseCase: BookContentUseCase
 ): ViewModel() {
-    private val _bookContentState = MutableStateFlow(BookContentState())
-    val bookContentState: StateFlow<BookContentState> = _bookContentState.stateIn(
+    private val _state = MutableStateFlow(BookContentDataState())
+    val state: StateFlow<BookContentDataState> = _state.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = _bookContentState.value
-    )
-    private val _contentState = MutableStateFlow(ContentState())
-    val contentState: StateFlow<ContentState> = _contentState.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = _contentState.value
+        initialValue = _state.value
     )
 
     init {
         bookContentUseCase.getBookAsFlow(bookId)
             .map { book ->
                 if (book == null) {
-                    _bookContentState.update { it.copy(bookState = UiState.Empty) }
+                    _state.update { it.copy(bookState = UiState.Empty) }
                 } else {
-                    _bookContentState.update { it.copy(bookState = UiState.Success(book)) }
+                    _state.update { it.copy(bookState = UiState.Success(book)) }
                 }
             }
             .onStart {
-                _bookContentState.update { it.copy(bookState = UiState.Loading) }
+                _state.update { it.copy(bookState = UiState.Loading) }
             }
             .catch { exception ->
-                _bookContentState.update { it.copy(bookState = UiState.Error(exception)) }
+                _state.update { it.copy(bookState = UiState.Error(exception)) }
+            }
+            .distinctUntilChanged()
+            .launchIn(viewModelScope)
+
+        bookContentUseCase.getTableOfContentAsFlow(bookId)
+            .map { tableOfContents ->
+                if (tableOfContents.isEmpty()) {
+                    _state.update { it.copy(tableOfContentState = UiState.Empty) }
+                } else {
+                    _state.update { it.copy(tableOfContentState = UiState.Success(tableOfContents)) }
+                }
+            }
+            .onStart {
+                _state.update { it.copy(tableOfContentState = UiState.Loading) }
+            }
+            .catch { exception ->
+                _state.update { it.copy(tableOfContentState = UiState.Error(exception)) }
             }
             .distinctUntilChanged()
             .launchIn(viewModelScope)
     }
 
-    fun onAction(action: BookContentAction) {
+    fun onAction(action: BookContentDataAction) {
         when(action) {
-            is BookContentAction.LoadChapter -> {
-                if (_bookContentState.value.chapterStates[action.index] is UiState.Success) return
+            is BookContentDataAction.LoadChapter -> {
+                if (_state.value.chapterStates[action.index] is UiState.Success) return
                 bookContentUseCase.getChapterContentFlow(bookId, action.index)
                     .map { chapter ->
-                        if (chapter == null) UiState.Empty else Success(chapter)
+                        if (chapter == null) UiState.Empty else UiState.Success(chapter)
                     }
                     .onStart { updateChapterState(action.index, UiState.Loading) }
-                    .catch { updateChapterState(action.index, Error(it)) }
+                    .catch { updateChapterState(action.index, UiState.Error(it)) }
                     .onEach { state -> updateChapterState(action.index, state) }
                     .launchIn(viewModelScope)
             }
-            is BookContentAction.UpdateRecentChapterToDB -> {
+            is BookContentDataAction.UpdateRecentChapterToDB -> {
                 viewModelScope.launch {
                     bookContentUseCase.saveBookInfoChapterIndex(bookId, action.chapterIndex)
                 }
             }
-            is BookContentAction.UpdateRecentParagraphToDB -> {
+            is BookContentDataAction.UpdateRecentParagraphToDB -> {
                 viewModelScope.launch {
                     bookContentUseCase.saveBookInfoParagraphIndex(bookId, action.paragraphIndex)
                 }
-            }
-
-            is BookContentAction.UpdateCurrentChapter -> {
-                _contentState.update { it.copy(currentChapterIndex = action.index) }
-            }
-            is BookContentAction.UpdateFirstVisibleItemIndex -> {
-                _contentState.update { it.copy(firstVisibleItemIndex = action.index) }
-            }
-            is BookContentAction.UpdateLastVisibleItemIndex -> {
-                _contentState.update { it.copy(lastVisibleItemIndex = action.index) }
             }
         }
     }
 
     private fun updateChapterState(index: Int, state: UiState<Chapter>) {
-        _bookContentState.update { currentState ->
+        _state.update { currentState ->
             currentState.copy(chapterStates = currentState.chapterStates + (index to state))
         }
     }

@@ -16,7 +16,7 @@ class TableOfContentRepositoryImpl(
         return tableOfContentDao.insertTableOfContent(tocEntity)
     }
 
-    override fun getFlowTableOfContents(bookId: String): Flow<List<TableOfContent>> {
+    override fun getTableOfContentAsFlow(bookId: String): Flow<List<TableOfContent>> {
         return tableOfContentDao
             .getFlowTableOfContents(bookId)
             .map { entity ->

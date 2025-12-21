@@ -30,6 +30,7 @@ fun HomeScreen(
                 polymorphic(baseClass = NavKey::class) {
                     subclass(serializer = Route.Home.RecentBooks.serializer())
                     subclass(serializer = Route.Home.Library.serializer())
+                    subclass(serializer = Route.Home.Explore.serializer())
                     subclass(serializer = Route.Home.Settings.serializer())
                 }
             }
@@ -52,13 +53,17 @@ fun HomeScreen(
                 entry<Route.Home.RecentBooks> {
                     RecentBookRootScreen(
                         parentNavigatorAction = parentNavigator::navigateTo,
-                        homeNavigatorAction = homeNavigator::navigateTo,
+                        homeNavigatorAction = homeNavigator::switchTab,
                     )
                 }
                 entry<Route.Home.Library> {
                     LibraryRootScreen(
                         parentNavigatorAction = parentNavigator::navigateTo
                     )
+                }
+                entry<Route.Home.Explore> {
+                    //todo add explore screen for search truyenfull/tangthuvien
+//                    ExploreRootScreen()
                 }
                 entry<Route.Home.Settings> {
                     SettingRootScreen()

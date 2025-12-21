@@ -26,7 +26,7 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import com.inkspire.ebookreader.common.BookImporter
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
-import com.inkspire.ebookreader.ui.bookcontent.BookContentRootScreen
+import com.inkspire.ebookreader.ui.bookcontent.root.BookContentRootScreen
 import com.inkspire.ebookreader.ui.bookdetail.BookDetailScreenRoot
 import com.inkspire.ebookreader.ui.bookwriter.BookWriterScreen
 import com.inkspire.ebookreader.ui.home.HomeScreen

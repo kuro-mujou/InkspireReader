@@ -23,7 +23,7 @@ import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.common.ContentPattern
+import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern
 import com.inkspire.ebookreader.ui.composable.MyBookChip
 
 @Composable

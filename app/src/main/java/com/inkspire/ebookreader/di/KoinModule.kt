@@ -21,6 +21,7 @@ import com.inkspire.ebookreader.domain.repository.NoteRepository
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
 import com.inkspire.ebookreader.domain.usecase.AutoScrollSettingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.BookCategorySettingUseCase
+import com.inkspire.ebookreader.domain.usecase.BookContentStylingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.BookContentUseCase
 import com.inkspire.ebookreader.domain.usecase.BookDetailUseCase
 import com.inkspire.ebookreader.domain.usecase.BookmarkSettingDatastoreUseCase
@@ -31,9 +32,15 @@ import com.inkspire.ebookreader.domain.usecase.MusicSettingUseCase
 import com.inkspire.ebookreader.domain.usecase.RecentBookUseCase
 import com.inkspire.ebookreader.domain.usecase.SettingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.TTSSettingDataStoreUseCase
+import com.inkspire.ebookreader.domain.usecase.TableOfContentUseCase
 import com.inkspire.ebookreader.service.TTSManager
 import com.inkspire.ebookreader.service.TTSServiceHandler
-import com.inkspire.ebookreader.ui.bookcontent.BookContentViewModel
+import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentViewModel
+import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerViewModel
+import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentViewModel
+import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataViewModel
+import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingViewModel
+import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarViewModel
 import com.inkspire.ebookreader.ui.bookdetail.BookDetailViewModel
 import com.inkspire.ebookreader.ui.home.libary.LibraryViewModel
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookViewModel
@@ -104,6 +111,8 @@ object KoinModule {
         factoryOf(::MusicSettingDatastoreUseCase)
         factoryOf(::BookDetailUseCase)
         factoryOf(::BookContentUseCase)
+        factoryOf(::BookContentStylingDatastoreUseCase)
+        factoryOf(::TableOfContentUseCase)
     }
 
     val viewModelModule = module {
@@ -117,7 +126,7 @@ object KoinModule {
         viewModelOf(::MusicSettingViewModel)
         viewModelOf(::RecentBookViewModel)
         viewModel {
-            BookContentViewModel(
+            BookContentDataViewModel(
                 bookId = it.get(),
                 bookContentUseCase = get()
             )
@@ -128,6 +137,11 @@ object KoinModule {
                 bookDetailUseCase = get()
             )
         }
+        viewModelOf(::BookChapterContentViewModel)
+        viewModelOf(::TableOfContentViewModel)
+        viewModelOf(::DrawerViewModel)
+        viewModelOf(::BookContentStylingViewModel)
+        viewModelOf(::BookContentTopBarViewModel)
     }
 
     val dataStoreModule = module {

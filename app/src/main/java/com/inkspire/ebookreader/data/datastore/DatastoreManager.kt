@@ -76,10 +76,10 @@ class DatastoreManager(private val context: Context) {
         preferences[AUTO_SCROLL_RESUME_DELAY_TIME] ?: 2000
     }
     val getBackgroundColor: Flow<Int> = context.dataStore.data.map { preferences ->
-        preferences[BACKGROUND_COLOR] ?: Color(0xFFD3C3A3).toArgb()
+        preferences[BACKGROUND_COLOR] ?: Color(0xFFF1F7ED).toArgb()
     }
     val getTextColor: Flow<Int> = context.dataStore.data.map { preferences ->
-        preferences[TEXT_COLOR] ?: Color(0xFF3A3129).toArgb()
+        preferences[TEXT_COLOR] ?: Color(0xFF1B310E).toArgb()
     }
     val getSelectedColorSet: Flow<Int> = context.dataStore.data.map { preferences ->
         preferences[SELECTED_COLOR_SET] ?: 0

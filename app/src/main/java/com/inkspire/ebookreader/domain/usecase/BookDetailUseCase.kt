@@ -8,7 +8,7 @@ class BookDetailUseCase(
     private val bookRepository: BookRepository,
     private val tableOfContentRepository: TableOfContentRepository
 ) {
-    fun getFlowTableOfContents(bookId: String) = tableOfContentRepository.getFlowTableOfContents(bookId)
+    fun getFlowTableOfContents(bookId: String) = tableOfContentRepository.getTableOfContentAsFlow(bookId)
     fun getFlowBookWithCategories(bookId: String) = bookRepository.getFlowBookWithCategories(bookId)
     fun getBookCategoryFlow() = bookRepository.getBookCategory()
     suspend fun setBookAsFavorite(bookId: String, isFavorite: Boolean) = bookRepository.setBookAsFavorite(bookId, isFavorite)

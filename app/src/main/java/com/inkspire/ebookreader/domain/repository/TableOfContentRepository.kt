@@ -6,11 +6,13 @@ import kotlinx.coroutines.flow.Flow
 
 interface TableOfContentRepository {
     suspend fun saveTableOfContent(tocEntity: TableOfContentEntity): Long
-    fun getFlowTableOfContents(bookId: String): Flow<List<TableOfContent>>
+
+    fun getTableOfContentAsFlow(bookId: String): Flow<List<TableOfContent>>
+    suspend fun updateTableOfContentFavoriteStatus(bookId: String, index: Int, isFavorite: Boolean)
+
     suspend fun getTableOfContents(bookId: String): List<TableOfContent>
     suspend fun getTableOfContent(bookId: String, tocId: Int): TableOfContent?
     suspend fun addChapter(chapter: TableOfContent)
-    suspend fun updateTableOfContentFavoriteStatus(bookId: String, index: Int, isFavorite: Boolean)
     suspend fun updateTableOfContentTitle(bookId: String, index: Int, chapterTitle: String)
     suspend fun deleteTableOfContent(bookId: String, tocId: Int)
     suspend fun updateTableOfContentIndexOnDelete(bookId: String, index: Int)

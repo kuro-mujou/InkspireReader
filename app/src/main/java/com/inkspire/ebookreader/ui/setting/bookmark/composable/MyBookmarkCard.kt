@@ -44,8 +44,7 @@ import androidx.media3.common.util.UnstableApi
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.BookmarkShape
 import com.inkspire.ebookreader.common.BookmarkStyle
-import com.inkspire.ebookreader.ui.bookcontent.ColorPalette
-import com.inkspire.ebookreader.ui.bookcontent.ContentState
+import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.util.ColorUtil.darken
 import com.inkspire.ebookreader.util.ColorUtil.isDark
 import com.inkspire.ebookreader.util.ColorUtil.lighten
@@ -57,17 +56,16 @@ import kotlinx.coroutines.delay
 fun MyBookmarkCard(
     bookmarkContent: String,
     bookmarkIndex: Int,
-    contentState: ContentState,
-    colorPaletteState: ColorPalette,
+    stylingStateState: StylingState,
     deletable: Boolean,
     bookmarkStyle: BookmarkStyle,
     onCardClicked: (Int) -> Unit,
     onDeleted: (Int) -> Unit
 ) {
-    val baseColor = if (colorPaletteState.containerColor.isDark()) {
-        colorPaletteState.containerColor.lighten(0.2f)
+    val baseColor = if (stylingStateState.containerColor.isDark()) {
+        stylingStateState.containerColor.lighten(0.2f)
     } else {
-        colorPaletteState.containerColor.darken(0.2f)
+        stylingStateState.containerColor.darken(0.2f)
     }
     val tooltipState = rememberTooltipState(
         isPersistent = true
@@ -87,15 +85,15 @@ fun MyBookmarkCard(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    color = colorPaletteState.textColor.copy(0.3f),
+                    color = stylingStateState.textColor.copy(0.3f),
                     shape = BookmarkShape()
                 )
                 .clickable {
                     onCardClicked(bookmarkIndex)
                 },
             colors = CardDefaults.elevatedCardColors(
-                containerColor = colorPaletteState.backgroundColor,
-                contentColor = colorPaletteState.textColor,
+                containerColor = stylingStateState.backgroundColor,
+                contentColor = stylingStateState.textColor,
             ),
             elevation = CardDefaults.elevatedCardElevation(
                 defaultElevation = 4.dp,
@@ -188,7 +186,7 @@ fun MyBookmarkCard(
                     modifier = Modifier
                         .padding(24.dp)
                         .background(
-                            color = colorPaletteState.backgroundColor,
+                            color = stylingStateState.backgroundColor,
                             shape = RoundedCornerShape(8.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -203,7 +201,7 @@ fun MyBookmarkCard(
                         text = bookmarkContent,
                         style = TextStyle(
                             textAlign = TextAlign.Center,
-                            fontFamily = contentState.fontFamilies[contentState.selectedFontFamilyIndex],
+                            fontFamily = stylingStateState.fontFamilies[stylingStateState.selectedFontFamilyIndex],
                         )
                     )
                 }
@@ -218,7 +216,7 @@ fun MyBookmarkCard(
             IconButton(
                 modifier = Modifier
                     .background(
-                        color = colorPaletteState.textBackgroundColor,
+                        color = stylingStateState.textBackgroundColor,
                         shape = CircleShape
                     ),
                 onClick = {

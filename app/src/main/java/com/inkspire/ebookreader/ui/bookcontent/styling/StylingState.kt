@@ -1,18 +1,56 @@
-package com.inkspire.ebookreader.ui.bookcontent
+package com.inkspire.ebookreader.ui.bookcontent.styling
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.ContentThemeColor
 
-data class ColorPalette(
-    val backgroundColor: Color = Color(0xFF000000),
+data class StylingState(
+    val backgroundColor: Color = Color(0xFFF1F7ED),
     val textBackgroundColor: Color = Color(0xFF3A342B),
     val tocTextColor: Color = Color(0xFF001F2B),
     val textColor: Color = Color(0xFF181C20),
     val containerColor: Color = Color(0xFFC8C8C8),
-    val specialArtColor: Color = Color(0xFFC8C8C8),
-    val selectedColorSet: Int = 5,
+    val selectedColorSet: Int = 0,
+    val fontSize: Int = 20,
+    val lineSpacing: Int = 15,
+    val textAlign: Boolean = true,
+    val textIndent: Boolean = true,
+    val selectedFontFamilyIndex: Int = 0,
+    val imagePaddingState: Boolean = false,
 
+    val fontFamilies: List<FontFamily> = listOf(
+        FontFamily(Font(R.font.cormorant)),//serif
+        FontFamily(Font(R.font.ibm_plex_serif)),//serif
+        FontFamily(Font(R.font.literata)),//serif
+        FontFamily(Font(R.font.noto_serif)),//serif
+        FontFamily(Font(R.font.playfair_display)),//serif
+        FontFamily(Font(R.font.source_serif_4)),//serif
+        FontFamily(Font(R.font.source_serif_pro)),//serif
+        FontFamily(Font(R.font.noto_sans)),//san
+        FontFamily(Font(R.font.open_sans)),//san
+        FontFamily(Font(R.font.roboto)),//san
+        FontFamily(Font(R.font.source_sans_pro)),//san
+    ),
+    val fontNames: List<String> = listOf(
+        "Cormorant",
+        "IBM Plex Serif",
+        "Literata",
+        "Noto Serif",
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif Pro",
+        "Noto Sans",
+        "Open Sans",
+        "Roboto",
+        "Source Sans Pro",
+    ),
     val contentThemeColors: List<ContentThemeColor> = listOf(
+        ContentThemeColor(
+            colorBg = Color(0xFFF1F7ED),
+            colorTxt = Color(0xFF1B310E)
+        ),
         ContentThemeColor(
             colorBg = Color(0xFFD3C3A3),
             colorTxt = Color(0xFF3A3129)
@@ -23,10 +61,6 @@ data class ColorPalette(
         ),
         ContentThemeColor(
             colorBg = Color(0xFFF3C9D7),
-            colorTxt = Color(0xFF1B310E)
-        ),
-        ContentThemeColor(
-            colorBg = Color(0xFFF1F7ED),
             colorTxt = Color(0xFF1B310E)
         ),
         ContentThemeColor(
