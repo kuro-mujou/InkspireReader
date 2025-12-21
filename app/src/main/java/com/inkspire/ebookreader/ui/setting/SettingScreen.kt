@@ -30,12 +30,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.ui.setting.autoscroll.MyAutoScrollSetting
-import com.inkspire.ebookreader.ui.setting.bookcategory.MyBookCategorySetting
-import com.inkspire.ebookreader.ui.setting.bookmark.MyBookmarkSetting
-import com.inkspire.ebookreader.ui.setting.composable.MySpecialCodeDialog
-import com.inkspire.ebookreader.ui.setting.music.MyMusicSetting
-import com.inkspire.ebookreader.ui.setting.tts.MyVoiceSetting
+import com.inkspire.ebookreader.ui.setting.autoscroll.AutoScrollSetting
+import com.inkspire.ebookreader.ui.setting.bookcategory.BookCategorySetting
+import com.inkspire.ebookreader.ui.setting.bookmark.BookmarkSetting
+import com.inkspire.ebookreader.ui.setting.music.MusicSetting
+import com.inkspire.ebookreader.ui.setting.tts.TTSSetting
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,14 +48,14 @@ fun SettingScreen(
     val categoryMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     if (settingState.openTTSVoiceMenu) {
-        MyVoiceSetting(
+        TTSSetting(
             onDismiss = {
                 onAction(SettingAction.OpenTTSVoiceMenu(false))
             },
         )
     }
     if (settingState.openAutoScrollMenu) {
-        MyAutoScrollSetting(
+        AutoScrollSetting(
             onDismissRequest = {
                 onAction(SettingAction.OpenAutoScrollMenu(false))
             }
@@ -114,41 +113,6 @@ fun SettingScreen(
                 Spacer(modifier = Modifier.width(8.dp))
             }
             HorizontalDivider(thickness = 1.dp)
-            if (settingState.unlockSpecialCodeStatus) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .clickable {
-                            onAction(SettingAction.UpdateEnableSpecialArt(!settingState.enableSpecialArt))
-                        },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Icon(
-                        modifier = Modifier
-                            .padding(start = 8.dp, end = 8.dp)
-                            .size(24.dp),
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_favourite_music),
-                        contentDescription = "enableSpecialArt"
-                    )
-                    Text(
-                        text = "Enable special Art",
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                        )
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Switch(
-                        checked = settingState.enableSpecialArt,
-                        onCheckedChange = {
-                            onAction(SettingAction.UpdateEnableSpecialArt(it))
-                        },
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-                HorizontalDivider(thickness = 1.dp)
-            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -311,38 +275,6 @@ fun SettingScreen(
                     contentDescription = null
                 )
             }
-            HorizontalDivider(thickness = 1.dp)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clickable {
-                        onAction(SettingAction.OpenSpecialCodeDialog(true))
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp)
-                        .size(24.dp),
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_favourite_music),
-                    contentDescription = "special code"
-                )
-                Text(
-                    text = "Coupon Code",
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                    )
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Icon(
-                    modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp)
-                        .size(30.dp),
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
-                    contentDescription = null
-                )
-            }
         }
     }
     if (settingState.openBackgroundMusicMenu) {
@@ -351,7 +283,7 @@ fun SettingScreen(
             sheetState = musicMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBackgroundMusicMenu(false)) },
         ) {
-            MyMusicSetting()
+            MusicSetting()
         }
     }
     if (settingState.openBookmarkThemeMenu) {
@@ -360,7 +292,7 @@ fun SettingScreen(
             sheetState = bookmarkMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBookmarkThemeMenu(false)) },
         ) {
-            MyBookmarkSetting()
+            BookmarkSetting()
         }
     }
     if (settingState.openCategoryMenu) {
@@ -371,17 +303,7 @@ fun SettingScreen(
                 onAction(SettingAction.OpenCategoryMenu(false))
             },
         ) {
-            MyBookCategorySetting()
+            BookCategorySetting()
         }
-    }
-    if (settingState.openSpecialCodeDialog) {
-        MySpecialCodeDialog(
-            onSuccess = {
-                onAction(SettingAction.OpenSpecialCodeSuccess)
-            },
-            onDismiss = {
-                onAction(SettingAction.OpenSpecialCodeDialog(false))
-            }
-        )
     }
 }

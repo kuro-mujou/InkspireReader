@@ -48,12 +48,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.Category
 import com.inkspire.ebookreader.ui.composable.MyBookChip
-import com.inkspire.ebookreader.ui.composable.MyColorRails
+import com.inkspire.ebookreader.ui.setting.bookcategory.composable.MyColorRails
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun MyBookCategorySetting() {
+fun BookCategorySetting() {
     val viewModel = koinViewModel<BookCategorySettingViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 

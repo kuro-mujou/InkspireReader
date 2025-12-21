@@ -8,8 +8,4 @@ data class SettingState(
     val openBookmarkThemeMenu: Boolean = false,
     val openAutoScrollMenu: Boolean = false,
     val openTTSVoiceMenu: Boolean = false,
-    val openSpecialCodeDialog: Boolean = false,
-
-    val enableSpecialArt: Boolean = false,
-    val unlockSpecialCodeStatus: Boolean = false,
 )

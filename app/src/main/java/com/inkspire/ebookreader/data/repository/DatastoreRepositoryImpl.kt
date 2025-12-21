@@ -78,12 +78,6 @@ class DatastoreRepositoryImpl(private val datastoreManager: DatastoreManager) : 
     override fun getBookmarkStyle(): Flow<BookmarkStyle> {
         return datastoreManager.getBookmarkStyle
     }
-    override fun getUnlockSpecialCodeStatus(): Flow<Boolean> {
-        return datastoreManager.getUnlockSpecialCodeStatus
-    }
-    override fun getEnableSpecialArt(): Flow<Boolean> {
-        return datastoreManager.getEnableSpecialArt
-    }
 
     override suspend fun setKeepScreenOn(value: Boolean) {
         datastoreManager.setKeepScreenOn(value)
@@ -179,13 +173,5 @@ class DatastoreRepositoryImpl(private val datastoreManager: DatastoreManager) : 
 
     override suspend fun setBookmarkStyle(bookmarkStyle: BookmarkStyle) {
         datastoreManager.setBookmarkStyle(bookmarkStyle)
-    }
-
-    override suspend fun setUnlockSpecialCodeStatus(value: Boolean) {
-        datastoreManager.setUnlockSpecialCodeStatus(value)
-    }
-
-    override suspend fun setEnableSpecialArt(value: Boolean) {
-        datastoreManager.setEnableSpecialArt(value)
     }
 }

@@ -28,8 +28,6 @@ interface DatastoreRepository {
     fun getBookListViewType(): Flow<Int>
     fun getImagePaddingState(): Flow<Boolean>
     fun getBookmarkStyle(): Flow<BookmarkStyle>
-    fun getUnlockSpecialCodeStatus(): Flow<Boolean>
-    fun getEnableSpecialArt(): Flow<Boolean>
 
     suspend fun setKeepScreenOn(value: Boolean)
     suspend fun setTTSSpeed(value: Float)
@@ -55,6 +53,4 @@ interface DatastoreRepository {
     suspend fun setBookListView(value: Int)
     suspend fun setImagePaddingState(value: Boolean)
     suspend fun setBookmarkStyle(bookmarkStyle: BookmarkStyle)
-    suspend fun setUnlockSpecialCodeStatus(value: Boolean)
-    suspend fun setEnableSpecialArt(value: Boolean)
 }

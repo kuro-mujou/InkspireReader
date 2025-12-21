@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.ui.composable
+package com.inkspire.ebookreader.ui.setting.bookcategory.composable
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth

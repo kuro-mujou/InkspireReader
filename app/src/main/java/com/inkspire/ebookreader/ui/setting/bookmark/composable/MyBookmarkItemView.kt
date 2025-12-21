@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.ui.setting.bookmark
+package com.inkspire.ebookreader.ui.setting.bookmark.composable
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.inkspire.ebookreader.domain.model.BookmarkMenuItem
+import com.inkspire.ebookreader.ui.setting.bookmark.BookmarkSettingState
 
 @Composable
 fun MyBookmarkItemView(

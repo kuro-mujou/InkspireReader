@@ -49,14 +49,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.service.TTSManager
-import com.inkspire.ebookreader.ui.setting.common.TTSSettingScreenType
+import com.inkspire.ebookreader.ui.setting.tts.common.TTSSettingScreenType
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyVoiceSetting(
+fun TTSSetting(
     onDismiss: () -> Unit,
 ) {
     val viewModel = koinViewModel<TTSSettingViewModel>()

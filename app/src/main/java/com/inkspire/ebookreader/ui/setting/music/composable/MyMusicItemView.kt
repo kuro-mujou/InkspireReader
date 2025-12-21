@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.ui.composable
+package com.inkspire.ebookreader.ui.setting.music.composable
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.MusicItem
 import kotlinx.coroutines.launch
-
 
 @Composable
 fun MyMusicItemView(

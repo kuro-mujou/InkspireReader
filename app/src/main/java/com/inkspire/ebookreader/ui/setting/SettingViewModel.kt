@@ -38,25 +38,10 @@ class SettingViewModel(
             is SettingAction.OpenCategoryMenu -> {
                 _state.update { it.copy(openCategoryMenu = action.open) }
             }
-            is SettingAction.OpenSpecialCodeDialog -> {
-                _state.update { it.copy(openSpecialCodeDialog = action.open) }
-            }
 
             is SettingAction.KeepScreenOn -> {
                 viewModelScope.launch {
                     settingDatastoreUseCase.setKeepScreenOn(action.keepScreenOn)
-                }
-            }
-
-            is SettingAction.OpenSpecialCodeSuccess -> {
-                viewModelScope.launch {
-                    settingDatastoreUseCase.setUnlockSpecialCodeStatus(true)
-                }
-            }
-
-            is SettingAction.UpdateEnableSpecialArt -> {
-                viewModelScope.launch {
-                    settingDatastoreUseCase.setEnableSpecialArt(action.enable)
                 }
             }
         }
@@ -66,18 +51,6 @@ class SettingViewModel(
         viewModelScope.launch {
             settingDatastoreUseCase.getKeepScreenOn().collectLatest { keepScreenOn ->
                 _state.update { it.copy(keepScreenOn = keepScreenOn) }
-            }
-        }
-        viewModelScope.launch {
-            settingDatastoreUseCase.getUnlockSpecialCodeStatus().collectLatest { status->
-                _state.update { it.copy(unlockSpecialCodeStatus = status) }
-            }
-        }
-        viewModelScope.launch {
-            settingDatastoreUseCase.getEnableSpecialArt().collectLatest {enable->
-                _state.update {
-                    it.copy(enableSpecialArt = enable)
-                }
             }
         }
     }

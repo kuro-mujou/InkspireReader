@@ -27,10 +27,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.BookmarkStyle
 import com.inkspire.ebookreader.domain.model.BookmarkMenuItem
+import com.inkspire.ebookreader.ui.setting.bookmark.composable.MyBookmarkItemView
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun MyBookmarkSetting() {
+fun BookmarkSetting() {
     val viewModel = koinViewModel<BookmarkSettingViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -85,7 +86,11 @@ fun MyBookmarkSetting() {
                             state = state,
                             listItem = listItem,
                             onSelected = {
-                                viewModel.onAction(BookmarkSettingAction.UpdateSelectedBookmarkStyle(listItem.bookmarkStyle))
+                                viewModel.onAction(
+                                    BookmarkSettingAction.UpdateSelectedBookmarkStyle(
+                                        listItem.bookmarkStyle
+                                    )
+                                )
                             }
                         )
                     }

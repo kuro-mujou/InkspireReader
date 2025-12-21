@@ -45,13 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.ui.composable.MyMusicItemView
+import com.inkspire.ebookreader.ui.setting.music.composable.MyMusicItemView
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyMusicSetting() {
+fun MusicSetting() {
     val viewModel = koinViewModel<MusicSettingViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()

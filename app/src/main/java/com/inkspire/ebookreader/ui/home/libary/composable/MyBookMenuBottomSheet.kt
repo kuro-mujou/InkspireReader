@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.ui.composable
+package com.inkspire.ebookreader.ui.home.libary.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

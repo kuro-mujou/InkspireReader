@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.ui.composable
+package com.inkspire.ebookreader.ui.setting.bookmark.composable
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable

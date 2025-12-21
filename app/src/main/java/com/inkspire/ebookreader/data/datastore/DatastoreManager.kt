@@ -43,8 +43,6 @@ class DatastoreManager(private val context: Context) {
         private val BOOK_LIST_VIEW_TYPE = intPreferencesKey("BOOK_LIST_VIEW_TYPE")
         private val IMAGE_PADDING_STATE = booleanPreferencesKey("IMAGE_PADDING_STATE")
         private val BOOKMARK_STYLE = stringPreferencesKey("BOOKMARK_STYLE")
-        private val UNLOCK_SPECIAL_CODE_STATUS = booleanPreferencesKey("UNLOCK_SPECIAL_CODE_STATUS")
-        private val ENABLE_SPECIAL_ART = booleanPreferencesKey("ENABLE_SPECIAL_ART")
     }
 
     val getKeepScreenOn: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -123,12 +121,6 @@ class DatastoreManager(private val context: Context) {
         } catch (_: IllegalArgumentException) {
             BookmarkStyle.WAVE_WITH_BIRDS
         }
-    }
-    val getUnlockSpecialCodeStatus: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[UNLOCK_SPECIAL_CODE_STATUS] == true
-    }
-    val getEnableSpecialArt: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[ENABLE_SPECIAL_ART] == true
     }
 
     suspend fun setKeepScreenOn(value: Boolean) {
@@ -272,18 +264,6 @@ class DatastoreManager(private val context: Context) {
     suspend fun setBookmarkStyle(bookmarkStyle: BookmarkStyle) {
         context.dataStore.edit { preferences ->
             preferences[BOOKMARK_STYLE] = bookmarkStyle.name
-        }
-    }
-
-    suspend fun setUnlockSpecialCodeStatus(value: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[UNLOCK_SPECIAL_CODE_STATUS] = value
-        }
-    }
-
-    suspend fun setEnableSpecialArt(value: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[ENABLE_SPECIAL_ART] = value
         }
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,17 +37,22 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyAutoScrollSetting(
+fun AutoScrollSetting(
     onDismissRequest: () -> Unit
 ) {
     val viewModel = koinViewModel<AutoScrollSettingViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    val minSpeed = 0.1f
+    val maxSpeed = 1.0f
+    val sumRange = minSpeed + maxSpeed
+
     Dialog(
-        onDismissRequest = {
-            onDismissRequest()
-        }
+        onDismissRequest = onDismissRequest
     ) {
-        var speedSliderValue by remember { mutableIntStateOf(state.currentScrollSpeed) }
+        var speedSliderValue by remember(state.currentScrollSpeed) {
+            mutableFloatStateOf(sumRange - (state.currentScrollSpeed / 10000f))
+        }
         var delayAtStart by remember { mutableIntStateOf(state.delayAtStart) }
         var delayAtEnd by remember { mutableIntStateOf(state.delayAtEnd) }
         var delayResumeMode by remember { mutableIntStateOf(state.delayResumeMode) }
@@ -76,21 +82,23 @@ fun MyAutoScrollSetting(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Faster")
-                    Text(text = "Speed")
                     Text(text = "Slower")
+                    Text(text = "Speed", fontWeight = FontWeight.Medium)
+                    Text(text = "Faster")
                 }
                 Slider(
                     modifier = Modifier.fillMaxWidth(),
-                    value = speedSliderValue / 10000f,
+                    value = speedSliderValue,
                     onValueChange = { value ->
-                        speedSliderValue = (value * 10000).roundToInt()
+                        speedSliderValue = value
                     },
                     onValueChangeFinished = {
-                        viewModel.onAction(AutoScrollSettingAction.UpdateScrollSpeed(speedSliderValue))
+                        val logicValue = sumRange - speedSliderValue
+                        val finalSpeed = (logicValue * 10000).roundToInt()
+                        viewModel.onAction(AutoScrollSettingAction.UpdateScrollSpeed(finalSpeed))
                     },
-                    valueRange = 0.1f..2f,
-                    steps = 18,
+                    valueRange = minSpeed..maxSpeed,
+                    steps = 17,
                     thumb = {
                         Box(
                             modifier = Modifier

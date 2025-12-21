@@ -1,7 +1,7 @@
 package com.inkspire.ebookreader.ui.setting.tts
 
 import android.speech.tts.Voice
-import com.inkspire.ebookreader.ui.setting.common.TTSSettingScreenType
+import com.inkspire.ebookreader.ui.setting.tts.common.TTSSettingScreenType
 import java.util.Locale
 
 data class TTSSettingState(

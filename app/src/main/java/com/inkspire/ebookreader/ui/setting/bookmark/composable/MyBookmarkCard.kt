@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.ui.setting.bookmark
+package com.inkspire.ebookreader.ui.setting.bookmark.composable
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -46,13 +46,6 @@ import com.inkspire.ebookreader.common.BookmarkShape
 import com.inkspire.ebookreader.common.BookmarkStyle
 import com.inkspire.ebookreader.ui.bookcontent.ColorPalette
 import com.inkspire.ebookreader.ui.bookcontent.ContentState
-import com.inkspire.ebookreader.ui.composable.CardBackgroundCherryBlossomRain
-import com.inkspire.ebookreader.ui.composable.CardBackgroundCloudWithBirds
-import com.inkspire.ebookreader.ui.composable.CardBackgroundGeometricTriangle
-import com.inkspire.ebookreader.ui.composable.CardBackgroundPolygonalHexagon
-import com.inkspire.ebookreader.ui.composable.CardBackgroundScatteredHexagons
-import com.inkspire.ebookreader.ui.composable.CardBackgroundStarryNight
-import com.inkspire.ebookreader.ui.composable.CardBackgroundWaveWithBirds
 import com.inkspire.ebookreader.util.ColorUtil.darken
 import com.inkspire.ebookreader.util.ColorUtil.isDark
 import com.inkspire.ebookreader.util.ColorUtil.lighten
