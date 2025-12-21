@@ -6,6 +6,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -78,12 +80,11 @@ import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.MiniFabItem
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.ui.composable.MyBookChip
+import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import com.inkspire.ebookreader.ui.home.libary.composable.MyBookMenuBottomSheet
-import com.inkspire.ebookreader.ui.composable.MyDriveInputLinkDialog
 import com.inkspire.ebookreader.ui.home.libary.composable.MyExpandableFab
 import com.inkspire.ebookreader.ui.home.libary.composable.MyGridBookView
 import com.inkspire.ebookreader.ui.home.libary.composable.MyListBookView
-import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -183,19 +184,6 @@ fun LibraryScreen(
                 importBookLauncher.launch(
                     arrayOf("application/pdf")
                 )
-            }
-        ),
-        MiniFabItem(
-            icon = R.drawable.ic_add_epub,
-            title = "Import EPUB via Google Drive",
-            tint = if (isSystemInDarkTheme())
-                Color(255, 250, 160)
-            else
-                Color(131, 105, 83),
-            onClick = {
-                specialIntent = "null"
-                onAction(LibraryAction.ChangeFabExpandState(false))
-                onAction(LibraryAction.ChangeDriveDialogVisibility)
             }
         ),
         MiniFabItem(
@@ -302,14 +290,11 @@ fun LibraryScreen(
                                     .only(WindowInsetsSides.End)
                                     .asPaddingValues()
                                     .calculateEndPadding(LayoutDirection.Ltr)
+                            ).clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                                onClick = { focusManager.clearFocus() }
                             ),
-
-
-//                        .clickable(
-//                            indication = null,
-//                    interactionSource = remember { MutableInteractionSource() },
-//                    onClick = { focusManager.clearFocus() }
-//                    )
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Crossfade(state.isOnDeletingBooks) { isDeleting ->
@@ -610,23 +595,6 @@ fun LibraryScreen(
             onDeleteBook = {
                 onAction(LibraryAction.DeleteSelectedBooks(it))
                 onAction(LibraryAction.RemoveSelectedBook(it))
-            }
-        )
-    }
-
-    AnimatedVisibility(
-        visible = state.driveDialogVisibility,
-        enter = fadeIn(),
-        exit = fadeOut()
-    ) {
-        MyDriveInputLinkDialog(
-            onDismiss = { onAction(LibraryAction.ChangeDriveDialogVisibility) },
-            onConfirm = { link ->
-                BookImporter(
-                    context = context,
-                    scope = scope,
-                    specialIntent = "null"
-                ).importBookViaGoogleDrive(link)
             }
         )
     }

@@ -13,7 +13,6 @@ data class LibraryState(
     val selectedBookList: List<Book> = emptyList(),
     val categories: List<Category> = emptyList(),
     val bottomSheetVisibility: Boolean = false,
-    val driveDialogVisibility: Boolean = false,
     val fabVisibility: Boolean = true,
     val fabExpanded: Boolean = false,
 )

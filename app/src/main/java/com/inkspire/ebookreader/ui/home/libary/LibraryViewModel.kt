@@ -135,9 +135,6 @@ class LibraryViewModel(
             is LibraryAction.ChangeBottomSheetVisibility -> {
                 _state.update { it.copy(bottomSheetVisibility = !_state.value.bottomSheetVisibility) }
             }
-            is LibraryAction.ChangeDriveDialogVisibility -> {
-                _state.update { it.copy(driveDialogVisibility = !_state.value.driveDialogVisibility) }
-            }
             is LibraryAction.ChangeFabVisibility -> {
                 _state.update { it.copy(fabVisibility = action.visibility) }
             }
