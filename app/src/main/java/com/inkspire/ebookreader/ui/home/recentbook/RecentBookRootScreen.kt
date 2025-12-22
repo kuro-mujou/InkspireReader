@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +63,8 @@ fun RecentBookRootScreen(
     val viewModel = koinViewModel<RecentBookViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -158,16 +161,32 @@ fun RecentBookRootScreen(
                         LaunchedEffect(Unit) {
                             pagerStateVertical.animateScrollToPage(0)
                         }
+
+                        val isTabletPortrait = deviceConfiguration == DeviceConfiguration.TABLET_PORTRAIT
+
+                        val cardWidth = if (isTabletPortrait) 400.dp else screenWidth - 80.dp
+
+                        val horizontalPadding = if (isTabletPortrait) {
+                            (screenWidth - cardWidth) / 2
+                        } else {
+                            40.dp
+                        }
+
+
                         HorizontalPager(
                             state = pagerStateVertical,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f),
-                            contentPadding = PaddingValues(horizontal = 48.dp),
+                            pageSize = PageSize.Fixed(cardWidth),
+                            snapPosition = SnapPosition.Center,
+                            contentPadding = PaddingValues(horizontal = horizontalPadding),
                         ) { pageIndex ->
                             val book = state.data[pageIndex]
                             MyRecentBookCard(
                                 book = book,
+                                deviceConfiguration = deviceConfiguration,
+                                cardWidth = cardWidth,
                                 pagerState = pagerStateVertical,
                                 pageIndex = pageIndex,
                                 onClick = {
@@ -220,6 +239,7 @@ fun RecentBookRootScreen(
 
                                 MyRecentBookCard(
                                     book = book,
+                                    deviceConfiguration = deviceConfiguration,
                                     pagerState = pagerStateHorizontal,
                                     pageIndex = pageIndex,
                                     onClick = {

@@ -23,9 +23,12 @@ import androidx.compose.ui.graphics.Color
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.TableOfContent
+import com.inkspire.ebookreader.service.TTSPlaybackState
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBar
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarAction
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarState
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSAction
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSState
 import com.inkspire.ebookreader.ui.bookcontent.composable.CustomFab
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
@@ -54,11 +57,14 @@ fun BookChapterContentRootScreen(
     bookContentBottomBarState: BookContentBottomBarState,
     stylingState: StylingState,
     drawerState: DrawerState,
+    ttsPlaybackState: TTSPlaybackState,
+    bottomBarTTSState: BottomBarTTSState,
     bookChapterContentEvent: Flow<BookChapterContentEvent>,
     onBookContentDataAction: (BookContentDataAction) -> Unit,
     onBookChapterContentAction: (BookChapterContentAction) -> Unit,
     onBookContentTopBarAction: (BookContentTopBarAction) -> Unit,
     onBookContentBottomBarAction: (BookContentBottomBarAction) -> Unit,
+    onBookContentBottomBarTTSAction: (BottomBarTTSAction) -> Unit,
     onStyleAction: (BookContentStylingAction) -> Unit
 ) {
     val totalChapters = bookInfo.totalChapter
@@ -123,9 +129,12 @@ fun BookChapterContentRootScreen(
                 hazeState = hazeState,
                 stylingState = stylingState,
                 drawerState = drawerState,
+                ttsPlaybackState = ttsPlaybackState,
+                bottomBarTTSState = bottomBarTTSState,
                 bookChapterContentState = bookChapterContentState,
                 bookContentBottomBarState = bookContentBottomBarState,
                 onBookContentBottomBarAction = onBookContentBottomBarAction,
+                onBottomBarTTSAction = onBookContentBottomBarTTSAction,
                 onStyleAction = onStyleAction
             )
         },
@@ -161,6 +170,7 @@ fun BookChapterContentRootScreen(
                         stylingState = stylingState,
                         bookChapterContentState = bookChapterContentState,
                         chapterUiState = bookContentDataState.chapterStates[pageIndex] ?: UiState.None,
+                        ttsPlaybackState = ttsPlaybackState,
                         isCurrentChapter = pagerState.currentPage == pageIndex,
                         onBookContentDataAction = onBookContentDataAction,
                         onBookChapterContentAction = onBookChapterContentAction,

@@ -7,8 +7,11 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.navigation.Navigator
+import com.inkspire.ebookreader.service.TTSManager
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarAction
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarViewModel
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSAction
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentRootScreen
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentViewModel
@@ -22,6 +25,7 @@ import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingViewMod
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarAction
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarViewModel
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -37,6 +41,8 @@ fun BookContentRootScreen(
     val tableOfContentViewModel = koinViewModel<TableOfContentViewModel>()
     val topBarViewModel = koinViewModel<BookContentTopBarViewModel>()
     val bottomBarViewModel = koinViewModel<BookContentBottomBarViewModel>()
+    val bottomBarTTSViewModel = koinViewModel<BottomBarTTSViewModel>()
+    val ttsManager = koinInject<TTSManager>()
 
     val bookContentDataState by dataViewModel.state.collectAsStateWithLifecycle()
     val drawerState by drawerViewModel.state.collectAsStateWithLifecycle()
@@ -45,6 +51,8 @@ fun BookContentRootScreen(
     val tableOfContentState by tableOfContentViewModel.state.collectAsStateWithLifecycle()
     val bookContentTopBarState by topBarViewModel.state.collectAsStateWithLifecycle()
     val bookContentBottomBarState by bottomBarViewModel.state.collectAsStateWithLifecycle()
+    val bottomBarTTSState by bottomBarTTSViewModel.state.collectAsStateWithLifecycle()
+    val ttsPlaybackState by ttsManager.state.collectAsStateWithLifecycle()
 
     val bookChapterContentEvent = chapterContentViewModel.event
 
@@ -135,6 +143,8 @@ fun BookContentRootScreen(
                                     bookContentBottomBarState = bookContentBottomBarState,
                                     stylingState = stylingState,
                                     drawerState = drawerState,
+                                    ttsPlaybackState = ttsPlaybackState,
+                                    bottomBarTTSState = bottomBarTTSState,
                                     bookChapterContentEvent = bookChapterContentEvent,
                                     onBookContentDataAction = dataViewModel::onAction,
                                     onBookChapterContentAction = {
@@ -171,6 +181,36 @@ fun BookContentRootScreen(
                                         }
                                     },
                                     onBookContentBottomBarAction = bottomBarViewModel::onAction,
+                                    onBookContentBottomBarTTSAction = {
+                                        when (it) {
+                                            BottomBarTTSAction.OnNextChapterClicked -> {
+                                                ttsManager.nextChapter()
+                                            }
+                                            BottomBarTTSAction.OnNextParagraphClicked -> {
+                                                ttsManager.nextParagraph()
+                                            }
+                                            BottomBarTTSAction.OnPlayPauseClicked -> {
+                                                if (ttsPlaybackState.isPaused) {
+                                                    ttsManager.resumeReading()
+                                                } else {
+                                                    ttsManager.pauseReading()
+                                                }
+                                            }
+                                            BottomBarTTSAction.OnPreviousChapterClicked -> {
+                                                ttsManager.prevChapter()
+                                            }
+                                            BottomBarTTSAction.OnPreviousParagraphClicked -> {
+                                                ttsManager.prevParagraph()
+                                            }
+                                            BottomBarTTSAction.OnStopClicked -> {
+                                                ttsManager.stopReading()
+                                                bottomBarViewModel.onAction(BookContentBottomBarAction.ResetBottomBarMode)
+                                            }
+                                            else -> {
+                                                bottomBarTTSViewModel.onAction(it)
+                                            }
+                                        }
+                                    },
                                     onStyleAction = stylingViewModel::onAction
                                 )
                             } else {

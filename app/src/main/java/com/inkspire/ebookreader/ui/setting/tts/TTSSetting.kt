@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -28,8 +30,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -39,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
@@ -46,9 +51,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
+import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.service.TTSManager
+import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.setting.tts.common.TTSSettingScreenType
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -57,6 +65,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TTSSetting(
+    stylingState: StylingState? = null,
     onDismiss: () -> Unit,
 ) {
     val viewModel = koinViewModel<TTSSettingViewModel>()
@@ -68,19 +77,39 @@ fun TTSSetting(
     var speedSliderValue by remember { mutableFloatStateOf(state.currentSpeed) }
     var pitchSliderValue by remember { mutableFloatStateOf(state.currentPitch) }
 
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
+    val dialogWidth = when (deviceConfiguration) {
+        DeviceConfiguration.PHONE_PORTRAIT -> 0.8f
+        DeviceConfiguration.PHONE_LANDSCAPE -> 0.6f
+        DeviceConfiguration.TABLET_PORTRAIT -> 0.7f
+        DeviceConfiguration.TABLET_LANDSCAPE -> 0.5f
+    }
+    val dialogHeight = when (deviceConfiguration) {
+        DeviceConfiguration.PHONE_PORTRAIT -> 0.6f
+        DeviceConfiguration.PHONE_LANDSCAPE -> 0.9f
+        DeviceConfiguration.TABLET_PORTRAIT -> 0.6f
+        DeviceConfiguration.TABLET_LANDSCAPE -> 0.9f
+    }
+
     Dialog(
         onDismissRequest = {
             if (state.currentVoice == null) {
                 tts?.let { viewModel.onAction(TTSSettingAction.FixNullVoice(it)) }
             }
             onDismiss()
-        }
+        },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         val focusManager = LocalFocusManager.current
         Surface(
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(dialogWidth)
+                .heightIn(max = screenHeight * dialogHeight)
                 .wrapContentHeight()
                 .clickable(
                     indication = null,
@@ -89,6 +118,7 @@ fun TTSSetting(
                         focusManager.clearFocus()
                     }
                 ),
+            color = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surface
         ) {
             Column(
                 modifier = Modifier.padding(8.dp),
@@ -106,296 +136,400 @@ fun TTSSetting(
                     style = TextStyle(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                 )
-                HorizontalDivider(thickness = 2.dp)
-                Crossfade(state.selectedScreenType) { targetState->
-                    when(targetState) {
-                        TTSSettingScreenType.NORMAL_SETTING -> {
-                            Column {
+                HorizontalDivider(
+                    thickness = 2.dp,
+                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.outlineVariant
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .fillMaxWidth()
+                ) {
+                    Crossfade(state.selectedScreenType) { targetState ->
+                        when (targetState) {
+                            TTSSettingScreenType.NORMAL_SETTING -> {
                                 Column(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp, bottom = 4.dp)
-                                        .border(
-                                            width = 1.dp,
-                                            color = MaterialTheme.colorScheme.outlineVariant,
-                                            shape = RoundedCornerShape(8.dp)
-                                        )
-                                        .clip(shape = RoundedCornerShape(8.dp)),
+                                        .verticalScroll(rememberScrollState())
                                 ) {
-                                    Row(
+                                    Column(
                                         modifier = Modifier
-                                            .background(
-                                                color = MaterialTheme.colorScheme.surfaceVariant
-                                            )
-                                            .padding(8.dp)
                                             .fillMaxWidth()
-                                            .clickable(
-                                                indication = null,
-                                                interactionSource = remember { MutableInteractionSource() },
-                                            )  {
-                                                viewModel.onAction(TTSSettingAction.UpdateScreenType(TTSSettingScreenType.LANGUAGE_SETTING))
-                                            },
+                                            .padding(top = 8.dp, bottom = 4.dp)
+                                            .border(
+                                                width = 1.dp,
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.outlineVariant,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .clip(shape = RoundedCornerShape(8.dp)),
                                     ) {
-                                        Icon(
-                                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_setting),
-                                            contentDescription = null
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(text = "Language")
-                                        Spacer(modifier = Modifier.weight(1f))
-                                        Icon(
-                                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
-                                            contentDescription = null
-                                        )
-                                    }
-                                    Text(
-                                        text = state.currentLanguage?.displayName ?: "null",
-                                        modifier = Modifier.padding(8.dp)
-                                    )
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp, bottom = 4.dp)
-                                        .border(
-                                            width = 1.dp,
-                                            color = MaterialTheme.colorScheme.outlineVariant,
-                                            shape = RoundedCornerShape(8.dp)
-                                        )
-                                        .clip(shape = RoundedCornerShape(8.dp)),
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .background(
-                                                color = MaterialTheme.colorScheme.surfaceVariant
-                                            )
-                                            .padding(8.dp)
-                                            .fillMaxWidth()
-                                            .clickable(
-                                                indication = null,
-                                                interactionSource = remember { MutableInteractionSource() },
-                                            ) {
-                                                viewModel.onAction(TTSSettingAction.UpdateScreenType(TTSSettingScreenType.VOICE_SETTING))
-                                            },
-                                    ) {
-                                        Icon(
-                                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_setting),
-                                            contentDescription = null
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(text = "Voice")
-                                        Spacer(modifier = Modifier.weight(1f))
-                                        Icon(
-                                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
-                                            contentDescription = null
-                                        )
-                                    }
-                                    Row(
-                                        modifier = Modifier
-                                            .padding(8.dp)
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(text = state.currentVoice?.name ?: "null")
-                                        state.currentVoice?.let { voice ->
-                                            Text(text = "-")
-                                            Text(text = voice.quality.toString())
-                                        }
-                                    }
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 8.dp, bottom = 4.dp)
-                                        .border(
-                                            width = 1.dp,
-                                            color = MaterialTheme.colorScheme.outlineVariant,
-                                            shape = RoundedCornerShape(8.dp)
-                                        ),
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .padding(top = 8.dp)
-                                            .padding(horizontal = 8.dp)
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(text = "Speed")
-                                        Text(text = "%.2fx".format(speedSliderValue))
-                                    }
-                                    Slider(
-                                        modifier = Modifier
-                                            .padding(horizontal = 8.dp)
-                                            .fillMaxWidth(),
-                                        value = speedSliderValue,
-                                        onValueChange = { value ->
-                                            speedSliderValue = (value * 100).roundToInt() / 100f
-                                        },
-                                        onValueChangeFinished = {
-                                            viewModel.onAction(
-                                                TTSSettingAction.UpdateSpeed(
-                                                    speedSliderValue
-                                                )
-                                            )
-                                        },
-                                        valueRange = 0.5f..2.5f,
-                                        thumb = {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(24.dp)
-                                                    .background(
-                                                        color = MaterialTheme.colorScheme.primary,
-                                                        shape = CircleShape
-                                                    )
-                                            )
-                                        }
-                                    )
-                                    Row(
-                                        modifier = Modifier
-                                            .padding(horizontal = 8.dp)
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(text = "Pitch")
-                                        Text(text = "%.2fx".format(pitchSliderValue))
-                                    }
-                                    Slider(
-                                        modifier = Modifier
-                                            .padding(horizontal = 8.dp)
-                                            .fillMaxWidth(),
-                                        value = pitchSliderValue,
-                                        onValueChange = { value ->
-                                            pitchSliderValue = (value * 100).roundToInt() / 100f
-                                        },
-                                        onValueChangeFinished = {
-                                            viewModel.onAction(
-                                                TTSSettingAction.UpdatePitch(
-                                                    pitchSliderValue
-                                                )
-                                            )
-                                        },
-                                        valueRange = 0.5f..1.5f,
-                                        thumb = {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(24.dp)
-                                                    .background(
-                                                        color = MaterialTheme.colorScheme.primary,
-                                                        shape = CircleShape
-                                                    )
-                                            )
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                        TTSSettingScreenType.LANGUAGE_SETTING -> {
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(
-                                        min = 0.dp,
-                                        max = 600.dp
-                                    ),
-                            ) {
-                                items(state.languages) { language ->
-                                    Row(
-                                        modifier = Modifier
-                                            .then(
-                                                if (language == state.currentLanguage) {
-                                                    Modifier.background(
-                                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                                        shape = RoundedCornerShape(16.dp)
-                                                    )
-                                                } else {
-                                                    Modifier
-                                                }
-                                            )
-                                            .fillMaxWidth()
-                                            .padding(4.dp)
-                                            .clickable(
-                                                indication = null,
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                onClick = {
-                                                    viewModel.onAction(TTSSettingAction.UpdateLanguage(language))
-                                                }
-                                            ),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ){
-                                        Text(
-                                            text = language.displayName,
+                                        Row(
                                             modifier = Modifier
-                                                .padding(4.dp)
-                                                .weight(1f)
-                                        )
-                                        if (language == state.currentLanguage) {
-                                            Icon(
-                                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_confirm),
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        TTSSettingScreenType.VOICE_SETTING -> {
-                            val filteredVoices = state.voices.filter {
-                                it.locale == state.currentLanguage
-                            }
-                            LazyColumn(
-                                modifier = Modifier
-                                    .padding(vertical = 4.dp)
-                                    .fillMaxWidth()
-                                    .heightIn(
-                                        min = 0.dp,
-                                        max = 600.dp
-                                    ),
-                            ) {
-                                items(filteredVoices) { voice ->
-                                    Row(
-                                        modifier = Modifier
-                                            .then(
-                                                if (voice == state.currentVoice) {
-                                                    Modifier.background(
-                                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                                        shape = RoundedCornerShape(16.dp)
+                                                .background(
+                                                    color = stylingState?.containerColor
+                                                        ?: MaterialTheme.colorScheme.surfaceVariant
+                                                )
+                                                .padding(8.dp)
+                                                .fillMaxWidth()
+                                                .clickable(
+                                                    indication = null,
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                ) {
+                                                    viewModel.onAction(
+                                                        TTSSettingAction.UpdateScreenType(
+                                                            TTSSettingScreenType.LANGUAGE_SETTING
+                                                        )
                                                     )
-                                                } else {
-                                                    Modifier
-                                                }
-                                            )
-                                            .fillMaxWidth()
-                                            .padding(4.dp)
-                                            .clickable(
-                                                indication = null,
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                onClick = {
-                                                    viewModel.onAction(TTSSettingAction.UpdateVoice(voice))
-                                                }
-                                            ),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ){
-                                        Column(
-                                            modifier = Modifier
-                                                .padding(horizontal = 4.dp)
-                                                .weight(1f)
+                                                },
                                         ) {
-                                            Text(text = "Quality: " + voice.quality.toString())
-                                            Text(text = voice.name)
-                                        }
-                                        if (voice == state.currentVoice) {
                                             Icon(
-                                                modifier = Modifier.padding(end = 4.dp),
-                                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_confirm),
+                                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_setting),
                                                 contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                                tint = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
                                             )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = "Language",
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Spacer(modifier = Modifier.weight(1f))
+                                            Icon(
+                                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
+                                                contentDescription = null,
+                                                tint = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Text(
+                                            text = state.currentLanguage?.displayName ?: "null",
+                                            modifier = Modifier.padding(8.dp),
+                                            color = stylingState?.textColor
+                                                ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp, bottom = 4.dp)
+                                            .border(
+                                                width = 1.dp,
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.outlineVariant,
+                                                shape = RoundedCornerShape(8.dp)
+                                            )
+                                            .clip(shape = RoundedCornerShape(8.dp)),
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .background(
+                                                    color = stylingState?.containerColor
+                                                        ?: MaterialTheme.colorScheme.surfaceVariant
+                                                )
+                                                .padding(8.dp)
+                                                .fillMaxWidth()
+                                                .clickable(
+                                                    indication = null,
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                ) {
+                                                    viewModel.onAction(
+                                                        TTSSettingAction.UpdateScreenType(
+                                                            TTSSettingScreenType.VOICE_SETTING
+                                                        )
+                                                    )
+                                                },
+                                        ) {
+                                            Icon(
+                                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_setting),
+                                                contentDescription = null,
+                                                tint = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = "Voice",
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Spacer(modifier = Modifier.weight(1f))
+                                            Icon(
+                                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
+                                                contentDescription = null,
+                                                tint = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Row(
+                                            modifier = Modifier
+                                                .padding(8.dp)
+                                                .fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = state.currentVoice?.name ?: "null",
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            state.currentVoice?.let { voice ->
+                                                Text(
+                                                    text = "-",
+                                                    color = stylingState?.textColor
+                                                        ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Text(
+                                                    text = voice.quality.toString(),
+                                                    color = stylingState?.textColor
+                                                        ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp, bottom = 4.dp)
+                                            .border(
+                                                width = 1.dp,
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.outlineVariant,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .padding(top = 8.dp)
+                                                .padding(horizontal = 8.dp)
+                                                .fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "Speed",
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = "%.2fx".format(speedSliderValue),
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Slider(
+                                            modifier = Modifier
+                                                .padding(horizontal = 8.dp)
+                                                .fillMaxWidth(),
+                                            value = speedSliderValue,
+                                            onValueChange = { value ->
+                                                speedSliderValue = (value * 100).roundToInt() / 100f
+                                            },
+                                            onValueChangeFinished = {
+                                                viewModel.onAction(
+                                                    TTSSettingAction.UpdateSpeed(
+                                                        speedSliderValue
+                                                    )
+                                                )
+                                            },
+                                            valueRange = 0.5f..2.5f,
+                                            thumb = {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .background(
+                                                            color = stylingState?.textColor
+                                                                ?: MaterialTheme.colorScheme.primary,
+                                                            shape = CircleShape
+                                                        )
+                                                )
+                                            },
+                                            colors = SliderDefaults.colors(
+                                                activeTrackColor = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.primary,
+                                                inactiveTrackColor = stylingState?.textColor?.copy(
+                                                    alpha = 0.5f
+                                                ) ?: MaterialTheme.colorScheme.secondaryContainer,
+                                            )
+                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .padding(horizontal = 8.dp)
+                                                .fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "Pitch",
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = "%.2fx".format(pitchSliderValue),
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Slider(
+                                            modifier = Modifier
+                                                .padding(horizontal = 8.dp)
+                                                .fillMaxWidth(),
+                                            value = pitchSliderValue,
+                                            onValueChange = { value ->
+                                                pitchSliderValue = (value * 100).roundToInt() / 100f
+                                            },
+                                            onValueChangeFinished = {
+                                                viewModel.onAction(
+                                                    TTSSettingAction.UpdatePitch(
+                                                        pitchSliderValue
+                                                    )
+                                                )
+                                            },
+                                            valueRange = 0.5f..1.5f,
+                                            thumb = {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .background(
+                                                            color = stylingState?.textColor
+                                                                ?: MaterialTheme.colorScheme.primary,
+                                                            shape = CircleShape
+                                                        )
+                                                )
+                                            },
+                                            colors = SliderDefaults.colors(
+                                                activeTrackColor = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.primary,
+                                                inactiveTrackColor = stylingState?.textColor?.copy(
+                                                    alpha = 0.5f
+                                                ) ?: MaterialTheme.colorScheme.secondaryContainer,
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                            TTSSettingScreenType.LANGUAGE_SETTING -> {
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                ) {
+                                    items(state.languages) { language ->
+                                        Row(
+                                            modifier = Modifier
+                                                .then(
+                                                    if (language == state.currentLanguage) {
+                                                        Modifier.background(
+                                                            color = stylingState?.textBackgroundColor
+                                                                ?: MaterialTheme.colorScheme.primaryContainer,
+                                                            shape = RoundedCornerShape(16.dp)
+                                                        )
+                                                    } else {
+                                                        Modifier
+                                                    }
+                                                )
+                                                .fillMaxWidth()
+                                                .padding(4.dp)
+                                                .clickable(
+                                                    indication = null,
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    onClick = {
+                                                        viewModel.onAction(
+                                                            TTSSettingAction.UpdateLanguage(
+                                                                language
+                                                            )
+                                                        )
+                                                    }
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                text = language.displayName,
+                                                modifier = Modifier
+                                                    .padding(4.dp)
+                                                    .weight(1f),
+                                                color = stylingState?.textColor
+                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            if (language == state.currentLanguage) {
+                                                Icon(
+                                                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_confirm),
+                                                    contentDescription = null,
+                                                    tint = stylingState?.textColor
+                                                        ?: MaterialTheme.colorScheme.onPrimaryContainer
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            TTSSettingScreenType.VOICE_SETTING -> {
+                                val filteredVoices = state.voices.filter {
+                                    it.locale == state.currentLanguage
+                                }
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .fillMaxWidth(),
+                                ) {
+                                    items(filteredVoices) { voice ->
+                                        Row(
+                                            modifier = Modifier
+                                                .then(
+                                                    if (voice == state.currentVoice) {
+                                                        Modifier.background(
+                                                            color = stylingState?.textBackgroundColor
+                                                                ?: MaterialTheme.colorScheme.primaryContainer,
+                                                            shape = RoundedCornerShape(16.dp)
+                                                        )
+                                                    } else {
+                                                        Modifier
+                                                    }
+                                                )
+                                                .fillMaxWidth()
+                                                .padding(4.dp)
+                                                .clickable(
+                                                    indication = null,
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    onClick = {
+                                                        viewModel.onAction(
+                                                            TTSSettingAction.UpdateVoice(
+                                                                voice
+                                                            )
+                                                        )
+                                                    }
+                                                ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 4.dp)
+                                                    .weight(1f)
+                                            ) {
+                                                Text(
+                                                    text = "Quality: " + voice.quality.toString(),
+                                                    color = stylingState?.textColor
+                                                        ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Text(
+                                                    text = voice.name,
+                                                    color = stylingState?.textColor
+                                                        ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                            if (voice == state.currentVoice) {
+                                                Icon(
+                                                    modifier = Modifier.padding(end = 4.dp),
+                                                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_confirm),
+                                                    contentDescription = null,
+                                                    tint = stylingState?.textColor
+                                                        ?: MaterialTheme.colorScheme.onPrimaryContainer
+                                                )
+                                            }
                                         }
                                     }
                                 }

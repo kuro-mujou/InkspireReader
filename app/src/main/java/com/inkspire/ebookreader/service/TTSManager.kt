@@ -153,6 +153,8 @@ class TTSManager(
 
     fun nextChapter() = playNextChapter()
     fun prevChapter() = playPreviousChapter()
+    fun nextParagraph() = playNextParagraphOrChapter()
+    fun prevParagraph() = playPreviousParagraphOrChapter()
 
     private fun playParagraph(index: Int, startOffset: Int) {
         if (index in currentChapterParagraphs.indices) {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,26 +26,30 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import coil.compose.AsyncImage
 import com.inkspire.ebookreader.R
+import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.domain.model.Book
 import kotlin.math.absoluteValue
 
 @Composable
 fun MyRecentBookCard(
     book: Book,
+    deviceConfiguration: DeviceConfiguration,
     pagerState: PagerState,
     pageIndex: Int,
+    cardWidth: Dp? = null,
     onClick: () -> Unit,
     onDoubleClick: () -> Unit
 ) {
     val cardShape = RoundedCornerShape(16.dp)
-
     Box(
         modifier = Modifier
+            .padding(horizontal = 8.dp)
             .combinedClickable(
                 onClick = onClick,
                 onDoubleClick = onDoubleClick
@@ -66,7 +71,13 @@ fun MyRecentBookCard(
                 this.shape = cardShape
                 this.clip = true
             }
-            .fillMaxWidth()
+            .then(
+                if (cardWidth != null) {
+                    Modifier.width(cardWidth)
+                } else {
+                    Modifier.fillMaxWidth()
+                }
+            )
             .wrapContentHeight()
     ) {
         Card(

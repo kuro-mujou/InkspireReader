@@ -34,6 +34,9 @@ class BookContentBottomBarViewModel(
                     )
                 }
             }
+            is BookContentBottomBarAction.ResetBottomBarMode -> {
+                _state.update { it.copy(bottomBarMode = BottomBarMode.Main) }
+            }
             is BookContentBottomBarAction.AutoScrollIconClicked -> {
                 _state.update { it.copy(bottomBarMode = BottomBarMode.AutoScroll) }
             }

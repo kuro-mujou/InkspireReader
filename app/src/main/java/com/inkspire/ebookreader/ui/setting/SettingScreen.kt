@@ -1,10 +1,13 @@
 package com.inkspire.ebookreader.ui.setting
 
+import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,14 +24,17 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogWindowProvider
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.ui.setting.autoscroll.AutoScrollSetting
 import com.inkspire.ebookreader.ui.setting.bookcategory.BookCategorySetting
@@ -282,7 +288,17 @@ fun SettingScreen(
             modifier = Modifier.fillMaxSize(),
             sheetState = musicMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBackgroundMusicMenu(false)) },
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
+            val view = LocalView.current
+            SideEffect {
+                val window = (view.context as? Activity)?.window ?: (view.parent as? DialogWindowProvider)?.window
+                window?.let {
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        it.isNavigationBarContrastEnforced = false
+                    }
+                }
+            }
             MusicSetting()
         }
     }
@@ -291,7 +307,17 @@ fun SettingScreen(
             modifier = Modifier.fillMaxSize(),
             sheetState = bookmarkMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBookmarkThemeMenu(false)) },
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
+            val view = LocalView.current
+            SideEffect {
+                val window = (view.context as? Activity)?.window ?: (view.parent as? DialogWindowProvider)?.window
+                window?.let {
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        it.isNavigationBarContrastEnforced = false
+                    }
+                }
+            }
             BookmarkSetting()
         }
     }
@@ -302,7 +328,17 @@ fun SettingScreen(
             onDismissRequest = {
                 onAction(SettingAction.OpenCategoryMenu(false))
             },
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
+            val view = LocalView.current
+            SideEffect {
+                val window = (view.context as? Activity)?.window ?: (view.parent as? DialogWindowProvider)?.window
+                window?.let {
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        it.isNavigationBarContrastEnforced = false
+                    }
+                }
+            }
             BookCategorySetting()
         }
     }

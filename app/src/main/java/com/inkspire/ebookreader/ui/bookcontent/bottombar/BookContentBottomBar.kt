@@ -14,12 +14,15 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.TableOfContent
+import com.inkspire.ebookreader.service.TTSPlaybackState
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScroll
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.common.BottomBarMode
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.default.BottomBarDefault
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.setting.BottomBarSetting
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.theme.BottomBarTheme
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTS
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSAction
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSState
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
 import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingAction
@@ -33,9 +36,12 @@ fun BookContentBottomBar(
     hazeState: HazeState,
     stylingState: StylingState,
     drawerState: DrawerState,
+    ttsPlaybackState: TTSPlaybackState,
+    bottomBarTTSState: BottomBarTTSState,
     bookChapterContentState: BookChapterContentState,
     bookContentBottomBarState: BookContentBottomBarState,
     onBookContentBottomBarAction: (BookContentBottomBarAction) -> Unit,
+    onBottomBarTTSAction: (BottomBarTTSAction) -> Unit,
     onStyleAction: (BookContentStylingAction) -> Unit
 ) {
     AnimatedVisibility(
@@ -90,6 +96,11 @@ fun BookContentBottomBar(
                     BottomBarTTS(
                         stylingState = stylingState,
                         drawerState = drawerState,
+                        ttsPlaybackState = ttsPlaybackState,
+                        currentChapterTitle = tableOfContents[bookChapterContentState.currentChapterIndex].title,
+                        hazeState = hazeState,
+                        bottomBarTTSState = bottomBarTTSState,
+                        onAction = onBottomBarTTSAction,
                     )
                 }
             }

@@ -1,12 +1,17 @@
 package com.inkspire.ebookreader.ui.home.libary.composable
 
+import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -15,14 +20,17 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindowProvider
 import com.inkspire.ebookreader.domain.model.Book
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,23 +42,36 @@ fun MyBookMenuBottomSheet(
     onViewBookDetails: (Book) -> Unit,
     onDeleteBook: (Book) -> Unit,
 ) {
-    book?.let {
+    book?.let { bookInfo ->
         ModalBottomSheet(
             onDismissRequest = {
-                onDismiss(it)
+                onDismiss(bookInfo)
             },
             sheetState = sheetState,
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
         ) {
+            val view = LocalView.current
+            SideEffect {
+                val window = (view.context as? Activity)?.window ?: (view.parent as? DialogWindowProvider)?.window
+                window?.let {
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        it.isNavigationBarContrastEnforced = false
+                    }
+                }
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .padding(
+                        bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+                    ),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = it.title,
+                    text = bookInfo.title,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     style = TextStyle(
@@ -60,7 +81,7 @@ fun MyBookMenuBottomSheet(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = it.authors.joinToString(","),
+                    text = bookInfo.authors.joinToString(","),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     style = TextStyle(
@@ -71,8 +92,8 @@ fun MyBookMenuBottomSheet(
                 TextButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        onDismiss(it)
-                        onViewBookDetails(it)
+                        onDismiss(bookInfo)
+                        onViewBookDetails(bookInfo)
                     }
                 ) {
                     Row(modifier = Modifier.fillMaxWidth()) {
@@ -85,8 +106,8 @@ fun MyBookMenuBottomSheet(
                 TextButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        onDismiss(it)
-                        onDeleteBook(it)
+                        onDismiss(bookInfo)
+                        onDeleteBook(bookInfo)
                     }
                 ) {
                     Row(modifier = Modifier.fillMaxWidth()) {

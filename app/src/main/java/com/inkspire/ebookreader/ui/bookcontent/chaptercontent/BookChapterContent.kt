@@ -27,7 +27,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.Chapter
+import com.inkspire.ebookreader.service.TTSPlaybackState
 import com.inkspire.ebookreader.ui.bookcontent.content.ChapterContent
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
@@ -69,6 +70,7 @@ fun BookChapterContent(
     stylingState: StylingState,
     bookChapterContentState: BookChapterContentState,
     chapterUiState: UiState<Chapter>,
+    ttsPlaybackState: TTSPlaybackState,
     isCurrentChapter: Boolean,
     onBookContentDataAction: (BookContentDataAction) -> Unit,
     onBookChapterContentAction: (BookChapterContentAction) -> Unit,
@@ -290,11 +292,11 @@ fun BookChapterContent(
                             onBookChapterContentAction(BookChapterContentAction.UpdateScreenHeight(coordinates.size.height))
                         },
                 ) {
-                    items(paragraphs) { paragraph ->
+                    itemsIndexed(paragraphs) { index, paragraph ->
                         ChapterContent(
                             paragraph = paragraph,
                             stylingState = stylingState,
-                            isHighlighted = false
+                            isHighlighted = ttsPlaybackState.isSpeaking && ttsPlaybackState.paragraphIndex == index
                         )
                     }
                 }

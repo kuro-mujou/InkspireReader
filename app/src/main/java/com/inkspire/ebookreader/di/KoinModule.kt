@@ -36,6 +36,7 @@ import com.inkspire.ebookreader.domain.usecase.TableOfContentUseCase
 import com.inkspire.ebookreader.service.TTSManager
 import com.inkspire.ebookreader.service.TTSServiceHandler
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarViewModel
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentViewModel
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerViewModel
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentViewModel
@@ -144,6 +145,7 @@ object KoinModule {
         viewModelOf(::BookContentStylingViewModel)
         viewModelOf(::BookContentTopBarViewModel)
         viewModelOf(::BookContentBottomBarViewModel)
+        viewModelOf(::BottomBarTTSViewModel)
     }
 
     val dataStoreModule = module {

@@ -6,4 +6,5 @@ sealed interface BookContentBottomBarAction {
     data object SettingIconClicked : BookContentBottomBarAction
     data object ThemeIconClicked : BookContentBottomBarAction
     data object TtsIconClicked : BookContentBottomBarAction
+    data object ResetBottomBarMode : BookContentBottomBarAction
 }
