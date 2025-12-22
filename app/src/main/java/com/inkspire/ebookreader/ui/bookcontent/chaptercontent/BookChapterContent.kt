@@ -64,6 +64,7 @@ import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 @Composable
 fun BookChapterContent(
     bookInfo: Book,
+    initialParagraphIndex: Int,
     currentChapter: Int,
     stylingState: StylingState,
     bookChapterContentState: BookChapterContentState,
@@ -74,7 +75,6 @@ fun BookChapterContent(
     onListStateLoaded: (LazyListState) -> Unit,
     onDispose: () -> Unit
 ) {
-    val initialParagraphIndex = if (currentChapter == bookInfo.currentChapter) bookInfo.currentParagraph else 0
     var originalOffset by remember { mutableStateOf(Offset.Zero) }
     var size by remember { mutableStateOf(IntSize.Zero) }
     var originalZoom by remember { mutableFloatStateOf(1f) }
@@ -125,7 +125,6 @@ fun BookChapterContent(
                 snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
                     .collect { index ->
                         if (isCurrentChapter && index != null) {
-                            onBookContentDataAction(BookContentDataAction.UpdateRecentParagraphToDB(index))
                             onBookChapterContentAction(BookChapterContentAction.UpdateLastVisibleItemIndex(index))
                         }
                     }

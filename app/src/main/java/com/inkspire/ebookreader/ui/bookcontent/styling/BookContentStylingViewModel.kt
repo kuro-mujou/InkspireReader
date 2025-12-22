@@ -50,6 +50,7 @@ class BookContentStylingViewModel(
                         tocTextColor = generateTOCTextColor(Color(color)),
                         textBackgroundColor = generateTextSelectionColor(Color(color), _state.value.textColor),
                         containerColor = generateContainerColor(Color(color)),
+                        drawerContainerColor = generateDrawerContainerColor(Color(color)),
                     )
                 }
             }
@@ -93,8 +94,51 @@ class BookContentStylingViewModel(
 
     fun onAction(action: BookContentStylingAction) {
         when (action) {
-
-            else -> {}
+            is BookContentStylingAction.UpdateBackgroundColor -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setBackgroundColor(action.color)
+                }
+            }
+            is BookContentStylingAction.UpdateFontSize -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setFontSize(action.fontSize)
+                }
+            }
+            is BookContentStylingAction.UpdateImagePaddingState -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setImagePaddingState(!_state.value.imagePaddingState)
+                }
+            }
+            is BookContentStylingAction.UpdateLineSpacing -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setLineSpacing(action.lineSpacing)
+                }
+            }
+            is BookContentStylingAction.UpdateSelectedColorSet -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setSelectedColorSet(action.index)
+                }
+            }
+            is BookContentStylingAction.UpdateSelectedFontFamilyIndex -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setFontFamily(action.index)
+                }
+            }
+            is BookContentStylingAction.UpdateTextAlign -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setTextAlign(!_state.value.textAlign)
+                }
+            }
+            is BookContentStylingAction.UpdateTextColor -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setTextColor(action.color)
+                }
+            }
+            is BookContentStylingAction.UpdateTextIndent -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setTextIndent(!_state.value.textIndent)
+                }
+            }
         }
     }
 
@@ -103,6 +147,14 @@ class BookContentStylingViewModel(
             backgroundColor.lighten(0.05f)
         } else {
             backgroundColor.darken(0.05f)
+        }
+    }
+
+    private fun generateDrawerContainerColor(backgroundColor: Color): Color {
+        return if (backgroundColor.isDark()) {
+            backgroundColor.lighten(0.1f)
+        } else {
+            backgroundColor.darken(0.1f)
         }
     }
 

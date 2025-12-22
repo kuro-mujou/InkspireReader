@@ -2,10 +2,13 @@ package com.inkspire.ebookreader.ui.bookcontent.root
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.navigation.Navigator
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarAction
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarViewModel
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentRootScreen
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentViewModel
@@ -32,14 +35,18 @@ fun BookContentRootScreen(
     val stylingViewModel = koinViewModel<BookContentStylingViewModel>()
     val chapterContentViewModel = koinViewModel<BookChapterContentViewModel>()
     val tableOfContentViewModel = koinViewModel<TableOfContentViewModel>()
-    val topbarViewModel = koinViewModel<BookContentTopBarViewModel>()
+    val topBarViewModel = koinViewModel<BookContentTopBarViewModel>()
+    val bottomBarViewModel = koinViewModel<BookContentBottomBarViewModel>()
 
     val bookContentDataState by dataViewModel.state.collectAsStateWithLifecycle()
     val drawerState by drawerViewModel.state.collectAsStateWithLifecycle()
     val stylingState by stylingViewModel.state.collectAsStateWithLifecycle()
     val bookChapterContentState by chapterContentViewModel.state.collectAsStateWithLifecycle()
     val tableOfContentState by tableOfContentViewModel.state.collectAsStateWithLifecycle()
-    val bookContentTopBarState by topbarViewModel.state.collectAsStateWithLifecycle()
+    val bookContentTopBarState by topBarViewModel.state.collectAsStateWithLifecycle()
+    val bookContentBottomBarState by bottomBarViewModel.state.collectAsStateWithLifecycle()
+
+    val bookChapterContentEvent = chapterContentViewModel.event
 
     when (val state = bookContentDataState.bookState) {
         is UiState.None -> {
@@ -47,7 +54,9 @@ fun BookContentRootScreen(
         }
 
         is UiState.Loading -> {
-            MyLoadingAnimation()
+            MyLoadingAnimation(
+                stylingState = stylingState
+            )
         }
 
         is UiState.Error -> {
@@ -60,13 +69,23 @@ fun BookContentRootScreen(
 
         is UiState.Success -> {
             val bookInfo = state.data
+            LaunchedEffect(bookInfo) {
+                chapterContentViewModel.onAction(
+                    BookChapterContentAction.InitFromDatabase(
+                        chapter = bookInfo.currentChapter,
+                        paragraph = bookInfo.currentParagraph
+                    )
+                )
+            }
             when (val state = bookContentDataState.tableOfContentState) {
                 is UiState.None -> {
 
                 }
 
                 is UiState.Loading -> {
-                    MyLoadingAnimation()
+                    MyLoadingAnimation(
+                        stylingState = stylingState
+                    )
                 }
 
                 is UiState.Error -> {
@@ -92,52 +111,73 @@ fun BookContentRootScreen(
                                 bookChapterContentState = bookChapterContentState,
                                 tableOfContentState = tableOfContentState,
                                 onDrawerAction = drawerViewModel::onAction,
-                                onTableOfContentAction = tableOfContentViewModel::onAction
-                            )
-                        },
-                        mainContent = {
-                            BookChapterContentRootScreen(
-                                bookInfo = bookInfo,
-                                tableOfContents = tableOfContents,
-                                bookContentDataState = bookContentDataState,
-                                bookChapterContentState = bookChapterContentState,
-                                bookContentTopBarState = bookContentTopBarState,
-                                stylingState = stylingState,
-                                drawerState = drawerState,
-                                onBookContentDataAction = dataViewModel::onAction,
-                                onBookChapterContentAction = {
+                                onTableOfContentAction = {
                                     when (it) {
-                                        is BookChapterContentAction.UpdateSystemBar -> {
-                                            topbarViewModel.onAction(BookContentTopBarAction.ChangeTopBarVisibility)
+                                        is TableOfContentAction.NavigateToChapter -> {
+                                            drawerViewModel.onAction(DrawerAction.CloseDrawer)
+                                            chapterContentViewModel.onAction(BookChapterContentAction.RequestScrollToChapter(it.chapterIndex))
                                         }
-                                        else -> {
-                                            chapterContentViewModel.onAction(it)
-                                        }
-                                    }
-                                },
-                                onBookContentTopBarAction = {
-                                    when (it) {
-                                        BookContentTopBarAction.BackIconClicked -> {
-                                            parentNavigator.handleBack()
-                                        }
-                                        BookContentTopBarAction.BookmarkIconClicked -> {
-                                            tableOfContentViewModel.onAction(
-                                                TableOfContentAction.UpdateCurrentChapterFavoriteState(
-                                                    bookId = bookId,
-                                                    chapterIndex = bookChapterContentState.currentChapterIndex,
-                                                    isFavorite = !tableOfContents[bookChapterContentState.currentChapterIndex].isFavorite
-                                                )
-                                            )
-                                        }
-                                        BookContentTopBarAction.DrawerIconClicked -> {
-                                            drawerViewModel.onAction(DrawerAction.OpenDrawer)
-                                        }
-                                        else -> {
-                                            topbarViewModel.onAction(it)
-                                        }
+                                        else -> {}
                                     }
                                 }
                             )
+                        },
+                        mainContent = {
+                            if (bookChapterContentState.currentChapterIndex != -1) {
+                                BookChapterContentRootScreen(
+                                    bookInfo = bookInfo,
+                                    initialChapter = bookChapterContentState.currentChapterIndex,
+                                    initialParagraph = bookChapterContentState.firstVisibleItemIndex,
+                                    tableOfContents = tableOfContents,
+                                    bookContentDataState = bookContentDataState,
+                                    bookChapterContentState = bookChapterContentState,
+                                    bookContentTopBarState = bookContentTopBarState,
+                                    bookContentBottomBarState = bookContentBottomBarState,
+                                    stylingState = stylingState,
+                                    drawerState = drawerState,
+                                    bookChapterContentEvent = bookChapterContentEvent,
+                                    onBookContentDataAction = dataViewModel::onAction,
+                                    onBookChapterContentAction = {
+                                        when (it) {
+                                            is BookChapterContentAction.UpdateSystemBar -> {
+                                                topBarViewModel.onAction(BookContentTopBarAction.ChangeTopBarVisibility)
+                                                bottomBarViewModel.onAction(BookContentBottomBarAction.ChangeBottomBarVisibility)
+                                            }
+                                            else -> {
+                                                chapterContentViewModel.onAction(it)
+                                            }
+                                        }
+                                    },
+                                    onBookContentTopBarAction = {
+                                        when (it) {
+                                            BookContentTopBarAction.BackIconClicked -> {
+                                                parentNavigator.handleBack()
+                                            }
+                                            BookContentTopBarAction.BookmarkIconClicked -> {
+                                                tableOfContentViewModel.onAction(
+                                                    TableOfContentAction.UpdateCurrentChapterFavoriteState(
+                                                        bookId = bookId,
+                                                        chapterIndex = bookChapterContentState.currentChapterIndex,
+                                                        isFavorite = !tableOfContents[bookChapterContentState.currentChapterIndex].isFavorite
+                                                    )
+                                                )
+                                            }
+                                            BookContentTopBarAction.DrawerIconClicked -> {
+                                                drawerViewModel.onAction(DrawerAction.OpenDrawer)
+                                            }
+                                            else -> {
+                                                topBarViewModel.onAction(it)
+                                            }
+                                        }
+                                    },
+                                    onBookContentBottomBarAction = bottomBarViewModel::onAction,
+                                    onStyleAction = stylingViewModel::onAction
+                                )
+                            } else {
+                                MyLoadingAnimation(
+                                    stylingState = stylingState
+                                )
+                            }
                         }
                     )
                 }

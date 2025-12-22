@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.dp
@@ -70,11 +70,11 @@ fun ParagraphComponent(
                 else
                     TextIndent.None,
                 fontSize = stylingState.fontSize.sp,
-                fontWeight = FontWeight.Bold,
                 fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
                 textAlign = if (stylingState.textAlign) TextAlign.Justify else TextAlign.Left,
                 color = stylingState.textColor,
                 background = color,
+                lineBreak = LineBreak.Paragraph,
                 lineHeight = (stylingState.fontSize + stylingState.lineSpacing).sp
             )
         )

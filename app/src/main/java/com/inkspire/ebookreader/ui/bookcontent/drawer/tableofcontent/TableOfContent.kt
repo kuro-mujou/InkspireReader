@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -78,11 +78,10 @@ fun TableOfContentScreen(
             onAction(TableOfContentAction.UpdateSearchState(false))
         }
     }
-    LaunchedEffect(bookChapterContentState.currentChapterIndex) {
-        lazyColumnState.scrollToItem(bookChapterContentState.currentChapterIndex)
-    }
     LaunchedEffect(drawerState.visibility) {
-        if (!drawerState.visibility) {
+        if (drawerState.visibility) {
+            lazyColumnState.scrollToItem(bookChapterContentState.currentChapterIndex)
+        } else {
             searchInput = ""
             onAction(TableOfContentAction.UpdateTargetSearchIndex(-1))
             keyboardController?.hide()
@@ -157,22 +156,24 @@ fun TableOfContentScreen(
                         .calculateBottomPadding()
                 )
             ) {
-                items(
-                    items = tableOfContents
-                ) { tocItem ->
+                itemsIndexed(
+                    items = tableOfContents,
+                    key = { _, tocItem -> tocItem.index }
+                ) { index, tocItem ->
                     CustomNavigationDrawerItem(
                         label = {
                             Text(
                                 text = tocItem.title,
-                                style =
-                                    if (tableOfContents.indexOf(tocItem) == tableOfContentState.targetSearchIndex) {
+                                style = when (index) {
+                                    tableOfContentState.targetSearchIndex -> {
                                         TextStyle(
                                             color = stylingState.textColor,
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
                                             fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
                                         )
-                                    } else if (tableOfContents.indexOf(tocItem) == bookChapterContentState.currentChapterIndex) {
+                                    }
+                                    bookChapterContentState.currentChapterIndex -> {
                                         TextStyle(
                                             color = stylingState.containerColor,
                                             fontStyle = FontStyle.Italic,
@@ -180,29 +181,25 @@ fun TableOfContentScreen(
                                             fontWeight = FontWeight.Bold,
                                             fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
                                         )
-                                    } else {
+                                    }
+                                    else -> {
                                         TextStyle(
                                             fontSize = 14.sp,
                                             fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
                                         )
-                                    },
+                                    }
+                                },
                             )
                         },
-                        selected = tableOfContents.indexOf(tocItem) == bookChapterContentState.currentChapterIndex,
+                        selected = index == bookChapterContentState.currentChapterIndex,
                         modifier = Modifier
                             .padding(4.dp, 2.dp, 4.dp, 2.dp)
                             .wrapContentHeight()
-                            .clickable(
-                                onClick = {
-//                                onTocItemClick(
-//                                    tableOfContents.indexOf(
-//                                        tocItem
-//                                    )
-//                                )
-                                },
-                            )
+                            .clickable {
+                                onAction(TableOfContentAction.NavigateToChapter(index))
+                            }
                             .then(
-                                if (tableOfContents.indexOf(tocItem) == tableOfContentState.targetSearchIndex)
+                                if (index == tableOfContentState.targetSearchIndex)
                                     Modifier.border(
                                         width = 1.dp,
                                         color = stylingState.textColor,
@@ -214,13 +211,13 @@ fun TableOfContentScreen(
                             ),
                         colors = NavigationDrawerItemDefaults.colors(
                             selectedContainerColor =
-                                if (tableOfContents.indexOf(tocItem) == tableOfContentState.targetSearchIndex) {
+                                if (index == tableOfContentState.targetSearchIndex) {
                                     stylingState.textBackgroundColor
                                 } else {
                                     stylingState.textColor
                                 },
                             unselectedContainerColor =
-                                if (tableOfContents.indexOf(tocItem) == tableOfContentState.targetSearchIndex) {
+                                if (index == tableOfContentState.targetSearchIndex) {
                                     stylingState.textBackgroundColor
                                 } else {
                                     Color.Transparent

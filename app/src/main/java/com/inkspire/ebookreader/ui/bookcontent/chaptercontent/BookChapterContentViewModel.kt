@@ -2,10 +2,13 @@ package com.inkspire.ebookreader.ui.bookcontent.chaptercontent
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class BookChapterContentViewModel(
 
@@ -18,8 +21,19 @@ class BookChapterContentViewModel(
             _state.value
         )
 
+    private val _event = Channel<BookChapterContentEvent>(Channel.BUFFERED)
+    val event = _event.receiveAsFlow()
+
     fun onAction(action: BookChapterContentAction){
         when(action) {
+            is BookChapterContentAction.InitFromDatabase -> {
+                if (_state.value.currentChapterIndex == -1) {
+                    _state.update { it.copy(
+                        currentChapterIndex = action.chapter,
+                        firstVisibleItemIndex = action.paragraph
+                    ) }
+                }
+            }
             is BookChapterContentAction.UpdateCurrentChapter -> {
                 _state.update { it.copy(currentChapterIndex = action.index) }
             }
@@ -40,6 +54,11 @@ class BookChapterContentViewModel(
             }
             is BookChapterContentAction.UpdateEnablePagerScroll -> {
                 _state.update { it.copy(enablePagerScroll = action.enable) }
+            }
+            is BookChapterContentAction.RequestScrollToChapter -> {
+                viewModelScope.launch {
+                    _event.send(BookChapterContentEvent.ScrollToChapter(action.index))
+                }
             }
             else -> {}
         }

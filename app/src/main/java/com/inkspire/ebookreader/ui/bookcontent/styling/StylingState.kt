@@ -7,11 +7,12 @@ import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.ContentThemeColor
 
 data class StylingState(
-    val backgroundColor: Color = Color(0xFFF1F7ED),
-    val textBackgroundColor: Color = Color(0xFF3A342B),
-    val tocTextColor: Color = Color(0xFF001F2B),
-    val textColor: Color = Color(0xFF181C20),
-    val containerColor: Color = Color(0xFFC8C8C8),
+    val backgroundColor: Color = Color(0xFFFFFFFF),
+    val textBackgroundColor: Color = Color(0xFFFFFFFF),
+    val tocTextColor: Color = Color(0xFFFFFFFF),
+    val textColor: Color = Color(0xFFFFFFFF),
+    val containerColor: Color = Color(0xFFFFFFFF),
+    val drawerContainerColor: Color = Color(0xFFFFFFFF),
     val selectedColorSet: Int = 0,
     val fontSize: Int = 20,
     val lineSpacing: Int = 15,

@@ -81,7 +81,7 @@ fun PushDrawer(
         label = "MainContentRotation"
     )
     val insetsController = rememberInsetsController()
-    val shouldUseDarkIcons = !stylingState.containerColor.isDark()
+    val shouldUseDarkIcons = !stylingState.drawerContainerColor.isDark()
 
     SideEffect {
         insetsController?.isAppearanceLightStatusBars = shouldUseDarkIcons
@@ -93,7 +93,7 @@ fun PushDrawer(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(stylingState.containerColor)
+            .background(stylingState.drawerContainerColor)
     ) {
         Box(
             modifier = Modifier

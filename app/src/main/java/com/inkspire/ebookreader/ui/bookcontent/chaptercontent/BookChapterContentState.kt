@@ -6,20 +6,22 @@ import java.util.Locale
 
 data class BookChapterContentState(
     val enableScaffoldBar: Boolean = true,
+
     val enablePagerScroll: Boolean = true,
     val enableUndoButton: Boolean = false,
     //content
-    val currentChapterIndex: Int = 0,
+    val currentChapterIndex: Int = -1,
+    val firstVisibleItemIndex: Int = -1,
+    val lastVisibleItemIndex: Int = -1,
+
     val previousChapterIndex: Int = 0,
     val flagTriggerScrolling: Boolean = false,
     val flagStartScrolling: Boolean = false,
     val flagScrollAdjusted: Boolean = false,
     val flagTriggerAdjustScroll: Boolean = false,
     val flagStartAdjustScroll: Boolean = false,
-    val firstVisibleItemIndex: Int = 0,
-    val lastVisibleItemIndex: Int = 0,
-    val chapterHeader: String = "",
     val flagTriggerScrollForNote: Int = -1,
+
     val screenHeight: Int = 0,
     val screenWidth: Int = 0,
     //tts
@@ -37,6 +39,4 @@ data class BookChapterContentState(
 
     val keepScreenOn: Boolean = false,
     val selectedBookmarkStyle: BookmarkStyle = BookmarkStyle.WAVE_WITH_BIRDS,
-    val unlockSpecialCodeStatus: Boolean = false,
-    val enableSpecialArt: Boolean = false
 )
