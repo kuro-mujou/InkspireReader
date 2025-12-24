@@ -1,12 +1,18 @@
 package com.inkspire.ebookreader.ui.bookcontent.chaptercontent
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,6 +22,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -23,6 +30,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,10 +41,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -56,11 +66,15 @@ import androidx.compose.ui.unit.dp
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.Chapter
-import com.inkspire.ebookreader.service.TTSPlaybackState
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollAction
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.content.ChapterContent
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @Composable
 fun BookChapterContent(
@@ -71,9 +85,11 @@ fun BookChapterContent(
     bookChapterContentState: BookChapterContentState,
     chapterUiState: UiState<Chapter>,
     ttsPlaybackState: TTSPlaybackState,
+    autoScrollState: AutoScrollState,
     isCurrentChapter: Boolean,
     onBookContentDataAction: (BookContentDataAction) -> Unit,
     onBookChapterContentAction: (BookChapterContentAction) -> Unit,
+    onAutoScrollAction: (AutoScrollAction) -> Unit,
     onListStateLoaded: (LazyListState) -> Unit,
     onDispose: () -> Unit
 ) {
@@ -104,10 +120,25 @@ fun BookChapterContent(
         is UiState.Success -> {
             val chapterData = chapterUiState.data
             val paragraphs = chapterData.content
-
             val listState = rememberLazyListState(
                 initialFirstVisibleItemIndex = initialParagraphIndex
             )
+
+            val currentAutoScrollState by rememberUpdatedState(autoScrollState)
+            val currentAutoScrollAction by rememberUpdatedState(onAutoScrollAction)
+            val isAtBottom by remember {
+                derivedStateOf {
+                    val layoutInfo = listState.layoutInfo
+                    val visibleItemsInfo = layoutInfo.visibleItemsInfo
+                    if (layoutInfo.totalItemsCount == 0) {
+                        false
+                    } else {
+                        val lastVisibleItem = visibleItemsInfo.lastOrNull()
+                        lastVisibleItem?.index == layoutInfo.totalItemsCount - 1 &&
+                                (lastVisibleItem.offset + lastVisibleItem.size) <= layoutInfo.viewportEndOffset
+                    }
+                }
+            }
 
             DisposableEffect(listState) {
                 onListStateLoaded(listState)
@@ -148,47 +179,112 @@ fun BookChapterContent(
                 }
             }
 
+            LaunchedEffect(
+                listState.interactionSource,
+                currentAutoScrollState.autoScrollResumeDelayTime
+            ) {
+                listState.interactionSource.interactions.collect { interaction ->
+                    if (!currentAutoScrollState.isActivated) return@collect
+
+                    when (interaction) {
+                        is PressInteraction.Press, is DragInteraction.Start -> {
+                            currentAutoScrollAction(AutoScrollAction.UpdateIsPaused(true))
+                        }
+                        is PressInteraction.Release, is DragInteraction.Stop, is DragInteraction.Cancel -> {
+                            if (currentAutoScrollState.autoScrollResumeMode) {
+                                delay(currentAutoScrollState.autoScrollResumeDelayTime.toLong())
+                                currentAutoScrollAction(AutoScrollAction.UpdateIsPaused(false))
+                            }
+                        }
+                    }
+                }
+            }
+
+            LaunchedEffect(
+                currentChapter,
+                isCurrentChapter,
+                currentAutoScrollState.delayTimeAtStart,
+            ) {
+                if (isCurrentChapter && autoScrollState.isActivated) {
+                    if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0) {
+                        onAutoScrollAction(AutoScrollAction.UpdateIsPaused(true))
+                        delay(autoScrollState.delayTimeAtStart.toLong())
+                        onAutoScrollAction(AutoScrollAction.UpdateIsPaused(false))
+                    }
+                }
+            }
+
+            LaunchedEffect(
+                currentAutoScrollState.isActivated,
+                currentAutoScrollState.isPaused,
+                currentAutoScrollState.autoScrollSpeed,
+                currentAutoScrollState.delayTimeAtEnd,
+                isCurrentChapter,
+                currentChapter
+            ) {
+                if (isCurrentChapter && currentAutoScrollState.isActivated && !currentAutoScrollState.isPaused) {
+                    if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0) {
+                        delay(currentAutoScrollState.delayTimeAtStart.toLong())
+                        currentAutoScrollAction(AutoScrollAction.UpdateIsPaused(false))
+                    }
+                    while (isActive) {
+                        if (isAtBottom) {
+                            onAutoScrollAction(AutoScrollAction.UpdateIsAnimationRunning(false))
+                            if (currentChapter + 1 < bookInfo.totalChapter) {
+                                onAutoScrollAction(AutoScrollAction.UpdateIsPaused(true))
+                                onBookChapterContentAction(
+                                    BookChapterContentAction.RequestScrollToChapter(currentChapter + 1)
+                                )
+                            } else {
+                                onAutoScrollAction(AutoScrollAction.UpdateIsActivated(false))
+                            }
+                            break
+                        }
+
+                        onAutoScrollAction(AutoScrollAction.UpdateIsAnimationRunning(true))
+
+                        listState.animateScrollBy(
+                            value = bookChapterContentState.screenHeight.toFloat(),
+                            animationSpec = tween(
+                                durationMillis = currentAutoScrollState.autoScrollSpeed,
+                                easing = LinearEasing
+                            )
+                        )
+
+                        onAutoScrollAction(AutoScrollAction.UpdateIsAnimationRunning(false))
+                    }
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                        onClick = {
-                            if (!bookChapterContentState.enableUndoButton) {
-                                onBookChapterContentAction(BookChapterContentAction.UpdateSystemBar)
-                            }
-                        },
-//                        onDoubleClick = {
-////                            autoScrollViewModel.onAction(AutoScrollAction.UpdateIsPaused(!autoScrollState.isPaused))
-//                        }
+                    .then(
+                        if (!currentAutoScrollState.isActivated) {
+                            Modifier.clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                                onClick = {
+                                    if (!bookChapterContentState.enableUndoButton) {
+                                        onBookChapterContentAction(BookChapterContentAction.UpdateSystemBar)
+                                    }
+                                },
+                            )
+                        } else {
+                            Modifier.combinedClickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() },
+                                onClick = {
+                                    if (!bookChapterContentState.enableUndoButton) {
+                                        onBookChapterContentAction(BookChapterContentAction.UpdateSystemBar)
+                                    }
+                                },
+                                onDoubleClick = {
+                                    onAutoScrollAction(AutoScrollAction.UpdateIsPaused(false))
+                                }
+                            )
+                        }
                     )
-//                    .then(
-//                        if (!autoScrollState.isStart) {
-//                            Modifier.clickable(
-//                                indication = null,
-//                                interactionSource = remember { MutableInteractionSource() },
-//                                onClick = {
-//                                    if (!contentState.enableUndoButton) {
-//                                        updateSystemBar()
-//                                    }
-//                                },
-//                            )
-//                        } else {
-//                            Modifier.combinedClickable(
-//                                indication = null,
-//                                interactionSource = remember { MutableInteractionSource() },
-//                                onClick = {
-//                                    if (!contentState.enableUndoButton) {
-//                                        updateSystemBar()
-//                                    }
-//                                },
-//                                onDoubleClick = {
-//                                    autoScrollViewModel.onAction(AutoScrollAction.UpdateIsPaused(!autoScrollState.isPaused))
-//                                }
-//                            )
-//                        }
-//                    )
             ) {
                 Row(
                     modifier = Modifier
@@ -289,8 +385,24 @@ fun BookChapterContent(
                                     ) { 32.dp.toPx() }.toInt())
                                 )
                             )
-                            onBookChapterContentAction(BookChapterContentAction.UpdateScreenHeight(coordinates.size.height))
+                            onBookChapterContentAction(
+                                BookChapterContentAction.UpdateScreenHeight(
+                                    coordinates.size.height
+                                )
+                            )
                         },
+                    contentPadding = PaddingValues(
+                        start = WindowInsets.systemBars
+                            .union(WindowInsets.displayCutout)
+                            .only(WindowInsetsSides.Start)
+                            .asPaddingValues()
+                            .calculateStartPadding(LayoutDirection.Ltr),
+                        end = WindowInsets.systemBars
+                            .union(WindowInsets.displayCutout)
+                            .only(WindowInsetsSides.End)
+                            .asPaddingValues()
+                            .calculateEndPadding(LayoutDirection.Ltr),
+                    ),
                 ) {
                     itemsIndexed(paragraphs) { index, paragraph ->
                         ChapterContent(

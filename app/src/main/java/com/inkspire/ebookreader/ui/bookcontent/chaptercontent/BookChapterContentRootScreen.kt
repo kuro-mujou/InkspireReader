@@ -1,7 +1,6 @@
 package com.inkspire.ebookreader.ui.bookcontent.chaptercontent
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
@@ -11,22 +10,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.TableOfContent
-import com.inkspire.ebookreader.service.TTSPlaybackState
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollAction
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBar
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarAction
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarState
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScrollAction
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSAction
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSState
 import com.inkspire.ebookreader.ui.bookcontent.composable.CustomFab
@@ -38,6 +36,9 @@ import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBar
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarAction
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarState
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
+import com.inkspire.ebookreader.ui.setting.SettingAction
+import com.inkspire.ebookreader.ui.setting.SettingState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import kotlinx.coroutines.delay
@@ -57,15 +58,21 @@ fun BookChapterContentRootScreen(
     bookContentBottomBarState: BookContentBottomBarState,
     stylingState: StylingState,
     drawerState: DrawerState,
+    settingState: SettingState,
     ttsPlaybackState: TTSPlaybackState,
+    autoScrollState: AutoScrollState,
     bottomBarTTSState: BottomBarTTSState,
+    bottomBarAutoScrollState: BottomBarAutoScrollState,
     bookChapterContentEvent: Flow<BookChapterContentEvent>,
+    onAutoScrollAction: (AutoScrollAction) -> Unit,
     onBookContentDataAction: (BookContentDataAction) -> Unit,
     onBookChapterContentAction: (BookChapterContentAction) -> Unit,
     onBookContentTopBarAction: (BookContentTopBarAction) -> Unit,
     onBookContentBottomBarAction: (BookContentBottomBarAction) -> Unit,
     onBookContentBottomBarTTSAction: (BottomBarTTSAction) -> Unit,
-    onStyleAction: (BookContentStylingAction) -> Unit
+    onBookContentBottomBarAutoScrollAction: (BottomBarAutoScrollAction) -> Unit,
+    onBookContentBottomBarSettingAction: (SettingAction) -> Unit,
+    onBookContentBottomBarStyleAction: (BookContentStylingAction) -> Unit
 ) {
     val totalChapters = bookInfo.totalChapter
     val pagerState = rememberPagerState(
@@ -73,7 +80,6 @@ fun BookChapterContentRootScreen(
         pageCount = { totalChapters }
     )
     val lazyListStates = remember { mutableStateMapOf<Int, LazyListState>() }
-    var isAutoScrolling by rememberSaveable { mutableStateOf(false) }
     val hazeState = rememberHazeState()
 
     LaunchedEffect(pagerState) {
@@ -83,28 +89,22 @@ fun BookChapterContentRootScreen(
                 onBookContentDataAction(BookContentDataAction.UpdateRecentChapterToDB(page))
             }
     }
-    LaunchedEffect(isAutoScrolling, pagerState.currentPage) {
-        if (isAutoScrolling) {
-            while (true) {
-                val currentListState = lazyListStates[pagerState.currentPage]
-                currentListState?.scrollBy(2f)
-                delay(16)
-            }
-        }
-    }
+
     LaunchedEffect(pagerState.targetPage) {
-        onBookChapterContentAction(BookChapterContentAction.UpdateCurrentChapter(pagerState.targetPage))
+        onBookChapterContentAction(BookChapterContentAction.UpdateCurrentChapterIndex(pagerState.targetPage))
     }
     LaunchedEffect(bookChapterContentEvent) {
         bookChapterContentEvent.collect { event ->
             when (event) {
                 is BookChapterContentEvent.ScrollToChapter -> {
-                    pagerState.scrollToPage(event.page)
+                    delay(300)
+                    pagerState.animateScrollToPage(event.page)
                 }
                 is BookChapterContentEvent.ScrollToParagraph -> {
-                    pagerState.scrollToPage(event.page)
+                    delay(300)
+                    pagerState.animateScrollToPage(event.page)
                     val currentListState = lazyListStates[event.page]
-                    currentListState?.scrollToItem(event.paragraphIndex)
+                    currentListState?.animateScrollToItem(event.paragraphIndex)
                 }
             }
         }
@@ -129,13 +129,18 @@ fun BookChapterContentRootScreen(
                 hazeState = hazeState,
                 stylingState = stylingState,
                 drawerState = drawerState,
+                settingState = settingState,
                 ttsPlaybackState = ttsPlaybackState,
+                autoScrollState = autoScrollState,
                 bottomBarTTSState = bottomBarTTSState,
+                bottomBarAutoScrollState = bottomBarAutoScrollState,
                 bookChapterContentState = bookChapterContentState,
                 bookContentBottomBarState = bookContentBottomBarState,
                 onBookContentBottomBarAction = onBookContentBottomBarAction,
                 onBottomBarTTSAction = onBookContentBottomBarTTSAction,
-                onStyleAction = onStyleAction
+                onBottomBarAutoScrollAction = onBookContentBottomBarAutoScrollAction,
+                onBottomBarSettingAction = onBookContentBottomBarSettingAction,
+                onStyleAction = onBookContentBottomBarStyleAction
             )
         },
         floatingActionButton = {
@@ -171,15 +176,17 @@ fun BookChapterContentRootScreen(
                         bookChapterContentState = bookChapterContentState,
                         chapterUiState = bookContentDataState.chapterStates[pageIndex] ?: UiState.None,
                         ttsPlaybackState = ttsPlaybackState,
+                        autoScrollState = autoScrollState,
                         isCurrentChapter = pagerState.currentPage == pageIndex,
                         onBookContentDataAction = onBookContentDataAction,
                         onBookChapterContentAction = onBookChapterContentAction,
+                        onAutoScrollAction = onAutoScrollAction,
                         onListStateLoaded = { loadedState ->
                             lazyListStates[pageIndex] = loadedState
                         },
                         onDispose = {
                             lazyListStates.remove(pageIndex)
-                        }
+                        },
                     )
                 }
             }

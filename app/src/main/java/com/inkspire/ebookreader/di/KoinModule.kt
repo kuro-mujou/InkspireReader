@@ -19,6 +19,7 @@ import com.inkspire.ebookreader.domain.repository.ImagePathRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import com.inkspire.ebookreader.domain.repository.NoteRepository
 import com.inkspire.ebookreader.domain.repository.TableOfContentRepository
+import com.inkspire.ebookreader.domain.usecase.AutoScrollDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.AutoScrollSettingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.BookCategorySettingUseCase
 import com.inkspire.ebookreader.domain.usecase.BookContentStylingDatastoreUseCase
@@ -31,11 +32,14 @@ import com.inkspire.ebookreader.domain.usecase.MusicSettingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.MusicSettingUseCase
 import com.inkspire.ebookreader.domain.usecase.RecentBookUseCase
 import com.inkspire.ebookreader.domain.usecase.SettingDatastoreUseCase
+import com.inkspire.ebookreader.domain.usecase.TTSContentUseCase
 import com.inkspire.ebookreader.domain.usecase.TTSSettingDataStoreUseCase
 import com.inkspire.ebookreader.domain.usecase.TableOfContentUseCase
 import com.inkspire.ebookreader.service.TTSManager
 import com.inkspire.ebookreader.service.TTSServiceHandler
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollViewModel
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarViewModel
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScrollViewModel
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentViewModel
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerViewModel
@@ -105,6 +109,7 @@ object KoinModule {
         factoryOf(::LibraryUseCase)
         factoryOf(::LibraryDatastoreUseCase)
         factoryOf(::SettingDatastoreUseCase)
+        factoryOf(::AutoScrollDatastoreUseCase)
         factoryOf(::AutoScrollSettingDatastoreUseCase)
         factoryOf(::TTSSettingDataStoreUseCase)
         factoryOf(::BookCategorySettingUseCase)
@@ -115,6 +120,7 @@ object KoinModule {
         factoryOf(::BookContentUseCase)
         factoryOf(::BookContentStylingDatastoreUseCase)
         factoryOf(::TableOfContentUseCase)
+        factoryOf(::TTSContentUseCase)
     }
 
     val viewModelModule = module {
@@ -145,7 +151,16 @@ object KoinModule {
         viewModelOf(::BookContentStylingViewModel)
         viewModelOf(::BookContentTopBarViewModel)
         viewModelOf(::BookContentBottomBarViewModel)
-        viewModelOf(::BottomBarTTSViewModel)
+        viewModel {
+            BottomBarTTSViewModel(
+                context = androidContext(),
+                contentUseCase = get(),
+                ttsManager = get(),
+                bookId = it.get(),
+            )
+        }
+        viewModelOf(::BottomBarAutoScrollViewModel)
+        viewModelOf(::AutoScrollViewModel)
     }
 
     val dataStoreModule = module {
@@ -154,7 +169,7 @@ object KoinModule {
 
     @UnstableApi
     val ttsModule = module {
-        single { TTSServiceHandler(context = androidContext()) }
         single<TTSManager>(createdAtStart = true) { TTSManager(context = androidContext()) }
+        single { TTSServiceHandler(context = androidContext(), ttsManager = get()) }
     }
 }

@@ -7,17 +7,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -27,8 +31,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,13 +51,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
+import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.setting.music.composable.MyMusicItemView
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MusicSetting() {
+fun MusicSetting(
+    stylingState: StylingState? = null,
+) {
     val viewModel = koinViewModel<MusicSettingViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
@@ -64,7 +73,9 @@ fun MusicSetting() {
         }
     }
     var volumeSliderValue by remember { mutableFloatStateOf(state.playerVolume) }
-    Surface {
+    Surface(
+        color = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surface
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -86,6 +97,8 @@ fun MusicSetting() {
                     text = "MUSIC MENU",
                     style = TextStyle(
                         fontSize = 20.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                     )
                 )
                 IconButton(
@@ -97,6 +110,7 @@ fun MusicSetting() {
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_add_music),
                         contentDescription = null,
+                        tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -107,6 +121,8 @@ fun MusicSetting() {
                     text = "Enable background music",
                     style = TextStyle(
                         fontSize = 16.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -115,6 +131,14 @@ fun MusicSetting() {
                     onCheckedChange = {
                         viewModel.onAction(MusicSettingAction.OnEnableBackgroundMusicChange(it))
                     },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        checkedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
+                        checkedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        uncheckedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        uncheckedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
+                        uncheckedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                    )
                 )
             }
             Row(
@@ -128,12 +152,16 @@ fun MusicSetting() {
                     text = "Volume",
                     style = TextStyle(
                         fontSize = 16.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                     )
                 )
                 Text(
                     text = "%.2fx".format(volumeSliderValue),
                     style = TextStyle(
                         fontSize = 16.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                     )
                 )
             }
@@ -154,11 +182,15 @@ fun MusicSetting() {
                         modifier = Modifier
                             .size(24.dp)
                             .background(
-                                color = MaterialTheme.colorScheme.primary,
+                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
                                 shape = CircleShape
                             )
                     )
-                }
+                },
+                colors = SliderDefaults.colors(
+                    activeTrackColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = stylingState?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                )
             )
             LazyColumn(
                 modifier = Modifier
@@ -172,6 +204,7 @@ fun MusicSetting() {
                     ) { listItem ->
                         MyMusicItemView(
                             music = listItem,
+                            stylingState = stylingState,
                             onFavoriteClick = { musicItem ->
                                 viewModel.onAction(MusicSettingAction.OnFavoriteClick(musicItem))
                             },
@@ -183,7 +216,15 @@ fun MusicSetting() {
                             }
                         )
                     }
-                }
+                },
+                contentPadding = PaddingValues(
+                    bottom = WindowInsets
+                        .systemBars
+                        .union(WindowInsets.displayCutout)
+                        .only(WindowInsetsSides.Bottom)
+                        .asPaddingValues()
+                        .calculateBottomPadding(),
+                )
             )
         }
     }

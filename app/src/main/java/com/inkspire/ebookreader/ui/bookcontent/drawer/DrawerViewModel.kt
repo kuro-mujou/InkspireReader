@@ -19,16 +19,31 @@ class DrawerViewModel(): ViewModel(){
     fun onAction(action: DrawerAction) {
         when(action) {
             is DrawerAction.CloseDrawer -> {
-                _state.update { it.copy(visibility = false) }
+                _state.update {
+                    it.copy(
+                        visibility = false,
+                        fromUser = true
+                    )
+                }
             }
             is DrawerAction.OpenDrawer -> {
-                _state.update { it.copy(visibility = true) }
+                _state.update {
+                    it.copy(
+                        visibility = true,
+                        fromUser = true
+                    )
+                }
             }
             is DrawerAction.ChangeTabIndex -> {
                 _state.update { it.copy(selectedTabIndex = action.index) }
             }
             is DrawerAction.UpdateDrawerAnimateState -> {
-                _state.update { it.copy(isAnimating = action.isAnimating) }
+                _state.update {
+                    it.copy(
+                        isAnimating = action.isAnimating,
+                        fromUser = action.isAnimating
+                    )
+                }
             }
         }
     }

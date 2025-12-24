@@ -53,19 +53,19 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @UnstableApi
 @Composable
-fun MyBookmarkCard(
+fun BookmarkSettingCard(
     bookmarkContent: String,
     bookmarkIndex: Int,
-    stylingStateState: StylingState,
+    stylingState: StylingState?,
     deletable: Boolean,
     bookmarkStyle: BookmarkStyle,
-    onCardClicked: (Int) -> Unit,
-    onDeleted: (Int) -> Unit
+    onCardClicked: () -> Unit,
+    onDeleted: () -> Unit
 ) {
-    val baseColor = if (stylingStateState.containerColor.isDark()) {
-        stylingStateState.containerColor.lighten(0.2f)
+    val baseColor = if (stylingState?.containerColor?.isDark() ?: MaterialTheme.colorScheme.primary.isDark()) {
+        stylingState?.containerColor?.lighten(0.2f) ?: MaterialTheme.colorScheme.primary.lighten(0.2f)
     } else {
-        stylingStateState.containerColor.darken(0.2f)
+        stylingState?.containerColor?.darken(0.2f) ?: MaterialTheme.colorScheme.primary.darken(0.2f)
     }
     val tooltipState = rememberTooltipState(
         isPersistent = true
@@ -85,15 +85,15 @@ fun MyBookmarkCard(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    color = stylingStateState.textColor.copy(0.3f),
+                    color = stylingState?.textColor?.copy(0.3f) ?: MaterialTheme.colorScheme.primary.copy(0.3f),
                     shape = BookmarkShape()
                 )
                 .clickable {
-                    onCardClicked(bookmarkIndex)
+                    onCardClicked()
                 },
             colors = CardDefaults.elevatedCardColors(
-                containerColor = stylingStateState.backgroundColor,
-                contentColor = stylingStateState.textColor,
+                containerColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.background,
+                contentColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
             ),
             elevation = CardDefaults.elevatedCardElevation(
                 defaultElevation = 4.dp,
@@ -186,7 +186,7 @@ fun MyBookmarkCard(
                     modifier = Modifier
                         .padding(24.dp)
                         .background(
-                            color = stylingStateState.backgroundColor,
+                            color = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.background,
                             shape = RoundedCornerShape(8.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -201,7 +201,8 @@ fun MyBookmarkCard(
                         text = bookmarkContent,
                         style = TextStyle(
                             textAlign = TextAlign.Center,
-                            fontFamily = stylingStateState.fontFamilies[stylingStateState.selectedFontFamilyIndex],
+                            color = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
+                            fontFamily = stylingState?.fontFamilies[stylingState.selectedFontFamilyIndex],
                         )
                     )
                 }
@@ -216,16 +217,15 @@ fun MyBookmarkCard(
             IconButton(
                 modifier = Modifier
                     .background(
-                        color = stylingStateState.textBackgroundColor,
+                        color = stylingState?.textBackgroundColor ?: MaterialTheme.colorScheme.secondaryContainer,
                         shape = CircleShape
                     ),
-                onClick = {
-                    onDeleted(bookmarkIndex)
-                }
+                onClick = onDeleted
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_delete),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         },
@@ -233,151 +233,5 @@ fun MyBookmarkCard(
         enableUserInput = deletable
     ) {
         cardComposable()
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BookmarkSettingCard(
-    bookmarkContent: String,
-    bookmarkIndex: Int,
-    bookmarkStyle: BookmarkStyle,
-    onCardClicked: () -> Unit,
-) {
-    val baseColor = MaterialTheme.colorScheme.primary
-    val isBackgroundReady = remember { mutableStateOf(false) }
-    var cardWidth by remember { mutableIntStateOf(0) }
-    var cardHeight by remember { mutableIntStateOf(0) }
-    LaunchedEffect(bookmarkIndex) {
-        delay(500)
-        isBackgroundReady.value = true
-    }
-    ElevatedCard(
-        shape = BookmarkShape(),
-        modifier = Modifier
-            .padding(4.dp)
-            .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.primary.copy(0.3f),
-                shape = BookmarkShape()
-            )
-            .clickable {
-                onCardClicked()
-            },
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.background,
-            contentColor = MaterialTheme.colorScheme.primary,
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 4.dp,
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                modifier = Modifier
-                    .matchParentSize()
-                    .onGloballyPositioned { coordinates ->
-                        cardWidth = coordinates.size.width
-                        cardHeight = coordinates.size.height
-                    }
-            ) {
-                AnimatedVisibility(
-                    visible = isBackgroundReady.value,
-                    enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
-                    exit = fadeOut(animationSpec = tween(durationMillis = 1000))
-                ) {
-                    when (bookmarkStyle) {
-                        BookmarkStyle.WAVE_WITH_BIRDS -> {
-                            CardBackgroundWaveWithBirds(
-                                modifier = Modifier.fillMaxSize(),
-                                baseColor = baseColor,
-                                cardWidth = cardWidth,
-                                cardHeight = cardHeight
-                            )
-                        }
-
-                        BookmarkStyle.CLOUD_WITH_BIRDS -> {
-                            CardBackgroundCloudWithBirds(
-                                modifier = Modifier.fillMaxSize(),
-                                baseColor = baseColor,
-                                cardWidth = cardWidth,
-                                cardHeight = cardHeight
-                            )
-                        }
-
-                        BookmarkStyle.STARRY_NIGHT -> {
-                            CardBackgroundStarryNight(
-                                modifier = Modifier.fillMaxSize(),
-                                baseColor = baseColor,
-                                cardWidth = cardWidth,
-                                cardHeight = cardHeight
-                            )
-                        }
-
-                        BookmarkStyle.GEOMETRIC_TRIANGLE -> {
-                            CardBackgroundGeometricTriangle(
-                                modifier = Modifier.fillMaxSize(),
-                                baseColor = baseColor,
-                                cardWidth = cardWidth,
-                                cardHeight = cardHeight
-                            )
-                        }
-
-                        BookmarkStyle.POLYGONAL_HEXAGON -> {
-                            CardBackgroundPolygonalHexagon(
-                                modifier = Modifier.fillMaxSize(),
-                                baseColor = baseColor,
-                                cardWidth = cardWidth,
-                                cardHeight = cardHeight
-                            )
-                        }
-
-                        BookmarkStyle.SCATTERED_HEXAGON -> {
-                            CardBackgroundScatteredHexagons(
-                                modifier = Modifier.fillMaxSize(),
-                                baseColor = baseColor,
-                                cardWidth = cardWidth,
-                                cardHeight = cardHeight
-                            )
-                        }
-
-                        BookmarkStyle.CHERRY_BLOSSOM_RAIN -> {
-                            CardBackgroundCherryBlossomRain(
-                                modifier = Modifier.fillMaxSize(),
-                                baseColor = baseColor,
-                                cardWidth = cardWidth,
-                                cardHeight = cardHeight
-                            )
-                        }
-                    }
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .padding(24.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.background,
-                        shape = RoundedCornerShape(8.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    modifier = Modifier.padding(
-                        start = 8.dp,
-                        top = 4.dp,
-                        end = 8.dp,
-                        bottom = 4.dp
-                    ),
-                    text = bookmarkContent,
-                    style = TextStyle(
-                        textAlign = TextAlign.Center,
-                    )
-                )
-            }
-        }
     }
 }

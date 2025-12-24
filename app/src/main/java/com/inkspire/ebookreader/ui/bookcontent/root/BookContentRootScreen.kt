@@ -8,8 +8,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.service.TTSManager
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollAction
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollViewModel
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarAction
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarViewModel
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScrollAction
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScrollViewModel
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSAction
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
@@ -25,6 +29,7 @@ import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingViewMod
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarAction
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarViewModel
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
+import com.inkspire.ebookreader.ui.setting.SettingViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -41,8 +46,11 @@ fun BookContentRootScreen(
     val tableOfContentViewModel = koinViewModel<TableOfContentViewModel>()
     val topBarViewModel = koinViewModel<BookContentTopBarViewModel>()
     val bottomBarViewModel = koinViewModel<BookContentBottomBarViewModel>()
-    val bottomBarTTSViewModel = koinViewModel<BottomBarTTSViewModel>()
+    val bottomBarTTSViewModel = koinViewModel<BottomBarTTSViewModel>(parameters = { parametersOf(bookId) })
+    val bottomBarAutoScrollViewModel = koinViewModel<BottomBarAutoScrollViewModel>()
+    val settingViewModel = koinViewModel<SettingViewModel>()
     val ttsManager = koinInject<TTSManager>()
+    val autoScrollViewModel = koinViewModel<AutoScrollViewModel>()
 
     val bookContentDataState by dataViewModel.state.collectAsStateWithLifecycle()
     val drawerState by drawerViewModel.state.collectAsStateWithLifecycle()
@@ -52,7 +60,10 @@ fun BookContentRootScreen(
     val bookContentTopBarState by topBarViewModel.state.collectAsStateWithLifecycle()
     val bookContentBottomBarState by bottomBarViewModel.state.collectAsStateWithLifecycle()
     val bottomBarTTSState by bottomBarTTSViewModel.state.collectAsStateWithLifecycle()
+    val bottomBarAutoScrollState by bottomBarAutoScrollViewModel.state.collectAsStateWithLifecycle()
+    val settingState by settingViewModel.state.collectAsStateWithLifecycle()
     val ttsPlaybackState by ttsManager.state.collectAsStateWithLifecycle()
+    val autoScrollState by autoScrollViewModel.state.collectAsStateWithLifecycle()
 
     val bookChapterContentEvent = chapterContentViewModel.event
 
@@ -84,6 +95,7 @@ fun BookContentRootScreen(
                         paragraph = bookInfo.currentParagraph
                     )
                 )
+                ttsManager.updateBookInfo(bookInfo)
             }
             when (val state = bookContentDataState.tableOfContentState) {
                 is UiState.None -> {
@@ -143,9 +155,13 @@ fun BookContentRootScreen(
                                     bookContentBottomBarState = bookContentBottomBarState,
                                     stylingState = stylingState,
                                     drawerState = drawerState,
+                                    settingState = settingState,
                                     ttsPlaybackState = ttsPlaybackState,
+                                    autoScrollState = autoScrollState,
                                     bottomBarTTSState = bottomBarTTSState,
+                                    bottomBarAutoScrollState = bottomBarAutoScrollState,
                                     bookChapterContentEvent = bookChapterContentEvent,
+                                    onAutoScrollAction = autoScrollViewModel::onAction,
                                     onBookContentDataAction = dataViewModel::onAction,
                                     onBookChapterContentAction = {
                                         when (it) {
@@ -180,7 +196,27 @@ fun BookContentRootScreen(
                                             }
                                         }
                                     },
-                                    onBookContentBottomBarAction = bottomBarViewModel::onAction,
+                                    onBookContentBottomBarAction = {
+                                        when (it) {
+                                            is BookContentBottomBarAction.TtsIconClicked -> {
+                                                bottomBarTTSViewModel.onAction(BottomBarTTSAction.StartTTS(
+                                                    bookInfo = bookInfo,
+                                                    chapterIndex = bookChapterContentState.currentChapterIndex,
+                                                    paragraphIndex = bookChapterContentState.firstVisibleItemIndex
+                                                ))
+                                            }
+                                            is BookContentBottomBarAction.AutoScrollIconClicked -> {
+                                                autoScrollViewModel.onAction(AutoScrollAction.UpdateIsActivated(true))
+                                                autoScrollViewModel.onAction(AutoScrollAction.UpdateIsPaused(false))
+//                                                bottomBarViewModel.onAction(BookContentBottomBarAction.ChangeBottomBarVisibility)
+//                                                topBarViewModel.onAction(BookContentTopBarAction.ChangeTopBarVisibility)
+                                                bottomBarViewModel.onAction(it)
+                                            }
+                                            else -> {
+                                                bottomBarViewModel.onAction(it)
+                                            }
+                                        }
+                                    },
                                     onBookContentBottomBarTTSAction = {
                                         when (it) {
                                             BottomBarTTSAction.OnNextChapterClicked -> {
@@ -211,7 +247,23 @@ fun BookContentRootScreen(
                                             }
                                         }
                                     },
-                                    onStyleAction = stylingViewModel::onAction
+                                    onBookContentBottomBarAutoScrollAction = {
+                                        when (it) {
+                                            is BottomBarAutoScrollAction.StopIconClicked -> {
+                                                bottomBarViewModel.onAction(BookContentBottomBarAction.ResetBottomBarMode)
+                                                autoScrollViewModel.onAction(AutoScrollAction.UpdateIsActivated(false))
+                                                autoScrollViewModel.onAction(AutoScrollAction.UpdateIsPaused(false))
+                                            }
+                                            is BottomBarAutoScrollAction.PlayPauseIconClicked -> {
+                                                autoScrollViewModel.onAction(AutoScrollAction.UpdateIsPaused(it.isPaused))
+                                            }
+                                            else -> {
+                                                bottomBarAutoScrollViewModel.onAction(it)
+                                            }
+                                        }
+                                    },
+                                    onBookContentBottomBarSettingAction = settingViewModel::onAction,
+                                    onBookContentBottomBarStyleAction = stylingViewModel::onAction
                                 )
                             } else {
                                 MyLoadingAnimation(

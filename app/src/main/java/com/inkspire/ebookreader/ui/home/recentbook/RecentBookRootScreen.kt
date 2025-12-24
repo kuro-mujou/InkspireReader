@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,6 +43,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
@@ -83,26 +85,42 @@ fun RecentBookRootScreen(
             }
             is UiState.Empty -> {
                 Text(
-                    modifier = Modifier.padding(horizontal = 8.dp),
+                    modifier = Modifier
+                        .padding(
+                            end = WindowInsets.safeContent
+                                .only(WindowInsetsSides.End)
+                                .asPaddingValues()
+                                .calculateEndPadding(LayoutDirection.Ltr)
+                        )
+                        .padding(horizontal = 8.dp),
                     text = "No Recent Books Found",
                     style = TextStyle(
                         fontSize = MaterialTheme.typography.displaySmall.fontSize,
                         fontWeight = FontWeight.Bold
                     ),
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(
+                            end = WindowInsets.safeContent
+                                .only(WindowInsetsSides.End)
+                                .asPaddingValues()
+                                .calculateEndPadding(LayoutDirection.Ltr)
+                        )
                         .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ){
                     Text(
-                        modifier = Modifier.weight(1f),
-                        text = "Add more books to your library",
+                        modifier = Modifier
+                            .weight(1f, false)
+                            .padding(end = 8.dp),
+                        text = "Add more books to your Library",
                         style = TextStyle(
                             fontSize = MaterialTheme.typography.headlineSmall.fontSize,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         ),
                     )
                     OutlinedIconButton(

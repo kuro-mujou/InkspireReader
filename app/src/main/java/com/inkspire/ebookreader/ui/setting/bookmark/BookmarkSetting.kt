@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,11 +28,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.BookmarkStyle
 import com.inkspire.ebookreader.domain.model.BookmarkMenuItem
+import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.setting.bookmark.composable.MyBookmarkItemView
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun BookmarkSetting() {
+fun BookmarkSetting(
+    stylingState: StylingState?,
+) {
     val viewModel = koinViewModel<BookmarkSettingViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -47,7 +51,10 @@ fun BookmarkSetting() {
             BookmarkMenuItem(7, "Cherry Blossom rain", BookmarkStyle.CHERRY_BLOSSOM_RAIN),
         )
     }
-    Surface {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surface
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -69,6 +76,8 @@ fun BookmarkSetting() {
                     text = "BOOKMARK STYLE",
                     style = TextStyle(
                         fontSize = 20.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex)
                     )
                 )
             }
@@ -85,6 +94,7 @@ fun BookmarkSetting() {
                         MyBookmarkItemView(
                             state = state,
                             listItem = listItem,
+                            stylingState = stylingState,
                             onSelected = {
                                 viewModel.onAction(
                                     BookmarkSettingAction.UpdateSelectedBookmarkStyle(

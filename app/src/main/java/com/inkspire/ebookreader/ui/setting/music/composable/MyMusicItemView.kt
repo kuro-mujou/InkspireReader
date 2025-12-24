@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -33,21 +34,29 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.MusicItem
+import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import kotlinx.coroutines.launch
 
 @Composable
 fun MyMusicItemView(
     music: MusicItem,
+    stylingState: StylingState?,
     onFavoriteClick: (MusicItem) -> Unit,
     onItemClick: (MusicItem) -> Unit,
     onDelete: (MusicItem) -> Unit
 ) {
+    val configuration = LocalWindowInfo.current.containerSize
+    val swipeThreshold = configuration.width / 2
     val isSelected by rememberUpdatedState(music.isSelected)
-    val dismissState = rememberSwipeToDismissBoxState()
+    val dismissState = rememberSwipeToDismissBoxState(
+        positionalThreshold =  { (swipeThreshold.toFloat()) }
+    )
     val scope = rememberCoroutineScope()
     SwipeToDismissBox(
         state = dismissState,
@@ -60,13 +69,16 @@ fun MyMusicItemView(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Red),
+                        .background(
+                            color = stylingState?.textBackgroundColor ?: Color.Red
+                        ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         modifier = Modifier.padding(start = 12.dp),
                         imageVector = ImageVector.vectorResource(R.drawable.ic_delete),
-                        contentDescription = "delete"
+                        contentDescription = "delete",
+                        tint = stylingState?.textColor ?: Color.White
                     )
                 }
             }
@@ -93,10 +105,11 @@ fun MyMusicItemView(
             )
             Box(
                 modifier = Modifier
-                    .clickable(
-                        onClick = {
-                            onItemClick(music)
-                        }
+                    .clickable {
+                        onItemClick(music)
+                    }
+                    .background(
+                        color = stylingState?.containerColor ?: MaterialTheme.colorScheme.surfaceVariant
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -117,7 +130,10 @@ fun MyMusicItemView(
                             ),
                         imageVector = ImageVector.vectorResource(R.drawable.ic_music_disk),
                         contentDescription = null,
-                        tint = if (music.isSelected) Color.Red else Color.Gray
+                        tint = if (music.isSelected)
+                            stylingState?.textColor ?: Color.Red
+                        else
+                            stylingState?.textBackgroundColor ?: Color.Gray
                     )
                     music.name?.let {
                         Text(
@@ -128,7 +144,11 @@ fun MyMusicItemView(
                                     animationMode = MarqueeAnimationMode.Immediately,
                                     initialDelayMillis = 0,
                                     repeatDelayMillis = 0
-                                )
+                                ),
+                            style = TextStyle(
+                                color = stylingState?.textColor ?: Color.White,
+                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex)
+                            )
                         )
                     }
                     IconButton(
@@ -140,8 +160,10 @@ fun MyMusicItemView(
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.ic_favourite_music),
                             contentDescription = null,
-                            tint = if (music.isFavorite) Color.Red else
-                                Color.Gray
+                            tint = if (music.isFavorite)
+                                stylingState?.textColor ?: Color.Red
+                            else
+                                stylingState?.textBackgroundColor ?: Color.Gray
                         )
                     }
                 }

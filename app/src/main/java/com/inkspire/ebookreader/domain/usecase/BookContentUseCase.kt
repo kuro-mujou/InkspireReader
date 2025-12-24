@@ -15,5 +15,4 @@ class BookContentUseCase(
 
     suspend fun saveBookInfoChapterIndex(bookId: String, chapterIndex: Int) = bookRepository.saveBookInfoChapterIndex(bookId, chapterIndex)
     suspend fun saveBookInfoParagraphIndex(bookId: String, paragraphIndex: Int) = bookRepository.saveBookInfoParagraphIndex(bookId, paragraphIndex)
-    suspend fun updateTableOfContentFavoriteStatus(bookId: String, index: Int, isFavorite: Boolean) = tableOfContentRepository.updateTableOfContentFavoriteStatus(bookId, index, isFavorite)
 }

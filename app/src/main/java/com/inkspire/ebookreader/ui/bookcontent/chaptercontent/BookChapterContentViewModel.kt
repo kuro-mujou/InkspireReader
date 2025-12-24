@@ -34,7 +34,7 @@ class BookChapterContentViewModel(
                     ) }
                 }
             }
-            is BookChapterContentAction.UpdateCurrentChapter -> {
+            is BookChapterContentAction.UpdateCurrentChapterIndex -> {
                 _state.update { it.copy(currentChapterIndex = action.index) }
             }
             is BookChapterContentAction.UpdateFirstVisibleItemIndex -> {
@@ -58,6 +58,12 @@ class BookChapterContentViewModel(
             is BookChapterContentAction.RequestScrollToChapter -> {
                 viewModelScope.launch {
                     _event.send(BookChapterContentEvent.ScrollToChapter(action.index))
+                }
+                _state.update { it.copy(firstVisibleItemIndex = 0) }
+            }
+            is BookChapterContentAction.RequestScrollToParagraph -> {
+                viewModelScope.launch {
+                    _event.send(BookChapterContentEvent.ScrollToParagraph(action.chapterIndex, action.paragraphIndex))
                 }
             }
             else -> {}

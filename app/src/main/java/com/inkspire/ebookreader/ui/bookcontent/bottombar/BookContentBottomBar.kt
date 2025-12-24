@@ -14,8 +14,10 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.TableOfContent
-import com.inkspire.ebookreader.service.TTSPlaybackState
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScroll
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScrollAction
+import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.common.BottomBarMode
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.default.BottomBarDefault
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.setting.BottomBarSetting
@@ -27,6 +29,9 @@ import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContent
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
 import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
+import com.inkspire.ebookreader.ui.setting.SettingAction
+import com.inkspire.ebookreader.ui.setting.SettingState
 import dev.chrisbanes.haze.HazeState
 
 @Composable
@@ -36,12 +41,17 @@ fun BookContentBottomBar(
     hazeState: HazeState,
     stylingState: StylingState,
     drawerState: DrawerState,
+    settingState: SettingState,
     ttsPlaybackState: TTSPlaybackState,
+    autoScrollState: AutoScrollState,
     bottomBarTTSState: BottomBarTTSState,
+    bottomBarAutoScrollState: BottomBarAutoScrollState,
     bookChapterContentState: BookChapterContentState,
     bookContentBottomBarState: BookContentBottomBarState,
     onBookContentBottomBarAction: (BookContentBottomBarAction) -> Unit,
     onBottomBarTTSAction: (BottomBarTTSAction) -> Unit,
+    onBottomBarAutoScrollAction: (BottomBarAutoScrollAction) -> Unit,
+    onBottomBarSettingAction: (SettingAction) -> Unit,
     onStyleAction: (BookContentStylingAction) -> Unit
 ) {
     AnimatedVisibility(
@@ -73,14 +83,21 @@ fun BookContentBottomBar(
                 }
                 BottomBarMode.AutoScroll -> {
                     BottomBarAutoScroll(
+                        hazeState = hazeState,
                         stylingState = stylingState,
                         drawerState = drawerState,
+                        autoScrollState = autoScrollState,
+                        bottomBarAutoScrollState = bottomBarAutoScrollState,
+                        onAction = onBottomBarAutoScrollAction
                     )
                 }
                 BottomBarMode.Settings -> {
                     BottomBarSetting(
+                        hazeState = hazeState,
                         stylingState = stylingState,
                         drawerState = drawerState,
+                        settingState = settingState,
+                        onSettingAction = onBottomBarSettingAction
                     )
                 }
                 BottomBarMode.Theme -> {

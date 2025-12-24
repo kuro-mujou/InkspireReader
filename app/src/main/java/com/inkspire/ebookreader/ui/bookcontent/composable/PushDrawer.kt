@@ -88,7 +88,9 @@ fun PushDrawer(
         insetsController?.isAppearanceLightNavigationBars = shouldUseDarkIcons
     }
     LaunchedEffect(drawerState.visibility) {
-        onDrawerAction(DrawerAction.UpdateDrawerAnimateState(true))
+        if (drawerState.fromUser) {
+            onDrawerAction(DrawerAction.UpdateDrawerAnimateState(true))
+        }
     }
     Box(
         modifier = Modifier

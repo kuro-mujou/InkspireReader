@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,11 +20,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,17 +40,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
 import com.inkspire.ebookreader.R
+import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.setting.autoscroll.AutoScrollSetting
 import com.inkspire.ebookreader.ui.setting.bookcategory.BookCategorySetting
 import com.inkspire.ebookreader.ui.setting.bookmark.BookmarkSetting
 import com.inkspire.ebookreader.ui.setting.music.MusicSetting
 import com.inkspire.ebookreader.ui.setting.tts.TTSSetting
+import com.inkspire.ebookreader.util.ColorUtil.isDark
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingScreen(
     modifier: Modifier = Modifier,
+    stylingState: StylingState? = null,
     settingState: SettingState,
     onAction: (SettingAction) -> Unit,
 ) {
@@ -55,6 +64,7 @@ fun SettingScreen(
 
     if (settingState.openTTSVoiceMenu) {
         TTSSetting(
+            stylingState = stylingState,
             onDismiss = {
                 onAction(SettingAction.OpenTTSVoiceMenu(false))
             },
@@ -62,6 +72,7 @@ fun SettingScreen(
     }
     if (settingState.openAutoScrollMenu) {
         AutoScrollSetting(
+            stylingState = stylingState,
             onDismissRequest = {
                 onAction(SettingAction.OpenAutoScrollMenu(false))
             }
@@ -79,9 +90,14 @@ fun SettingScreen(
             style = TextStyle(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
+                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
             )
         )
-        HorizontalDivider(thickness = 2.dp)
+        HorizontalDivider(
+            thickness = 2.dp,
+            color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -101,12 +117,15 @@ fun SettingScreen(
                         .padding(start = 8.dp, end = 8.dp)
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_keep_screen_on),
-                    contentDescription = "keep screen on"
+                    contentDescription = "keep screen on",
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "Keep Screen On",
                     style = TextStyle(
                         fontSize = 16.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -115,10 +134,21 @@ fun SettingScreen(
                     onCheckedChange = {
                         onAction(SettingAction.KeepScreenOn(it))
                     },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        checkedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
+                        checkedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        uncheckedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        uncheckedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
+                        uncheckedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                    )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
-            HorizontalDivider(thickness = 1.dp)
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -134,12 +164,15 @@ fun SettingScreen(
                         .padding(start = 8.dp, end = 8.dp)
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_music_background),
-                    contentDescription = "background music"
+                    contentDescription = "background music",
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "Background Music",
                     style = TextStyle(
                         fontSize = 16.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -148,10 +181,14 @@ fun SettingScreen(
                         .padding(start = 8.dp, end = 8.dp)
                         .size(30.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            HorizontalDivider(thickness = 1.dp)
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -167,12 +204,15 @@ fun SettingScreen(
                         .padding(start = 8.dp, end = 8.dp)
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_tag),
-                    contentDescription = "Bookmark theme"
+                    contentDescription = "Bookmark theme",
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "Bookmark theme",
                     style = TextStyle(
                         fontSize = 16.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -181,10 +221,14 @@ fun SettingScreen(
                         .padding(start = 8.dp, end = 8.dp)
                         .size(30.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            HorizontalDivider(thickness = 1.dp)
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -200,12 +244,15 @@ fun SettingScreen(
                         .padding(start = 8.dp, end = 8.dp)
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_headphones),
-                    contentDescription = "text to speech"
+                    contentDescription = "text to speech",
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "Text to Speech",
                     style = TextStyle(
                         fontSize = 16.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -214,10 +261,14 @@ fun SettingScreen(
                         .padding(start = 8.dp, end = 8.dp)
                         .size(30.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            HorizontalDivider(thickness = 1.dp)
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -232,12 +283,15 @@ fun SettingScreen(
                         .padding(start = 8.dp, end = 8.dp)
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_scroll),
-                    contentDescription = "auto scroll up"
+                    contentDescription = "auto scroll up",
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "Auto Scroll Up",
                     style = TextStyle(
                         fontSize = 16.sp,
+                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -246,40 +300,41 @@ fun SettingScreen(
                         .padding(start = 8.dp, end = 8.dp)
                         .size(30.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            HorizontalDivider(thickness = 1.dp)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clickable {
-                        onAction(SettingAction.OpenCategoryMenu(true))
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
+            if (stylingState == null) {
+                HorizontalDivider(thickness = 1.dp)
+                Row(
                     modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp)
-                        .size(24.dp),
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_grid_view),
-                    contentDescription = "book category"
-                )
-                Text(
-                    text = "Book Category",
-                    style = TextStyle(
-                        fontSize = 16.sp,
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clickable {
+                            onAction(SettingAction.OpenCategoryMenu(true))
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        modifier = Modifier
+                            .padding(start = 8.dp, end = 8.dp)
+                            .size(24.dp),
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_grid_view),
+                        contentDescription = "book category",
                     )
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Icon(
-                    modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp)
-                        .size(30.dp),
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
-                    contentDescription = null
-                )
+                    Text(
+                        text = "Book Category",
+                        style = TextStyle(fontSize = 16.sp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        modifier = Modifier
+                            .padding(start = 8.dp, end = 8.dp)
+                            .size(30.dp),
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
+                        contentDescription = null,
+                    )
+                }
             }
         }
     }
@@ -288,18 +343,42 @@ fun SettingScreen(
             modifier = Modifier.fillMaxSize(),
             sheetState = musicMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBackgroundMusicMenu(false)) },
-            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
-        ) {
-            val view = LocalView.current
-            SideEffect {
-                val window = (view.context as? Activity)?.window ?: (view.parent as? DialogWindowProvider)?.window
-                window?.let {
-                    if (Build.VERSION.SDK_INT >= 29) {
-                        it.isNavigationBarContrastEnforced = false
-                    }
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+            containerColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer,
+            scrimColor = stylingState?.containerColor ?: MaterialTheme.colorScheme.surfaceContainer.copy(0.32f),
+            dragHandle = {
+                Surface(
+                    modifier = Modifier.padding(vertical = 22.dp),
+                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                    shape = MaterialTheme.shapes.extraLarge,
+                ) {
+                    Box(Modifier.size(width = 32.dp, height = 4.dp))
                 }
             }
-            MusicSetting()
+        ) {
+            val view = LocalView.current
+            val isLightTheme = !(stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer).isDark()
+
+            DisposableEffect(view, isLightTheme) {
+                val window = (view.parent as? DialogWindowProvider)?.window
+                    ?: (view.context as? Activity)?.window
+
+                window?.let { w ->
+                    val controller = WindowCompat.getInsetsController(w, view)
+
+                    controller.isAppearanceLightStatusBars = isLightTheme
+                    controller.isAppearanceLightNavigationBars = isLightTheme
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        w.isNavigationBarContrastEnforced = false
+                    }
+                }
+
+                onDispose { }
+            }
+            MusicSetting(
+                stylingState = stylingState
+            )
         }
     }
     if (settingState.openBookmarkThemeMenu) {
@@ -307,18 +386,42 @@ fun SettingScreen(
             modifier = Modifier.fillMaxSize(),
             sheetState = bookmarkMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBookmarkThemeMenu(false)) },
-            contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
-        ) {
-            val view = LocalView.current
-            SideEffect {
-                val window = (view.context as? Activity)?.window ?: (view.parent as? DialogWindowProvider)?.window
-                window?.let {
-                    if (Build.VERSION.SDK_INT >= 29) {
-                        it.isNavigationBarContrastEnforced = false
-                    }
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+            containerColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer,
+            scrimColor = stylingState?.containerColor ?: MaterialTheme.colorScheme.surfaceContainer.copy(0.32f),
+            dragHandle = {
+                Surface(
+                    modifier = Modifier.padding(vertical = 22.dp),
+                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                    shape = MaterialTheme.shapes.extraLarge,
+                ) {
+                    Box(Modifier.size(width = 32.dp, height = 4.dp))
                 }
             }
-            BookmarkSetting()
+        ) {
+            val view = LocalView.current
+            val isLightTheme = !(stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer).isDark()
+
+            DisposableEffect(view, isLightTheme) {
+                val window = (view.parent as? DialogWindowProvider)?.window
+                    ?: (view.context as? Activity)?.window
+
+                window?.let { w ->
+                    val controller = WindowCompat.getInsetsController(w, view)
+
+                    controller.isAppearanceLightStatusBars = isLightTheme
+                    controller.isAppearanceLightNavigationBars = isLightTheme
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        w.isNavigationBarContrastEnforced = false
+                    }
+                }
+
+                onDispose { }
+            }
+            BookmarkSetting(
+                stylingState = stylingState
+            )
         }
     }
     if (settingState.openCategoryMenu) {

@@ -2,6 +2,7 @@ package com.inkspire.ebookreader.ui.setting.tts
 
 import android.speech.tts.TextToSpeech
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -43,8 +45,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -77,8 +79,8 @@ fun TTSSetting(
     var speedSliderValue by remember { mutableFloatStateOf(state.currentSpeed) }
     var pitchSliderValue by remember { mutableFloatStateOf(state.currentPitch) }
 
-    val configuration = LocalConfiguration.current
-    val screenHeight = configuration.screenHeightDp.dp
+    val configuration = LocalWindowInfo.current.containerSize
+    val screenHeight = configuration.height.dp
 
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
@@ -136,6 +138,7 @@ fun TTSSetting(
                     style = TextStyle(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                         color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                 )
@@ -195,8 +198,8 @@ fun TTSSetting(
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
                                                 text = "Language",
-                                                color = stylingState?.textColor
-                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
                                             Spacer(modifier = Modifier.weight(1f))
                                             Icon(
@@ -209,8 +212,8 @@ fun TTSSetting(
                                         Text(
                                             text = state.currentLanguage?.displayName ?: "null",
                                             modifier = Modifier.padding(8.dp),
-                                            color = stylingState?.textColor
-                                                ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                         )
                                     }
                                     Column(
@@ -253,8 +256,8 @@ fun TTSSetting(
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
                                                 text = "Voice",
-                                                color = stylingState?.textColor
-                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
                                             Spacer(modifier = Modifier.weight(1f))
                                             Icon(
@@ -273,19 +276,19 @@ fun TTSSetting(
                                         ) {
                                             Text(
                                                 text = state.currentVoice?.name ?: "null",
-                                                color = stylingState?.textColor
-                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
                                             state.currentVoice?.let { voice ->
                                                 Text(
                                                     text = "-",
-                                                    color = stylingState?.textColor
-                                                        ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                                 )
                                                 Text(
                                                     text = voice.quality.toString(),
-                                                    color = stylingState?.textColor
-                                                        ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                                 )
                                             }
                                         }
@@ -311,13 +314,13 @@ fun TTSSetting(
                                         ) {
                                             Text(
                                                 text = "Speed",
-                                                color = stylingState?.textColor
-                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
                                             Text(
                                                 text = "%.2fx".format(speedSliderValue),
-                                                color = stylingState?.textColor
-                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
                                         }
                                         Slider(
@@ -364,13 +367,13 @@ fun TTSSetting(
                                         ) {
                                             Text(
                                                 text = "Pitch",
-                                                color = stylingState?.textColor
-                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
                                             Text(
                                                 text = "%.2fx".format(pitchSliderValue),
-                                                color = stylingState?.textColor
-                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
                                         }
                                         Slider(
@@ -451,8 +454,8 @@ fun TTSSetting(
                                                 modifier = Modifier
                                                     .padding(4.dp)
                                                     .weight(1f),
-                                                color = stylingState?.textColor
-                                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
                                             if (language == state.currentLanguage) {
                                                 Icon(
@@ -512,13 +515,13 @@ fun TTSSetting(
                                             ) {
                                                 Text(
                                                     text = "Quality: " + voice.quality.toString(),
-                                                    color = stylingState?.textColor
-                                                        ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                                 )
                                                 Text(
                                                     text = voice.name,
-                                                    color = stylingState?.textColor
-                                                        ?: MaterialTheme.colorScheme.onSurfaceVariant
+                                                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                                 )
                                             }
                                             if (voice == state.currentVoice) {
@@ -547,16 +550,34 @@ fun TTSSetting(
                             onClick = {
                                 viewModel.onAction(TTSSettingAction.UpdateScreenType(TTSSettingScreenType.NORMAL_SETTING))
                             },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = stylingState?.containerColor ?: MaterialTheme.colorScheme.primary,
+                            )
                         ) {
-                            Text(text = "Done")
+                            Text(
+                                text = "Done",
+                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onPrimary,
+                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                            )
                         }
                     }
                     OutlinedButton(
                         onClick = {
                             tts?.speak("xin chào", TextToSpeech.QUEUE_FLUSH, null, "utteranceId")
                         },
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = stylingState?.textColor ?: MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     ) {
-                        Text(text = "Test Voice")
+                        Text(
+                            text = "Test Voice",
+                            color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        )
                     }
                 }
             }

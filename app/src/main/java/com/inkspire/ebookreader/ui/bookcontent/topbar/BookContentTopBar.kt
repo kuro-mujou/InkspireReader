@@ -53,7 +53,8 @@ fun BookContentTopBar(
         exit = slideOutVertically(targetOffsetY = { -it }),
     ) {
         val style = HazeMaterials.thin(stylingState.containerColor)
-        val useHaze = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !drawerState.visibility && !drawerState.isAnimating
+        val useHaze = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && !drawerState.visibility && !drawerState.isAnimating
         Row(
             modifier = Modifier
                 .fillMaxWidth()

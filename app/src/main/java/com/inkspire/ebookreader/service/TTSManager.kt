@@ -4,11 +4,15 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
-import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
+import androidx.core.net.toUri
+import androidx.media3.common.MediaItem.Builder
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import com.inkspire.ebookreader.domain.model.Book
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -56,6 +60,9 @@ class TTSManager(
         .build()
 
     private var currentChapterParagraphs: List<String> = emptyList()
+    private var  mediaItemPreview: String = ""
+    private var  mediaItemTitle: String = ""
+    private var  mediaItemArtist: String = ""
     private var totalChapters: Int = 0
 
     private var currentBaseOffset = 0
@@ -105,10 +112,23 @@ class TTSManager(
         this.exoPlayer = player
     }
 
-    fun setChapterContent(chapterIndex: Int, paragraphs: List<String>, totalChapters: Int) {
+    fun setChapterContent(chapterIndex: Int, chapterTitle: String, paragraphs: List<String>) {
         this.currentChapterParagraphs = paragraphs
-        this.totalChapters = totalChapters
+        this.mediaItemArtist = chapterTitle
         _state.update { it.copy(chapterIndex = chapterIndex) }
+        exoPlayer?.let { player ->
+            if (_state.value.isSpeaking) {
+                val updatedMetadata = player.currentMediaItem?.mediaMetadata?.buildUpon() ?.setArtist(chapterTitle)?.build()
+                val updatedMediaItem = updatedMetadata?.let{
+                    player.currentMediaItem?.buildUpon()?.setMediaMetadata(updatedMetadata) ?.build()
+                }
+                updatedMediaItem?.let {
+                    player.replaceMediaItem(0, it)
+                }
+                player.prepare()
+                player.play()
+            }
+        }
     }
 
     fun startReading(paragraphIndex: Int) {
@@ -120,7 +140,6 @@ class TTSManager(
 
     fun pauseReading(abandonFocus: Boolean = false) {
         textToSpeech?.stop()
-        exoPlayer?.pause()
         _state.update { it.copy(isPaused = true, isSpeaking = false) }
 
         if (abandonFocus) {
@@ -132,7 +151,6 @@ class TTSManager(
         val currentState = _state.value
         if (currentState.chapterIndex != -1 && currentState.paragraphIndex != -1) {
             if (requestAudioFocus()) {
-                exoPlayer?.play()
                 playParagraph(
                     index = currentState.paragraphIndex,
                     startOffset = currentState.charOffset
@@ -143,7 +161,6 @@ class TTSManager(
 
     fun stopReading() {
         textToSpeech?.stop()
-        exoPlayer?.stop()
         audioManager?.abandonAudioFocusRequest(focusRequest)
         _state.update {
             it.copy(isSpeaking = false, isPaused = false, paragraphIndex = -1, charOffset = 0)
@@ -174,18 +191,31 @@ class TTSManager(
                 )
             }
 
-            if (exoPlayer?.isPlaying == true) {
-                exoPlayer?.volume = 0.3f
+            exoPlayer?.let { player ->
+                if (!player.isPlaying) {
+                    val mediaItem = Builder()
+                        .setUri("asset:///silent.mp3".toUri())
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setArtworkUri(mediaItemPreview.toUri())
+                                .setTitle(mediaItemTitle)
+                                .setArtist(mediaItemArtist)
+                                .build()
+                        )
+                        .build()
+                    player.setMediaItem(mediaItem)
+                    player.prepare()
+                    player.play()
+                } else {
+                    player.volume = 0.3f
+                }
             }
-
-            val params = Bundle()
-            params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "id_$index")
 
             textToSpeech?.speak(
                 textToSpeak,
                 TextToSpeech.QUEUE_FLUSH,
-                params,
-                "id_$index"
+                null,
+                "id_${_state.value.chapterIndex}_${_state.value.paragraphIndex}"
             )
         } else {
             stopReading()
@@ -246,6 +276,14 @@ class TTSManager(
     fun updateSpeed(rate: Float) { textToSpeech?.setSpeechRate(rate) }
     fun updatePitch(pitch: Float) { textToSpeech?.setPitch(pitch) }
     fun updateVoice(voice: Voice) { textToSpeech?.voice = voice }
+    fun updateBookInfo(bookInfo: Book){
+        mediaItemPreview = bookInfo.coverImagePath
+        mediaItemTitle = bookInfo.title
+        totalChapters = bookInfo.totalChapter
+    }
+    fun updateReadingState(isPaused: Boolean) {
+        _state.update { it.copy(isPaused = isPaused) }
+    }
     fun getTTS(): TextToSpeech? { return textToSpeech }
 
     fun shutdown() {

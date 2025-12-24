@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 class AutoScrollSettingViewModel(
     private val datastoreUseCase: AutoScrollSettingDatastoreUseCase
 ): ViewModel() {
-    private val _state = MutableStateFlow(AutoScrollState())
+    private val _state = MutableStateFlow(AutoScrollSettingState())
     val state = _state.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),

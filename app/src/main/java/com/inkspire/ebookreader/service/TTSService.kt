@@ -22,6 +22,7 @@ import org.koin.android.ext.android.inject
 class TTSService : MediaSessionService() {
 
     private val ttsManager by inject<TTSManager>()
+    private val ttsServiceHandler by inject<TTSServiceHandler>()
 
     private var mediaSession: MediaSession? = null
 
@@ -61,6 +62,7 @@ class TTSService : MediaSessionService() {
             .apply {
                 repeatMode = Player.REPEAT_MODE_ALL
                 shuffleModeEnabled = true
+                addListener(ttsServiceHandler)
             }
 
         val forwardingPlayer = object : ForwardingPlayer(player) {
@@ -71,26 +73,6 @@ class TTSService : MediaSessionService() {
                     .remove(COMMAND_SEEK_TO_PREVIOUS)
                     .remove(COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
                     .build()
-            }
-
-            override fun play() {
-                ttsManager.resumeReading()
-            }
-
-            override fun pause() {
-                ttsManager.pauseReading(abandonFocus = false)
-            }
-
-            override fun seekToNext() {
-                ttsManager.nextChapter()
-            }
-
-            override fun seekToPrevious() {
-                ttsManager.prevChapter()
-            }
-
-            override fun stop() {
-                ttsManager.stopReading()
             }
         }
 

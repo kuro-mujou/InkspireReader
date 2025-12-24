@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.service
+package com.inkspire.ebookreader.ui.bookcontent.tts
 
 data class TTSPlaybackState(
     val chapterIndex: Int = -1,
