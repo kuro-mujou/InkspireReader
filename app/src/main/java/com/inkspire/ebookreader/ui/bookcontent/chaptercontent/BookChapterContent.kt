@@ -81,9 +81,9 @@ fun BookChapterContent(
     bookInfo: Book,
     initialParagraphIndex: Int,
     currentChapter: Int,
+    chapterUiState: UiState<Chapter>,
     stylingState: StylingState,
     bookChapterContentState: BookChapterContentState,
-    chapterUiState: UiState<Chapter>,
     ttsPlaybackState: TTSPlaybackState,
     autoScrollState: AutoScrollState,
     isCurrentChapter: Boolean,
@@ -107,7 +107,9 @@ fun BookChapterContent(
 
         }
         is UiState.Loading -> {
-            MyLoadingAnimation()
+            MyLoadingAnimation(
+                stylingState = stylingState
+            )
         }
         is UiState.Error -> {
             Box(
@@ -125,18 +127,11 @@ fun BookChapterContent(
             )
 
             val currentAutoScrollState by rememberUpdatedState(autoScrollState)
+            val currentContentState by rememberUpdatedState(bookChapterContentState)
             val currentAutoScrollAction by rememberUpdatedState(onAutoScrollAction)
             val isAtBottom by remember {
                 derivedStateOf {
-                    val layoutInfo = listState.layoutInfo
-                    val visibleItemsInfo = layoutInfo.visibleItemsInfo
-                    if (layoutInfo.totalItemsCount == 0) {
-                        false
-                    } else {
-                        val lastVisibleItem = visibleItemsInfo.lastOrNull()
-                        lastVisibleItem?.index == layoutInfo.totalItemsCount - 1 &&
-                                (lastVisibleItem.offset + lastVisibleItem.size) <= layoutInfo.viewportEndOffset
-                    }
+                    !listState.canScrollForward && listState.layoutInfo.totalItemsCount > 0
                 }
             }
 
@@ -172,8 +167,8 @@ fun BookChapterContent(
                 }
             }
 
-            LaunchedEffect(bookChapterContentState.enableUndoButton) {
-                if (!bookChapterContentState.enableUndoButton) {
+            LaunchedEffect(currentContentState.enableUndoButton) {
+                if (!currentContentState.enableUndoButton) {
                     originalZoom = 1f
                     originalOffset = Offset.Zero
                 }
@@ -205,10 +200,10 @@ fun BookChapterContent(
                 isCurrentChapter,
                 currentAutoScrollState.delayTimeAtStart,
             ) {
-                if (isCurrentChapter && autoScrollState.isActivated) {
+                if (isCurrentChapter && currentAutoScrollState.isActivated) {
                     if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0) {
                         onAutoScrollAction(AutoScrollAction.UpdateIsPaused(true))
-                        delay(autoScrollState.delayTimeAtStart.toLong())
+                        delay(currentAutoScrollState.delayTimeAtStart.toLong())
                         onAutoScrollAction(AutoScrollAction.UpdateIsPaused(false))
                     }
                 }
@@ -218,23 +213,17 @@ fun BookChapterContent(
                 currentAutoScrollState.isActivated,
                 currentAutoScrollState.isPaused,
                 currentAutoScrollState.autoScrollSpeed,
-                currentAutoScrollState.delayTimeAtEnd,
+                currentContentState.screenHeight,
                 isCurrentChapter,
                 currentChapter
             ) {
                 if (isCurrentChapter && currentAutoScrollState.isActivated && !currentAutoScrollState.isPaused) {
-                    if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0) {
-                        delay(currentAutoScrollState.delayTimeAtStart.toLong())
-                        currentAutoScrollAction(AutoScrollAction.UpdateIsPaused(false))
-                    }
                     while (isActive) {
                         if (isAtBottom) {
                             onAutoScrollAction(AutoScrollAction.UpdateIsAnimationRunning(false))
                             if (currentChapter + 1 < bookInfo.totalChapter) {
-                                onAutoScrollAction(AutoScrollAction.UpdateIsPaused(true))
-                                onBookChapterContentAction(
-                                    BookChapterContentAction.RequestScrollToChapter(currentChapter + 1)
-                                )
+                                delay(currentAutoScrollState.delayTimeAtEnd.toLong())
+                                onBookChapterContentAction(BookChapterContentAction.RequestScrollToChapter(currentChapter + 1))
                             } else {
                                 onAutoScrollAction(AutoScrollAction.UpdateIsActivated(false))
                             }
@@ -244,7 +233,7 @@ fun BookChapterContent(
                         onAutoScrollAction(AutoScrollAction.UpdateIsAnimationRunning(true))
 
                         listState.animateScrollBy(
-                            value = bookChapterContentState.screenHeight.toFloat(),
+                            value = currentContentState.screenHeight.toFloat(),
                             animationSpec = tween(
                                 durationMillis = currentAutoScrollState.autoScrollSpeed,
                                 easing = LinearEasing
@@ -265,7 +254,7 @@ fun BookChapterContent(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
                                 onClick = {
-                                    if (!bookChapterContentState.enableUndoButton) {
+                                    if (!currentContentState.enableUndoButton) {
                                         onBookChapterContentAction(BookChapterContentAction.UpdateSystemBar)
                                     }
                                 },
@@ -275,7 +264,7 @@ fun BookChapterContent(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
                                 onClick = {
-                                    if (!bookChapterContentState.enableUndoButton) {
+                                    if (!currentContentState.enableUndoButton) {
                                         onBookChapterContentAction(BookChapterContentAction.UpdateSystemBar)
                                     }
                                 },
@@ -433,7 +422,7 @@ fun BookChapterContent(
                                         .calculateBottomPadding()
                                 )
                             ),
-                        text = "${bookChapterContentState.lastVisibleItemIndex + 1} / ${paragraphs.size}",
+                        text = "${currentContentState.lastVisibleItemIndex + 1} / ${paragraphs.size}",
                         style = TextStyle(
                             color = stylingState.textColor,
                             textAlign = TextAlign.Right,

@@ -208,8 +208,8 @@ fun BookContentRootScreen(
                                             is BookContentBottomBarAction.AutoScrollIconClicked -> {
                                                 autoScrollViewModel.onAction(AutoScrollAction.UpdateIsActivated(true))
                                                 autoScrollViewModel.onAction(AutoScrollAction.UpdateIsPaused(false))
-//                                                bottomBarViewModel.onAction(BookContentBottomBarAction.ChangeBottomBarVisibility)
-//                                                topBarViewModel.onAction(BookContentTopBarAction.ChangeTopBarVisibility)
+                                                bottomBarViewModel.onAction(BookContentBottomBarAction.ChangeBottomBarVisibility)
+                                                topBarViewModel.onAction(BookContentTopBarAction.ChangeTopBarVisibility)
                                                 bottomBarViewModel.onAction(it)
                                             }
                                             else -> {

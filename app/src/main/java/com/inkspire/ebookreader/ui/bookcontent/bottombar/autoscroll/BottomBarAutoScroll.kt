@@ -154,6 +154,7 @@ fun BottomBarAutoScroll(
             if (bottomBarAutoScrollState.settingVisibility) {
                 AutoScrollSetting(
                     stylingState = stylingState,
+                    autoScrollState = autoScrollState,
                     onDismissRequest = {
                         onAction(BottomBarAutoScrollAction.ChangeSettingVisibility)
                     }

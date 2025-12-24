@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.roundToInt
@@ -41,12 +41,11 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AutoScrollSetting(
+    autoScrollState: AutoScrollState,
     stylingState: StylingState?,
     onDismissRequest: () -> Unit
 ) {
     val viewModel = koinViewModel<AutoScrollSettingViewModel>()
-    val state by viewModel.state.collectAsStateWithLifecycle()
-
     val minSpeed = 0.1f
     val maxSpeed = 1.0f
     val sumRange = minSpeed + maxSpeed
@@ -54,12 +53,12 @@ fun AutoScrollSetting(
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
-        var speedSliderValue by remember(state.currentScrollSpeed) {
-            mutableFloatStateOf(sumRange - (state.currentScrollSpeed / 10000f))
+        var speedSliderValue by remember(autoScrollState.autoScrollSpeed) {
+            mutableFloatStateOf(sumRange - (autoScrollState.autoScrollSpeed / 20000f))
         }
-        var delayAtStart by remember { mutableIntStateOf(state.delayAtStart) }
-        var delayAtEnd by remember { mutableIntStateOf(state.delayAtEnd) }
-        var delayResumeMode by remember { mutableIntStateOf(state.delayResumeMode) }
+        var delayAtStart by remember { mutableIntStateOf(autoScrollState.delayTimeAtStart) }
+        var delayAtEnd by remember { mutableIntStateOf(autoScrollState.delayTimeAtEnd) }
+        var delayResumeMode by remember { mutableIntStateOf(autoScrollState.autoScrollResumeDelayTime) }
         Surface(
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
@@ -117,7 +116,7 @@ fun AutoScrollSetting(
                     },
                     onValueChangeFinished = {
                         val logicValue = sumRange - speedSliderValue
-                        val finalSpeed = (logicValue * 10000).roundToInt()
+                        val finalSpeed = (logicValue * 20000).roundToInt()
                         viewModel.onAction(AutoScrollSettingAction.UpdateScrollSpeed(finalSpeed))
                     },
                     valueRange = minSpeed..maxSpeed,
@@ -242,7 +241,7 @@ fun AutoScrollSetting(
                         color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                     Switch(
-                        checked = state.isAutoResumeScrollMode,
+                        checked = autoScrollState.autoScrollResumeMode,
                         onCheckedChange = {
                             viewModel.onAction(AutoScrollSettingAction.UpdateAutoResumeScrollMode(it))
                         },
@@ -256,7 +255,7 @@ fun AutoScrollSetting(
                         )
                     )
                 }
-                if (state.isAutoResumeScrollMode) {
+                if (autoScrollState.autoScrollResumeMode) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,

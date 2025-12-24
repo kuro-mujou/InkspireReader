@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.LayoutDirection
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.setting.SettingAction
@@ -32,6 +33,7 @@ fun BottomBarSetting(
     hazeState: HazeState,
     stylingState: StylingState,
     settingState: SettingState,
+    autoScrollState: AutoScrollState,
     drawerState: DrawerState,
     onSettingAction: (SettingAction) -> Unit,
 ) {
@@ -68,6 +70,7 @@ fun BottomBarSetting(
             ),
         stylingState = stylingState,
         settingState = settingState,
+        autoScrollState = autoScrollState,
         onAction = onSettingAction
     )
 }

@@ -61,7 +61,7 @@ class DatastoreManager(private val context: Context) {
         preferences[TTS_VOICE] ?: ""
     }
     val getAutoScrollSpeed: Flow<Int> = context.dataStore.data.map { preferences ->
-        preferences[AUTO_SCROLL_SPEED] ?: 10000
+        preferences[AUTO_SCROLL_SPEED] ?: 20000
     }
     val getDelayTimeAtStart: Flow<Int> = context.dataStore.data.map { preferences ->
         preferences[DELAY_TIME_AT_START] ?: 3000

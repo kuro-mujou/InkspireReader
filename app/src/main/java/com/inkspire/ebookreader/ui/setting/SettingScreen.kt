@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import com.inkspire.ebookreader.R
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.setting.autoscroll.AutoScrollSetting
 import com.inkspire.ebookreader.ui.setting.bookcategory.BookCategorySetting
@@ -55,6 +56,7 @@ import com.inkspire.ebookreader.util.ColorUtil.isDark
 fun SettingScreen(
     modifier: Modifier = Modifier,
     stylingState: StylingState? = null,
+    autoScrollState: AutoScrollState,
     settingState: SettingState,
     onAction: (SettingAction) -> Unit,
 ) {
@@ -72,6 +74,7 @@ fun SettingScreen(
     }
     if (settingState.openAutoScrollMenu) {
         AutoScrollSetting(
+            autoScrollState = autoScrollState,
             stylingState = stylingState,
             onDismissRequest = {
                 onAction(SettingAction.OpenAutoScrollMenu(false))

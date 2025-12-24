@@ -15,14 +15,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollViewModel
 import com.inkspire.ebookreader.ui.setting.SettingScreen
 import com.inkspire.ebookreader.ui.setting.SettingViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SettingRootScreen() {
-    val viewModel = koinViewModel<SettingViewModel>()
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val settingViewModel = koinViewModel<SettingViewModel>()
+    val autoScrollViewModel = koinViewModel<AutoScrollViewModel>()
+    val settingState by settingViewModel.state.collectAsStateWithLifecycle()
+    val autoScrollState by autoScrollViewModel.state.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -42,8 +45,9 @@ fun SettingRootScreen() {
                         .asPaddingValues()
                         .calculateRightPadding(LayoutDirection.Ltr)
                 ),
-            settingState = state,
-            onAction = viewModel::onAction
+            autoScrollState = autoScrollState,
+            settingState = settingState,
+            onAction = settingViewModel::onAction
         )
     }
 }

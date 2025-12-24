@@ -97,6 +97,7 @@ fun BookContentBottomBar(
                         stylingState = stylingState,
                         drawerState = drawerState,
                         settingState = settingState,
+                        autoScrollState = autoScrollState,
                         onSettingAction = onBottomBarSettingAction
                     )
                 }
