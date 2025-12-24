@@ -16,13 +16,13 @@ import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.inkspire.ebookreader.R
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSManager
 import org.koin.android.ext.android.inject
 
 @UnstableApi
 class TTSService : MediaSessionService() {
 
     private val ttsManager by inject<TTSManager>()
-    private val ttsServiceHandler by inject<TTSServiceHandler>()
 
     private var mediaSession: MediaSession? = null
 
@@ -62,7 +62,6 @@ class TTSService : MediaSessionService() {
             .apply {
                 repeatMode = Player.REPEAT_MODE_ALL
                 shuffleModeEnabled = true
-                addListener(ttsServiceHandler)
             }
 
         val forwardingPlayer = object : ForwardingPlayer(player) {
@@ -82,11 +81,9 @@ class TTSService : MediaSessionService() {
                 ImmutableList.of(previousButton, nextButton, stopButton)
             )
             .build()
-        ttsManager.attachSystemComponents(mediaSession?.player)
     }
 
     override fun onDestroy() {
-        ttsManager.stopReading()
         mediaSession?.run {
             player.release()
             release()
@@ -100,7 +97,6 @@ class TTSService : MediaSessionService() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        ttsManager.stopReading()
         stopSelf()
     }
 

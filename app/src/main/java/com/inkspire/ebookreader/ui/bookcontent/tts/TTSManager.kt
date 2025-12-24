@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.service
+package com.inkspire.ebookreader.ui.bookcontent.tts
 
 import android.content.Context
 import android.media.AudioAttributes
@@ -8,11 +8,10 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
 import androidx.core.net.toUri
-import androidx.media3.common.MediaItem.Builder
+import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import com.inkspire.ebookreader.domain.model.Book
-import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -193,7 +192,7 @@ class TTSManager(
 
             exoPlayer?.let { player ->
                 if (!player.isPlaying) {
-                    val mediaItem = Builder()
+                    val mediaItem = MediaItem.Builder()
                         .setUri("asset:///silent.mp3".toUri())
                         .setMediaMetadata(
                             MediaMetadata.Builder()
@@ -268,7 +267,8 @@ class TTSManager(
     suspend fun getAvailableVoicesAndLanguages() = withContext(Dispatchers.IO) {
         val tts = textToSpeech ?: return@withContext emptyList<Locale>() to emptyList<Voice>()
         val languages = tts.availableLanguages?.toList()?.sortedBy { it.displayName } ?: emptyList()
-        val voices = tts.voices?.filter { !it.isNetworkConnectionRequired }?.sortedBy { it.name } ?: emptyList()
+        val voices = tts.voices?.filter { !it.isNetworkConnectionRequired }?.sortedBy { it.name }
+            ?: emptyList()
         languages to voices
     }
 

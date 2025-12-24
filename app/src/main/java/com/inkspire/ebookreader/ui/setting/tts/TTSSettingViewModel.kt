@@ -3,7 +3,7 @@ package com.inkspire.ebookreader.ui.setting.tts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.domain.usecase.TTSSettingDataStoreUseCase
-import com.inkspire.ebookreader.service.TTSManager
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect

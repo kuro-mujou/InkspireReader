@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.navigation.Navigator
-import com.inkspire.ebookreader.service.TTSManager
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSManager
 import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollAction
 import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollViewModel
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarAction

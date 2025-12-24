@@ -35,8 +35,7 @@ import com.inkspire.ebookreader.domain.usecase.SettingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.TTSContentUseCase
 import com.inkspire.ebookreader.domain.usecase.TTSSettingDataStoreUseCase
 import com.inkspire.ebookreader.domain.usecase.TableOfContentUseCase
-import com.inkspire.ebookreader.service.TTSManager
-import com.inkspire.ebookreader.service.TTSServiceHandler
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSManager
 import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollViewModel
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarViewModel
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScrollViewModel
@@ -170,6 +169,5 @@ object KoinModule {
     @UnstableApi
     val ttsModule = module {
         single<TTSManager>(createdAtStart = true) { TTSManager(context = androidContext()) }
-        single { TTSServiceHandler(context = androidContext(), ttsManager = get()) }
     }
 }
