@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.map
 import java.util.Locale
 
 private const val DATASTORE_NAME = "user_prefs"
-private val Context.dataStore by preferencesDataStore(name = DATASTORE_NAME)
+private val Context.datastore by preferencesDataStore(name = DATASTORE_NAME)
 
 class DatastoreManager(private val context: Context) {
     companion object Keys {
@@ -45,76 +45,76 @@ class DatastoreManager(private val context: Context) {
         private val BOOKMARK_STYLE = stringPreferencesKey("BOOKMARK_STYLE")
     }
 
-    val getKeepScreenOn: Flow<Boolean> = context.dataStore.data.map { preferences ->
+    val getKeepScreenOn: Flow<Boolean> = context.datastore.data.map { preferences ->
         preferences[KEEP_SCREEN_ON] == true
     }
-    val getTtsSpeed: Flow<Float> = context.dataStore.data.map { preferences ->
+    val getTtsSpeed: Flow<Float> = context.datastore.data.map { preferences ->
         preferences[TTS_SPEED] ?: 1f
     }
-    val getTtsPitch: Flow<Float> = context.dataStore.data.map { preferences ->
+    val getTtsPitch: Flow<Float> = context.datastore.data.map { preferences ->
         preferences[TTS_PITCH] ?: 1f
     }
-    val getTtsLocale: Flow<String> = context.dataStore.data.map { preferences ->
+    val getTtsLocale: Flow<String> = context.datastore.data.map { preferences ->
         preferences[TTS_LOCALE] ?: Locale.getDefault().displayName
     }
-    val getTtsVoice: Flow<String> = context.dataStore.data.map { preferences ->
+    val getTtsVoice: Flow<String> = context.datastore.data.map { preferences ->
         preferences[TTS_VOICE] ?: ""
     }
-    val getAutoScrollSpeed: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getAutoScrollSpeed: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[AUTO_SCROLL_SPEED] ?: 20000
     }
-    val getDelayTimeAtStart: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getDelayTimeAtStart: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[DELAY_TIME_AT_START] ?: 3000
     }
-    val getDelayTimeAtEnd: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getDelayTimeAtEnd: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[DELAY_TIME_AT_END] ?: 3000
     }
-    val getAutoScrollResumeMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
+    val getAutoScrollResumeMode: Flow<Boolean> = context.datastore.data.map { preferences ->
         preferences[AUTO_SCROLL_RESUME_MODE] == true
     }
-    val getAutoScrollResumeDelayTime: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getAutoScrollResumeDelayTime: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[AUTO_SCROLL_RESUME_DELAY_TIME] ?: 2000
     }
-    val getBackgroundColor: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getBackgroundColor: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[BACKGROUND_COLOR] ?: Color(0xFFF1F7ED).toArgb()
     }
-    val getTextColor: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getTextColor: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[TEXT_COLOR] ?: Color(0xFF1B310E).toArgb()
     }
-    val getSelectedColorSet: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getSelectedColorSet: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[SELECTED_COLOR_SET] ?: 0
     }
-    val getFontSize: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getFontSize: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[FONT_SIZE] ?: 20
     }
-    val getTextAlign: Flow<Boolean> = context.dataStore.data.map { preferences ->
+    val getTextAlign: Flow<Boolean> = context.datastore.data.map { preferences ->
         preferences[TEXT_ALIGN] != false
     }
-    val getTextIndent: Flow<Boolean> = context.dataStore.data.map { preferences ->
+    val getTextIndent: Flow<Boolean> = context.datastore.data.map { preferences ->
         preferences[TEXT_INDENT] != false
     }
-    val getLineSpacing: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getLineSpacing: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[LINE_SPACING] ?: 14
     }
-    val getFontFamily: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getFontFamily: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[FONT_FAMILY] ?: 0
     }
-    val getIsSortedByFavorite: Flow<Boolean> = context.dataStore.data.map { preferences ->
+    val getIsSortedByFavorite: Flow<Boolean> = context.datastore.data.map { preferences ->
         preferences[IS_SORTED_BY_FAVORITE] != false
     }
-    val getEnableBackgroundMusic: Flow<Boolean> = context.dataStore.data.map { preferences ->
+    val getEnableBackgroundMusic: Flow<Boolean> = context.datastore.data.map { preferences ->
         preferences[ENABLE_BACKGROUND_MUSIC] == true
     }
-    val getPlayerVolume: Flow<Float> = context.dataStore.data.map { preferences ->
+    val getPlayerVolume: Flow<Float> = context.datastore.data.map { preferences ->
         preferences[PLAYER_VOLUME] ?: 1f
     }
-    val getBookListViewType: Flow<Int> = context.dataStore.data.map { preferences ->
+    val getBookListViewType: Flow<Int> = context.datastore.data.map { preferences ->
         preferences[BOOK_LIST_VIEW_TYPE] ?: 1
     }
-    val getImagePaddingState: Flow<Boolean> = context.dataStore.data.map { preferences ->
+    val getImagePaddingState: Flow<Boolean> = context.datastore.data.map { preferences ->
         preferences[IMAGE_PADDING_STATE] != false
     }
-    val getBookmarkStyle: Flow<BookmarkStyle> = context.dataStore.data.map { preferences ->
+    val getBookmarkStyle: Flow<BookmarkStyle> = context.datastore.data.map { preferences ->
         val raw = preferences[BOOKMARK_STYLE] ?: BookmarkStyle.WAVE_WITH_BIRDS.name
         try {
             BookmarkStyle.valueOf(raw)
@@ -124,145 +124,145 @@ class DatastoreManager(private val context: Context) {
     }
 
     suspend fun setKeepScreenOn(value: Boolean) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[KEEP_SCREEN_ON] = value
         }
     }
 
     suspend fun setTTSSpeed(value: Float) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[TTS_SPEED] = value
         }
     }
 
     suspend fun setTTSPitch(value: Float) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[TTS_PITCH] = value
         }
     }
 
     suspend fun setTTSLocale(value: String) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[TTS_LOCALE] = value
         }
     }
 
     suspend fun setTTSVoice(value: String) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[TTS_VOICE] = value
         }
     }
 
     suspend fun setAutoScrollSpeed(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[AUTO_SCROLL_SPEED] = value
         }
     }
 
     suspend fun setDelayTimeAtStart(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[DELAY_TIME_AT_START] = value
         }
     }
 
     suspend fun setDelayTimeAtEnd(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[DELAY_TIME_AT_END] = value
         }
     }
 
     suspend fun setAutoScrollResumeMode(value: Boolean) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[AUTO_SCROLL_RESUME_MODE] = value
         }
     }
 
     suspend fun setAutoScrollResumeDelayTime(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[AUTO_SCROLL_RESUME_DELAY_TIME] = value
         }
     }
 
     suspend fun setBackgroundColor(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[BACKGROUND_COLOR] = value
         }
     }
 
     suspend fun setTextColor(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[TEXT_COLOR] = value
         }
     }
 
     suspend fun setSelectedColorSet(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[SELECTED_COLOR_SET] = value
         }
     }
 
     suspend fun setFontSize(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[FONT_SIZE] = value
         }
     }
 
     suspend fun setTextAlign(value: Boolean) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[TEXT_ALIGN] = value
         }
     }
 
     suspend fun setTextIndent(value: Boolean) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[TEXT_INDENT] = value
         }
     }
 
     suspend fun setLineSpacing(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[LINE_SPACING] = value
         }
     }
 
     suspend fun setFontFamily(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[FONT_FAMILY] = value
         }
     }
 
     suspend fun setSortByFavorite(value: Boolean) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[IS_SORTED_BY_FAVORITE] = value
         }
     }
 
     suspend fun setEnableBackgroundMusic(value: Boolean) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[ENABLE_BACKGROUND_MUSIC] = value
         }
     }
 
     suspend fun setPlayerVolume(value: Float) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[PLAYER_VOLUME] = value
         }
     }
 
     suspend fun setBookListView(value: Int) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[BOOK_LIST_VIEW_TYPE] = value
         }
     }
 
     suspend fun setImagePaddingState(value: Boolean) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[IMAGE_PADDING_STATE] = value
         }
     }
 
     suspend fun setBookmarkStyle(bookmarkStyle: BookmarkStyle) {
-        context.dataStore.edit { preferences ->
+        context.datastore.edit { preferences ->
             preferences[BOOKMARK_STYLE] = bookmarkStyle.name
         }
     }

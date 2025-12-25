@@ -133,17 +133,17 @@ class TTSService : MediaSessionService() {
         ): ListenableFuture<SessionResult> {
             return when (customCommand.customAction) {
                 ACTION_STOP -> {
-                    ttsManager.stopReading()
+                    ttsManager.stopReading(true)
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 
                 ACTION_NEXT -> {
-                    ttsManager.nextChapter()
+                    ttsManager.checkPlayNextChapter()
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 
                 ACTION_PREVIOUS -> {
-                    ttsManager.prevChapter()
+                    ttsManager.checkPlayPreviousChapter()
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 

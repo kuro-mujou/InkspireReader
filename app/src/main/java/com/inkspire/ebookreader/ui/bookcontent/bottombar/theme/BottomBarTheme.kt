@@ -92,8 +92,8 @@ fun BottomBarTheme(
 //                colorPaletteViewModel.updateBackgroundColor(it)
 //                colorPaletteViewModel.updateSelectedColorSet(18)
 //                scope.launch {
-//                    dataStore.setSelectedColorSet(18)
-//                    dataStore.setBackgroundColor(it.toArgb())
+//                    datastore.setSelectedColorSet(18)
+//                    datastore.setBackgroundColor(it.toArgb())
 //                }
 //                openColorPickerForBackground = false
 //            }
@@ -108,8 +108,8 @@ fun BottomBarTheme(
 //                colorPaletteViewModel.updateTextColor(it)
 //                colorPaletteViewModel.updateSelectedColorSet(18)
 //                scope.launch {
-//                    dataStore.setSelectedColorSet(18)
-//                    dataStore.setTextColor(it.toArgb())
+//                    datastore.setSelectedColorSet(18)
+//                    datastore.setTextColor(it.toArgb())
 //                }
 //                openColorPickerForText = false
 //            }

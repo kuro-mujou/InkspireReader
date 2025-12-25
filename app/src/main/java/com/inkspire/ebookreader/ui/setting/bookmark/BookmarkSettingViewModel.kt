@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class BookmarkSettingViewModel(
-    private val dataStoreUseCase: BookmarkSettingDatastoreUseCase
+    private val datastoreUseCase: BookmarkSettingDatastoreUseCase
 ): ViewModel() {
     private val _state = MutableStateFlow(BookmarkSettingState())
     val state = _state
@@ -23,7 +23,7 @@ class BookmarkSettingViewModel(
 
     init {
         viewModelScope.launch {
-            dataStoreUseCase.getBookmarkStyle().collectLatest { bookmarkStyle ->
+            datastoreUseCase.getBookmarkStyle().collectLatest { bookmarkStyle ->
                 _state.update { it.copy(selectedBookmarkStyle = bookmarkStyle) }
             }
         }
@@ -33,7 +33,7 @@ class BookmarkSettingViewModel(
         when (action) {
             is BookmarkSettingAction.UpdateSelectedBookmarkStyle -> {
                 viewModelScope.launch {
-                    dataStoreUseCase.setBookmarkStyle(action.bookmarkStyle)
+                    datastoreUseCase.setBookmarkStyle(action.bookmarkStyle)
                 }
             }
         }

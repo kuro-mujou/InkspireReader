@@ -36,6 +36,7 @@ import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBar
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarAction
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarState
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSAction
 import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import com.inkspire.ebookreader.ui.setting.SettingAction
 import com.inkspire.ebookreader.ui.setting.SettingState
@@ -65,6 +66,7 @@ fun BookChapterContentRootScreen(
     bottomBarAutoScrollState: BottomBarAutoScrollState,
     bookChapterContentEvent: Flow<BookChapterContentEvent>,
     onAutoScrollAction: (AutoScrollAction) -> Unit,
+    onTTSAction: (TTSAction) -> Unit,
     onBookContentDataAction: (BookContentDataAction) -> Unit,
     onBookChapterContentAction: (BookChapterContentAction) -> Unit,
     onBookContentTopBarAction: (BookContentTopBarAction) -> Unit,
@@ -92,6 +94,7 @@ fun BookChapterContentRootScreen(
 
     LaunchedEffect(pagerState.targetPage) {
         onBookChapterContentAction(BookChapterContentAction.UpdateCurrentChapterIndex(pagerState.targetPage))
+        onTTSAction(TTSAction.UpdateCurrentChapterData(pagerState.targetPage))
     }
     LaunchedEffect(bookChapterContentEvent) {
         bookChapterContentEvent.collect { event ->
@@ -107,6 +110,11 @@ fun BookChapterContentRootScreen(
                     currentListState?.animateScrollToItem(event.paragraphIndex)
                 }
             }
+        }
+    }
+    LaunchedEffect(ttsPlaybackState.chapterIndex) {
+        if (ttsPlaybackState.isActivated && ttsPlaybackState.chapterIndex != bookChapterContentState.currentChapterIndex) {
+            onBookChapterContentAction(BookChapterContentAction.RequestScrollToChapter(ttsPlaybackState.chapterIndex))
         }
     }
     Scaffold(
@@ -164,7 +172,7 @@ fun BookChapterContentRootScreen(
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
-                    userScrollEnabled = bookChapterContentState.enablePagerScroll,
+                    userScrollEnabled = bookChapterContentState.enablePagerScroll && !ttsPlaybackState.isActivated,
                     beyondViewportPageCount = 1
                 ) { pageIndex ->
                     val paragraphToLoad = if (pageIndex == initialChapter) initialParagraph else 0

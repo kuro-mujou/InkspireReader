@@ -33,9 +33,9 @@ import com.inkspire.ebookreader.domain.usecase.MusicSettingUseCase
 import com.inkspire.ebookreader.domain.usecase.RecentBookUseCase
 import com.inkspire.ebookreader.domain.usecase.SettingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.TTSContentUseCase
+import com.inkspire.ebookreader.domain.usecase.TTSDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.TTSSettingDataStoreUseCase
 import com.inkspire.ebookreader.domain.usecase.TableOfContentUseCase
-import com.inkspire.ebookreader.ui.bookcontent.tts.TTSManager
 import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollViewModel
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarViewModel
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAutoScrollViewModel
@@ -46,6 +46,8 @@ import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfCont
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataViewModel
 import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarViewModel
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSManager
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSViewModel
 import com.inkspire.ebookreader.ui.bookdetail.BookDetailViewModel
 import com.inkspire.ebookreader.ui.home.libary.LibraryViewModel
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookViewModel
@@ -120,6 +122,7 @@ object KoinModule {
         factoryOf(::BookContentStylingDatastoreUseCase)
         factoryOf(::TableOfContentUseCase)
         factoryOf(::TTSContentUseCase)
+        factoryOf(::TTSDatastoreUseCase)
     }
 
     val viewModelModule = module {
@@ -150,19 +153,13 @@ object KoinModule {
         viewModelOf(::BookContentStylingViewModel)
         viewModelOf(::BookContentTopBarViewModel)
         viewModelOf(::BookContentBottomBarViewModel)
-        viewModel {
-            BottomBarTTSViewModel(
-                context = androidContext(),
-                contentUseCase = get(),
-                ttsManager = get(),
-                bookId = it.get(),
-            )
-        }
+        viewModelOf(::BottomBarTTSViewModel)
         viewModelOf(::BottomBarAutoScrollViewModel)
         viewModelOf(::AutoScrollViewModel)
+        viewModelOf(::TTSViewModel)
     }
 
-    val dataStoreModule = module {
+    val datastoreModule = module {
         single(createdAtStart = true) { DatastoreManager(androidContext()) }
     }
 

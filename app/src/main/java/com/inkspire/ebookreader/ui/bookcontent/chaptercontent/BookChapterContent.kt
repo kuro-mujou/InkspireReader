@@ -125,6 +125,7 @@ fun BookChapterContent(
             val listState = rememberLazyListState(
                 initialFirstVisibleItemIndex = initialParagraphIndex
             )
+            val isModeActive = ttsPlaybackState.isActivated || autoScrollState.isActivated
 
             val currentAutoScrollState by rememberUpdatedState(autoScrollState)
             val currentContentState by rememberUpdatedState(bookChapterContentState)
@@ -138,6 +139,13 @@ fun BookChapterContent(
             DisposableEffect(listState) {
                 onListStateLoaded(listState)
                 onDispose { onDispose() }
+            }
+
+            LaunchedEffect(isModeActive) {
+                if (isModeActive) {
+                    originalZoom = 1f
+                    originalOffset = Offset.Zero
+                }
             }
 
             LaunchedEffect(listState, isCurrentChapter) {
@@ -214,6 +222,7 @@ fun BookChapterContent(
                 currentAutoScrollState.isPaused,
                 currentAutoScrollState.autoScrollSpeed,
                 currentContentState.screenHeight,
+                isAtBottom,
                 isCurrentChapter,
                 currentChapter
             ) {
@@ -338,7 +347,8 @@ fun BookChapterContent(
                             scaleX = zoom
                             scaleY = zoom
                         }
-                        .pointerInput(Unit) {
+                        .pointerInput(isModeActive) {
+                            if (isModeActive) return@pointerInput
                             awaitEachGesture {
                                 awaitFirstDown()
                                 do {
@@ -397,7 +407,7 @@ fun BookChapterContent(
                         ChapterContent(
                             paragraph = paragraph,
                             stylingState = stylingState,
-                            isHighlighted = ttsPlaybackState.isSpeaking && ttsPlaybackState.paragraphIndex == index
+                            isHighlighted = ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index
                         )
                     }
                 }

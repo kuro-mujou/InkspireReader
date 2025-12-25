@@ -4,8 +4,8 @@ import com.inkspire.ebookreader.common.BookmarkStyle
 import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 
 class BookmarkSettingDatastoreUseCase(
-    private val dataStoreRepository: DatastoreRepository
+    private val datastoreRepository: DatastoreRepository
 ) {
-    fun getBookmarkStyle() = dataStoreRepository.getBookmarkStyle()
-    suspend fun setBookmarkStyle(value: BookmarkStyle) = dataStoreRepository.setBookmarkStyle(value)
+    fun getBookmarkStyle() = datastoreRepository.getBookmarkStyle()
+    suspend fun setBookmarkStyle(value: BookmarkStyle) = datastoreRepository.setBookmarkStyle(value)
 }

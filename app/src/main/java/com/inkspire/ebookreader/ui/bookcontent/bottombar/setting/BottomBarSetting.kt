@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import com.inkspire.ebookreader.ui.setting.SettingAction
 import com.inkspire.ebookreader.ui.setting.SettingScreen
 import com.inkspire.ebookreader.ui.setting.SettingState
@@ -33,6 +34,7 @@ fun BottomBarSetting(
     hazeState: HazeState,
     stylingState: StylingState,
     settingState: SettingState,
+    ttsState: TTSPlaybackState,
     autoScrollState: AutoScrollState,
     drawerState: DrawerState,
     onSettingAction: (SettingAction) -> Unit,
@@ -70,6 +72,7 @@ fun BottomBarSetting(
             ),
         stylingState = stylingState,
         settingState = settingState,
+        ttsState = ttsState,
         autoScrollState = autoScrollState,
         onAction = onSettingAction
     )

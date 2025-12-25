@@ -57,8 +57,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.DeviceConfiguration
-import com.inkspire.ebookreader.ui.bookcontent.tts.TTSManager
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSManager
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import com.inkspire.ebookreader.ui.setting.tts.common.TTSSettingScreenType
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -67,6 +68,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TTSSetting(
+    ttsState: TTSPlaybackState,
     stylingState: StylingState? = null,
     onDismiss: () -> Unit,
 ) {
@@ -76,8 +78,8 @@ fun TTSSetting(
     val ttsManager = koinInject<TTSManager>()
     val tts = ttsManager.getTTS()
 
-    var speedSliderValue by remember { mutableFloatStateOf(state.currentSpeed) }
-    var pitchSliderValue by remember { mutableFloatStateOf(state.currentPitch) }
+    var speedSliderValue by remember { mutableFloatStateOf(ttsState.currentSpeed) }
+    var pitchSliderValue by remember { mutableFloatStateOf(ttsState.currentPitch) }
 
     val configuration = LocalWindowInfo.current.containerSize
     val screenHeight = configuration.height.dp
@@ -99,9 +101,6 @@ fun TTSSetting(
 
     Dialog(
         onDismissRequest = {
-            if (state.currentVoice == null) {
-                tts?.let { viewModel.onAction(TTSSettingAction.FixNullVoice(it)) }
-            }
             onDismiss()
         },
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -210,7 +209,7 @@ fun TTSSetting(
                                             )
                                         }
                                         Text(
-                                            text = state.currentLanguage?.displayName ?: "null",
+                                            text = ttsState.currentLanguage?.displayName ?: "null",
                                             modifier = Modifier.padding(8.dp),
                                             color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
@@ -275,11 +274,11 @@ fun TTSSetting(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Text(
-                                                text = state.currentVoice?.name ?: "null",
+                                                text = ttsState.currentVoice?.name ?: "null",
                                                 color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
-                                            state.currentVoice?.let { voice ->
+                                            ttsState.currentVoice?.let { voice ->
                                                 Text(
                                                     text = "-",
                                                     color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
@@ -424,7 +423,7 @@ fun TTSSetting(
                                         Row(
                                             modifier = Modifier
                                                 .then(
-                                                    if (language == state.currentLanguage) {
+                                                    if (language == ttsState.currentLanguage) {
                                                         Modifier.background(
                                                             color = stylingState?.textBackgroundColor
                                                                 ?: MaterialTheme.colorScheme.primaryContainer,
@@ -440,11 +439,7 @@ fun TTSSetting(
                                                     indication = null,
                                                     interactionSource = remember { MutableInteractionSource() },
                                                     onClick = {
-                                                        viewModel.onAction(
-                                                            TTSSettingAction.UpdateLanguage(
-                                                                language
-                                                            )
-                                                        )
+                                                        viewModel.onAction(TTSSettingAction.UpdateLanguage(language, tts))
                                                     }
                                                 ),
                                             verticalAlignment = Alignment.CenterVertically,
@@ -457,7 +452,7 @@ fun TTSSetting(
                                                 color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                             )
-                                            if (language == state.currentLanguage) {
+                                            if (language == ttsState.currentLanguage) {
                                                 Icon(
                                                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_confirm),
                                                     contentDescription = null,
@@ -472,7 +467,7 @@ fun TTSSetting(
 
                             TTSSettingScreenType.VOICE_SETTING -> {
                                 val filteredVoices = state.voices.filter {
-                                    it.locale == state.currentLanguage
+                                    it.locale == ttsState.currentLanguage
                                 }
                                 LazyColumn(
                                     modifier = Modifier
@@ -483,7 +478,7 @@ fun TTSSetting(
                                         Row(
                                             modifier = Modifier
                                                 .then(
-                                                    if (voice == state.currentVoice) {
+                                                    if (voice == ttsState.currentVoice) {
                                                         Modifier.background(
                                                             color = stylingState?.textBackgroundColor
                                                                 ?: MaterialTheme.colorScheme.primaryContainer,
@@ -524,7 +519,7 @@ fun TTSSetting(
                                                     fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
                                                 )
                                             }
-                                            if (voice == state.currentVoice) {
+                                            if (voice == ttsState.currentVoice) {
                                                 Icon(
                                                     modifier = Modifier.padding(end = 4.dp),
                                                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_confirm),
@@ -563,7 +558,7 @@ fun TTSSetting(
                     }
                     OutlinedButton(
                         onClick = {
-                            tts?.speak("xin chào", TextToSpeech.QUEUE_FLUSH, null, "utteranceId")
+                            tts.speak("xin chào", TextToSpeech.QUEUE_FLUSH, null, "utteranceId")
                         },
                         border = BorderStroke(
                             width = 1.dp,
