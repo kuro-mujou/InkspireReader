@@ -14,7 +14,7 @@ import java.util.Locale
 import java.util.UUID
 
 class TTSManager(
-    private val context: Context
+    context: Context
 )  : TextToSpeech.OnInitListener{
     private val tts: TextToSpeech = TextToSpeech(context, this)
 
@@ -24,9 +24,8 @@ class TTSManager(
     val events: SharedFlow<TTSEvent> = _events.asSharedFlow()
     private lateinit var bookInfo: Book
     private var chapterContent: List<String> = emptyList()
-    private var currentUtteranceParagraphIndex: Int = -1
-    private var lastRangeStart: Int = 0
-    private var lastRangeEnd: Int = 0
+    private var paragraphOffset: Int = 0
+    private var lastWordStartInSegment: Int = 0
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
@@ -36,6 +35,8 @@ class TTSManager(
 
                 }
                 override fun onDone(utteranceId: String?) {
+                    paragraphOffset = 0
+                    lastWordStartInSegment = 0
                     checkPLayNextParagraph()
                 }
                 override fun onError(utteranceId: String?) {
@@ -43,28 +44,10 @@ class TTSManager(
                 }
                 override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
                     super.onRangeStart(utteranceId, start, end, frame)
-                    val paragraphIndex = parseParagraphIndex(utteranceId)
-                    if (paragraphIndex >= 0) {
-                        currentUtteranceParagraphIndex = paragraphIndex
-                        lastRangeStart = start
-                        lastRangeEnd = end
-                    }
-
-//                    _events.tryEmit(
-//                        TTSEvent.Range(
-//                            paragraphIndex = paragraphIndex,
-//                            start = start,
-//                            end = end
-//                        )
-//                    )
+                    lastWordStartInSegment = start
                 }
             })
         }
-    }
-
-    private fun parseParagraphIndex(utteranceId: String?): Int {
-        if (utteranceId == null) return -1
-        return utteranceId.substringAfterLast("_").toIntOrNull() ?: -1
     }
 
     fun checkPlayNextChapter() {
@@ -80,17 +63,12 @@ class TTSManager(
     }
 
     fun startReading(paragraphIndex: Int) {
-        if (chapterContent.isNotEmpty() && paragraphIndex < chapterContent.size) {
-            currentUtteranceParagraphIndex = paragraphIndex
-            lastRangeStart = 0
-            lastRangeEnd = 0
+        if (chapterContent.isNotEmpty() && paragraphIndex in chapterContent.indices) {
+            paragraphOffset = 0
+            lastWordStartInSegment = 0
+
             val text = chapterContent[paragraphIndex]
-            tts.speak(
-                text,
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "paragraph_${UUID.randomUUID()}_${paragraphIndex}"
-            )
+            speakInternal(text, paragraphIndex)
         } else {
             checkPlayNextChapter()
         }
@@ -98,36 +76,41 @@ class TTSManager(
 
     fun stopReading(isFromService: Boolean = false) {
         tts.stop()
-        currentUtteranceParagraphIndex = -1
-        lastRangeStart = 0
-        lastRangeEnd = 0
+        paragraphOffset = 0
+        lastWordStartInSegment = 0
         if (isFromService) {
             _events.tryEmit(TTSEvent.StopReading)
         }
     }
 
+    fun pauseReading() {
+        paragraphOffset += lastWordStartInSegment
+        tts.stop()
+        lastWordStartInSegment = 0
+    }
+
     fun resumeReading(paragraphIndex: Int) {
-        if (chapterContent.isEmpty()) return
-        if (paragraphIndex !in chapterContent.indices) return
+        if (chapterContent.isEmpty() || paragraphIndex !in chapterContent.indices) return
 
         val fullText = chapterContent[paragraphIndex]
 
-        val resumeFrom = if (
-            paragraphIndex == currentUtteranceParagraphIndex &&
-            lastRangeStart in 1 until fullText.length
-        ) {
-            lastRangeStart
-        } else {
-            0
+        val resumeIndex = paragraphOffset.coerceIn(0, fullText.length)
+        val textToSpeak = fullText.substring(resumeIndex)
+
+        if (textToSpeak.isBlank()) {
+            checkPLayNextParagraph()
+            return
         }
 
-        val textToSpeak = fullText.substring(resumeFrom)
+        speakInternal(textToSpeak, paragraphIndex)
+    }
 
+    private fun speakInternal(text: String, index: Int) {
         tts.speak(
-            textToSpeak,
+            text,
             TextToSpeech.QUEUE_FLUSH,
             null,
-            "paragraph_${UUID.randomUUID()}_${paragraphIndex}"
+            "paragraph_${UUID.randomUUID()}_${index}"
         )
     }
 

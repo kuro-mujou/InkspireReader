@@ -254,6 +254,15 @@ fun BookChapterContent(
                 }
             }
 
+            LaunchedEffect(
+                isCurrentChapter,
+                ttsPlaybackState.paragraphIndex
+            ) {
+                if (ttsPlaybackState.isActivated && isCurrentChapter) {
+                    listState.animateScrollToItem(ttsPlaybackState.paragraphIndex)
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()

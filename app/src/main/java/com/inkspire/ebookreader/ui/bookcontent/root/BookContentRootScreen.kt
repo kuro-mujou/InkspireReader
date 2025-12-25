@@ -253,6 +253,8 @@ fun BookContentRootScreen(
                                             }
                                             is BottomBarAutoScrollAction.PlayPauseIconClicked -> {
                                                 autoScrollViewModel.onAction(AutoScrollAction.UpdateIsPaused(it.isPaused))
+                                                bottomBarViewModel.onAction(BookContentBottomBarAction.ChangeBottomBarVisibility)
+                                                topBarViewModel.onAction(BookContentTopBarAction.ChangeTopBarVisibility)
                                             }
                                             else -> {
                                                 bottomBarAutoScrollViewModel.onAction(it)

@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class TTSViewModel(
     private val ttsManager: TTSManager,
@@ -62,7 +63,7 @@ class TTSViewModel(
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
             if (!isPlaying) {
-                ttsManager.stopReading()
+                ttsManager.pauseReading()
                 _state.update { it.copy(isPaused = true) }
             } else {
                 ttsManager.resumeReading(_state.value.paragraphIndex)
@@ -80,10 +81,10 @@ class TTSViewModel(
                 datastoreUseCase.getTtsVoice()
             ) { speed, pitch, localeName, voiceName ->
                 val (languages, voices) = ttsManager.getAvailableVoicesAndLanguages()
-                val selectedLocale = languages.find { it.displayName == localeName }
+                val selectedLocale = languages.find { it.displayName == localeName } ?: Locale.getDefault()
                 val selectedVoice = voices.find {
                     it.name == voiceName && it.locale == selectedLocale
-                } ?: voices.firstOrNull { it.locale == selectedLocale }
+                } ?: voices.firstOrNull { it.locale == selectedLocale } ?: ttsManager.getTTS().defaultVoice
 
                 _state.update { it.copy(
                     currentSpeed = speed,
@@ -93,6 +94,8 @@ class TTSViewModel(
                 )}
                 ttsManager.updateSpeed(speed)
                 ttsManager.updatePitch(pitch)
+                ttsManager.updateLanguage(selectedLocale)
+                ttsManager.updateVoice(selectedVoice)
             }.collect()
         }
         viewModelScope.launch {
@@ -166,7 +169,7 @@ class TTSViewModel(
                         play()
                     }
                 } else {
-                    ttsManager.stopReading()
+                    ttsManager.pauseReading()
                     _state.update { it.copy(isPaused = true) }
                     mediaController?.apply {
                         pause()
@@ -241,46 +244,46 @@ class TTSViewModel(
             }
 
             is TTSAction.UpdateCurrentChapterData -> {
+                val isSameChapter = _state.value.chapterIndex == action.realCurrentChapterIndex
                 viewModelScope.launch {
                     _state.update {
                         it.copy(
-                            chapterIndex = action.chapterIndex,
-                            paragraphIndex = 0
+                            chapterIndex = action.chapterIndexToLoadData,
+                            paragraphIndex = if (isSameChapter) it.paragraphIndex else 0
                         )
                     }
-                    val chapter = contentUseCase.getChapterContent(bookInfo.id, action.chapterIndex)
+
+                    val chapter = contentUseCase.getChapterContent(bookInfo.id, action.chapterIndexToLoadData)
                     chapter?.let { chapter ->
                         currentChapterTitle = chapter.chapterTitle
                         val contentToRead = chapter.content.map { raw ->
                             val cleaned = htmlTagPattern.replace(raw, replacement = "")
-                            if (linkPattern.containsMatchIn(cleaned)) {
-                                " "
-                            } else {
-                                cleaned.trim()
-                            }
+                            if (linkPattern.containsMatchIn(cleaned)) " " else cleaned.trim()
                         }
+
                         _state.update { it.copy(chapterText = contentToRead) }
                         ttsManager.updateChapter(contentToRead)
 
+                        // 3. MediaController Metadata Update
                         mediaController?.apply {
                             if (_state.value.isActivated) {
                                 val updatedMetadata = currentMediaItem?.mediaMetadata?.buildUpon()
                                     ?.setArtist(chapter.chapterTitle)?.build()
-                                val updatedMediaItem = updatedMetadata?.let{
-                                    currentMediaItem?.buildUpon()?.setMediaMetadata(updatedMetadata)
-                                        ?.build()
+                                val updatedMediaItem = updatedMetadata?.let {
+                                    currentMediaItem?.buildUpon()?.setMediaMetadata(updatedMetadata)?.build()
                                 }
                                 updatedMediaItem?.let { replaceMediaItem(0, it) }
-                                prepare()
-                                play()
                             }
                         }
 
-                        if (_state.value.isActivated) {
-                            if (!_state.value.isPaused)
+                        // 4. SMART RESTART: Only start reading if this is a NEW chapter
+                        // If it's a rotation (isSameChapter == true), the TTS is already speaking!
+                        if (_state.value.isActivated && !isSameChapter) {
+                            if (!_state.value.isPaused) {
                                 ttsManager.stopReading()
-                            delay(500)
-                            ttsManager.startReading(0)
+                                delay(500)
+                                ttsManager.startReading(_state.value.paragraphIndex)
+                            }
                         }
                     }
                 }

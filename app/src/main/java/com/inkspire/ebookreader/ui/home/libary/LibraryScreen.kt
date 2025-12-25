@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -79,6 +80,7 @@ import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.MiniFabItem
 import com.inkspire.ebookreader.navigation.Route
+import com.inkspire.ebookreader.ui.composable.MyArrowAnimation
 import com.inkspire.ebookreader.ui.composable.MyBookChip
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import com.inkspire.ebookreader.ui.home.libary.composable.MyBookMenuBottomSheet
@@ -449,7 +451,24 @@ fun LibraryScreen(
                                 MyLoadingAnimation()
                             }
                             is UiState.Empty -> {
-                                Text(text = "No books found")
+                                Box(modifier = Modifier.fillMaxSize()){
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text ="Press here to add your book",
+                                            modifier = Modifier.align(Alignment.TopCenter)
+                                        )
+                                        MyArrowAnimation(
+                                            modifier = Modifier
+                                                .align(Alignment.BottomEnd)
+                                                .size(150.dp)
+                                                .padding(end = 64.dp)
+                                        )
+                                    }
+                                }
                             }
                             is UiState.Error -> {
                                 Text(text = "Error loading books")
@@ -608,6 +627,7 @@ fun LibraryScreen(
             items = fabItems,
             expanded = state.fabExpanded,
             deviceConfiguration = deviceConfiguration,
+            isListEmpty = state.bookList is UiState.Empty,
             onToggle = { onAction(LibraryAction.ChangeFabExpandState(!state.fabExpanded)) },
             onDismiss = { onAction(LibraryAction.ChangeFabExpandState(false)) }
         )

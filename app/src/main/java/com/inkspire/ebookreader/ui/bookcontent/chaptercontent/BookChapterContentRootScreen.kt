@@ -94,7 +94,7 @@ fun BookChapterContentRootScreen(
 
     LaunchedEffect(pagerState.targetPage) {
         onBookChapterContentAction(BookChapterContentAction.UpdateCurrentChapterIndex(pagerState.targetPage))
-        onTTSAction(TTSAction.UpdateCurrentChapterData(pagerState.targetPage))
+        onTTSAction(TTSAction.UpdateCurrentChapterData(pagerState.targetPage, bookChapterContentState.currentChapterIndex))
     }
     LaunchedEffect(bookChapterContentEvent) {
         bookChapterContentEvent.collect { event ->

@@ -439,7 +439,12 @@ fun TTSSetting(
                                                     indication = null,
                                                     interactionSource = remember { MutableInteractionSource() },
                                                     onClick = {
-                                                        viewModel.onAction(TTSSettingAction.UpdateLanguage(language, tts))
+                                                        viewModel.onAction(
+                                                            TTSSettingAction.UpdateLanguage(
+                                                                language,
+                                                                tts
+                                                            )
+                                                        )
                                                     }
                                                 ),
                                             verticalAlignment = Alignment.CenterVertically,
@@ -556,23 +561,28 @@ fun TTSSetting(
                             )
                         }
                     }
-                    OutlinedButton(
-                        onClick = {
-                            tts.speak("xin chào", TextToSpeech.QUEUE_FLUSH, null, "utteranceId")
-                        },
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = stylingState?.textColor ?: MaterialTheme.colorScheme.outlineVariant
-                        ),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    ) {
-                        Text(
-                            text = "Test Voice",
-                            color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        )
+                    if (!ttsState.isActivated) {
+                        OutlinedButton(
+                            onClick = {
+                                tts.speak("xin chào", TextToSpeech.QUEUE_FLUSH, null, "utteranceId")
+                            },
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = stylingState?.textColor
+                                    ?: MaterialTheme.colorScheme.outlineVariant
+                            ),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = stylingState?.textColor
+                                    ?: MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Text(
+                                text = "Test Voice",
+                                color = stylingState?.textColor
+                                    ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                            )
+                        }
                     }
                 }
             }

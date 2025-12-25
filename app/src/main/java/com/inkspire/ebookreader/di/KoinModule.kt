@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.di
 
-import androidx.media3.common.util.UnstableApi
 import androidx.room.Room
 import com.inkspire.ebookreader.data.database.LocalBookDatabase
 import com.inkspire.ebookreader.data.datastore.DatastoreManager
@@ -163,7 +162,6 @@ object KoinModule {
         single(createdAtStart = true) { DatastoreManager(androidContext()) }
     }
 
-    @UnstableApi
     val ttsModule = module {
         single<TTSManager>(createdAtStart = true) { TTSManager(context = androidContext()) }
     }

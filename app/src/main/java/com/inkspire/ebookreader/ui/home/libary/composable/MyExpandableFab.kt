@@ -53,6 +53,7 @@ fun MyExpandableFab(
     items: List<MiniFabItem>,
     expanded: Boolean,
     deviceConfiguration: DeviceConfiguration,
+    isListEmpty: Boolean,
     onToggle: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -134,7 +135,9 @@ fun MyExpandableFab(
                             0.dp
 
                     )
-                    .alpha(alpha)
+                    .then(
+                        if (isListEmpty) Modifier.alpha(1f) else Modifier.alpha(alpha)
+                    )
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_add_music),
