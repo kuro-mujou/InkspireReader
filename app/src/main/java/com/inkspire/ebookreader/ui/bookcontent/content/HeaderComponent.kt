@@ -60,7 +60,7 @@ fun HeaderComponent(
 
             if (start < end) {
                 builder.addStyle(
-                    style = SpanStyle(background = stylingState.wordHighlightColor),
+                    style = SpanStyle(background = stylingState.backgroundColor),
                     start = start,
                     end = end
                 )
