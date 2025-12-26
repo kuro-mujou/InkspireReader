@@ -20,9 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,18 +42,38 @@ fun HeaderComponent(
     isHighlighted: Boolean,
     text: String,
     textSize: Float,
-    currentCharOffset: Int,
+    currentWordRange: TextRange,
     onRequestScrollToOffset: (Float) -> Unit,
     onContentAction: (BookChapterContentAction) -> Unit
 ) {
-    val color = if (isHighlighted) stylingState.textBackgroundColor else Color.Transparent
+    val paragraphBgColor = if (isHighlighted) stylingState.textBackgroundColor else Color.Transparent
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    val displayedText = remember(text, isHighlighted, currentWordRange) {
+        if (!isHighlighted || currentWordRange.start == currentWordRange.end) {
+            val builder = AnnotatedString.Builder(text)
+            builder.toAnnotatedString()
+        } else {
+            val builder = AnnotatedString.Builder(text)
 
-    LaunchedEffect(currentCharOffset, isHighlighted, textLayoutResult) {
+            val start = currentWordRange.start.coerceIn(0, text.length)
+            val end = currentWordRange.end.coerceIn(0, text.length)
+
+            if (start < end) {
+                builder.addStyle(
+                    style = SpanStyle(background = stylingState.wordHighlightColor),
+                    start = start,
+                    end = end
+                )
+            }
+            builder.toAnnotatedString()
+        }
+    }
+
+    LaunchedEffect(currentWordRange, isHighlighted, textLayoutResult) {
         if (isHighlighted && textLayoutResult != null) {
             val layout = textLayoutResult!!
-            val validOffset = currentCharOffset.coerceIn(0, layout.layoutInput.text.length)
-            val cursorRect = layout.getCursorRect(validOffset)
+            val safeOffset = currentWordRange.start.coerceIn(0, layout.layoutInput.text.length)
+            val cursorRect = layout.getCursorRect(safeOffset)
             onRequestScrollToOffset(cursorRect.bottom)
         }
     }
@@ -73,7 +97,7 @@ fun HeaderComponent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-            text = text.trim(),
+            text = displayedText,
             onTextLayout = { textLayoutResult = it },
             style = TextStyle(
                 fontSize = textSize.sp,
@@ -81,8 +105,9 @@ fun HeaderComponent(
                 fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
                 textAlign = TextAlign.Center,
                 color = stylingState.textColor,
-                background = color,
-                lineHeight = (textSize + stylingState.lineSpacing).sp
+                background = paragraphBgColor,
+                lineBreak = LineBreak.Paragraph,
+                lineHeight = (stylingState.fontSize + stylingState.lineSpacing).sp
             )
         )
     }

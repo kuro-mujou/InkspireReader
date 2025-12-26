@@ -64,11 +64,12 @@ class TTSManager(
                             val chunkIndex = parts[3].toInt()
 
                             val chunkStartOffset = currentChunkOffsets.getOrElse(chunkIndex) { 0 }
-                            val globalOffset = chunkStartOffset + start
+                            val globalStart = chunkStartOffset + start
+                            val globalEnd = chunkStartOffset + end
 
-                            lastWordStartInSegment = globalOffset
+                            lastWordStartInSegment = globalStart
 
-                            _events.tryEmit(TTSEvent.OnRangeStart(globalOffset))
+                            _events.tryEmit(TTSEvent.OnRangeStart(globalStart, globalEnd))
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -79,14 +80,17 @@ class TTSManager(
     }
 
     fun checkPlayNextChapter() {
+        _events.tryEmit(TTSEvent.OnRangeStart(0, 0))
         _events.tryEmit(TTSEvent.CheckPlayNextChapter)
     }
 
     fun checkPlayPreviousChapter() {
+        _events.tryEmit(TTSEvent.OnRangeStart(0, 0))
         _events.tryEmit(TTSEvent.CheckPlayPreviousChapter)
     }
 
     fun checkPLayNextParagraph() {
+        _events.tryEmit(TTSEvent.OnRangeStart(0, 0))
         _events.tryEmit(TTSEvent.CheckPlayNextParagraph)
     }
 

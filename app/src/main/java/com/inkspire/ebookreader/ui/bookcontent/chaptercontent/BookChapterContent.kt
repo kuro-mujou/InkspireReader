@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -263,9 +264,10 @@ fun BookChapterContent(
                 if (!isCurrentChapter || !ttsPlaybackState.isActivated) return@LaunchedEffect
 
                 val currentIndex = ttsPlaybackState.paragraphIndex
-                val isAtBottomEdge = currentIndex >= currentContentState.lastVisibleItemIndex
+                val isAtTopEdge = currentIndex == currentContentState.firstVisibleItemIndex
+                val isAtBottomEdge = currentIndex == currentContentState.lastVisibleItemIndex
                 val isOffScreen = currentIndex !in currentContentState.firstVisibleItemIndex..currentContentState.lastVisibleItemIndex
-                if (isAtBottomEdge || isOffScreen) {
+                if (isAtTopEdge || isAtBottomEdge || isOffScreen) {
                     listState.animateScrollToItem(currentIndex)
                 }
             }
@@ -415,11 +417,11 @@ fun BookChapterContent(
                             paragraph = paragraph,
                             stylingState = stylingState,
                             isHighlighted = ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index,
-                            currentCharOffset = if(ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index)
-                                ttsPlaybackState.charOffset else 0,
+                            currentWordRange = if (ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index)
+                                ttsPlaybackState.currentWordRange else TextRange.Zero,
                             onRequestScrollToOffset = { lineBottomY ->
                                 coroutineScope.launch {
-                                    if (ttsPlaybackState.isActivated && !listState.isScrollInProgress) {
+                                    if (ttsPlaybackState.isActivated && !listState.isScrollInProgress && isCurrentChapter) {
                                         val itemInfo = listState.layoutInfo.visibleItemsInfo.find { it.index == index }
                                         if (itemInfo != null) {
                                             val absoluteLineY = itemInfo.offset + lineBottomY

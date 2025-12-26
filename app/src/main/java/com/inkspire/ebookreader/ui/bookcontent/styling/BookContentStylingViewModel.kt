@@ -38,6 +38,7 @@ class BookContentStylingViewModel(
                             _state.value.backgroundColor,
                             Color(color)
                         ),
+                        wordHighlightColor = generateWordHighlightColor(Color(color), _state.value.backgroundColor)
                     )
                 }
             }
@@ -51,6 +52,7 @@ class BookContentStylingViewModel(
                         textBackgroundColor = generateTextSelectionColor(Color(color), _state.value.textColor),
                         containerColor = generateContainerColor(Color(color)),
                         drawerContainerColor = generateDrawerContainerColor(Color(color)),
+                        wordHighlightColor = generateWordHighlightColor(_state.value.textColor, Color(color))
                     )
                 }
             }
@@ -188,5 +190,15 @@ class BookContentStylingViewModel(
             Color.Black
         }
         return tocTextColor
+    }
+
+    private fun generateWordHighlightColor(textColor: Color, backgroundColor: Color): Color {
+        val currentTextBackgroundColor = generateTextSelectionColor(backgroundColor, textColor)
+        val wordHighlightColor: Color = if (currentTextBackgroundColor.isDark()) {
+            currentTextBackgroundColor.lighten(0.3f)
+        } else {
+            currentTextBackgroundColor.darken(0.3f)
+        }
+        return wordHighlightColor
     }
 }

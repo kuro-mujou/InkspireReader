@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ComponentName
 import android.content.Intent
 import androidx.annotation.OptIn
+import androidx.compose.ui.text.TextRange
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
@@ -132,7 +133,7 @@ class TTSViewModel(
                     }
 
                     is TTSEvent.OnRangeStart -> {
-                        _state.update { it.copy(charOffset = event.charOffset) }
+                        _state.update { it.copy(currentWordRange = TextRange(event.startOffset, event.endOffset)) }
                     }
                 }
             }
