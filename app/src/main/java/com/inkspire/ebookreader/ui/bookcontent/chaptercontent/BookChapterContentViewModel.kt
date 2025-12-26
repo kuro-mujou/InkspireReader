@@ -10,9 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class BookChapterContentViewModel(
-
-): ViewModel() {
+class BookChapterContentViewModel: ViewModel() {
     private val _state = MutableStateFlow(BookChapterContentState())
     val state = _state
         .stateIn(
@@ -46,9 +44,6 @@ class BookChapterContentViewModel(
             is BookChapterContentAction.UpdateScreenHeight -> {
                 _state.update { it.copy(screenHeight = action.screenHeight) }
             }
-            is BookChapterContentAction.UpdateScreenWidth -> {
-                _state.update { it.copy(screenWidth = action.screenWidth) }
-            }
             is BookChapterContentAction.UpdateEnableUndoButton -> {
                 _state.update { it.copy(enableUndoButton = action.enable) }
             }
@@ -65,6 +60,9 @@ class BookChapterContentViewModel(
                 viewModelScope.launch {
                     _event.send(BookChapterContentEvent.ScrollToParagraph(action.chapterIndex, action.paragraphIndex))
                 }
+            }
+            is BookChapterContentAction.ChangeNoteDialogVisibility -> {
+                _state.update { it.copy(noteDialogVisibility = !_state.value.noteDialogVisibility) }
             }
             else -> {}
         }

@@ -8,9 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
-class BottomBarAutoScrollViewModel(
-
-): ViewModel() {
+class BottomBarAutoScrollViewModel: ViewModel() {
     private val _state = MutableStateFlow(BottomBarAutoScrollState())
     val state: StateFlow<BottomBarAutoScrollState>
         get() = _state

@@ -18,6 +18,7 @@ import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSViewMod
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentRootScreen
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentViewModel
+import com.inkspire.ebookreader.ui.bookcontent.composable.KeepScreenOn
 import com.inkspire.ebookreader.ui.bookcontent.composable.PushDrawer
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerAction
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerRoot
@@ -118,6 +119,16 @@ fun BookContentRootScreen(
 
                 is UiState.Success -> {
                     val tableOfContents = state.data
+
+                    if (!settingState.keepScreenOn) {
+                        if (autoScrollState.isActivated)
+                            KeepScreenOn(true)
+                        else
+                            KeepScreenOn(false)
+                    } else {
+                        KeepScreenOn(true)
+                    }
+
                     PushDrawer(
                         drawerState = drawerState,
                         stylingState = stylingState,

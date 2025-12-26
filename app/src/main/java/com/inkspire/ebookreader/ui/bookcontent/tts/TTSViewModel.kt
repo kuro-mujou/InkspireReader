@@ -33,8 +33,8 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 class TTSViewModel(
-    private val ttsManager: TTSManager,
     private val application: Application,
+    private val ttsManager: TTSManager,
     private val datastoreUseCase: TTSDatastoreUseCase,
     private val contentUseCase: TTSContentUseCase
 ) : ViewModel() {
@@ -129,6 +129,10 @@ class TTSViewModel(
                             )
                         }
                         mediaController?.clearMediaItems()
+                    }
+
+                    is TTSEvent.OnRangeStart -> {
+                        _state.update { it.copy(charOffset = event.charOffset) }
                     }
                 }
             }

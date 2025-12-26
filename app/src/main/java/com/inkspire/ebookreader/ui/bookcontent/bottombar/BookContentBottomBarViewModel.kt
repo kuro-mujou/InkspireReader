@@ -8,9 +8,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 
-class BookContentBottomBarViewModel(
-
-) : ViewModel(){
+class BookContentBottomBarViewModel: ViewModel(){
     private val _state = MutableStateFlow(BookContentBottomBarState())
     val state = _state
         .stateIn(

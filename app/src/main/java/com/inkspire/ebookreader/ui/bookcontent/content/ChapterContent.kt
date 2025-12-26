@@ -1,6 +1,7 @@
 package com.inkspire.ebookreader.ui.bookcontent.content
 
 import androidx.compose.runtime.Composable
+import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.headerLevel
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.headerPatten
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.htmlTagPattern
@@ -13,7 +14,10 @@ import com.inkspire.ebookreader.util.HeaderTextSizeUtil.calculateHeaderSize
 fun ChapterContent(
     stylingState: StylingState,
     paragraph: String,
-    isHighlighted: Boolean
+    isHighlighted: Boolean,
+    currentCharOffset: Int,
+    onRequestScrollToOffset: (Float) -> Unit,
+    onContentAction: (BookChapterContentAction) -> Unit
 ) {
     if (linkPattern.containsMatchIn(paragraph)) {
         ImageComponent(
@@ -21,20 +25,28 @@ fun ChapterContent(
             uriString = paragraph,
         )
     } else if (headerPatten.containsMatchIn(paragraph)) {
-        if (htmlTagPattern.replace(paragraph, replacement = "").isNotEmpty()) {
+        val cleanText = htmlTagPattern.replace(paragraph, replacement = "")
+        if (cleanText.isNotEmpty()) {
             HeaderComponent(
                 stylingState = stylingState,
-                text = htmlTagPattern.replace(paragraph, replacement = ""),
+                text = cleanText,
                 isHighlighted = isHighlighted,
                 textSize = calculateHeaderSize(headerLevel.find(paragraph)!!.groupValues[1].toInt(), stylingState.fontSize),
+                currentCharOffset = currentCharOffset,
+                onRequestScrollToOffset = onRequestScrollToOffset,
+                onContentAction = onContentAction
             )
         }
     } else {
-        if (htmlTagPattern.replace(paragraph, replacement = "").isNotEmpty()) {
+        val cleanText = htmlTagPattern.replace(paragraph, replacement = "")
+        if (cleanText.isNotEmpty()) {
             ParagraphComponent(
                 stylingState = stylingState,
                 text = convertToAnnotatedStrings(paragraph),
                 isHighlighted = isHighlighted,
+                currentCharOffset = currentCharOffset,
+                onRequestScrollToOffset = onRequestScrollToOffset,
+                onContentAction = onContentAction
             )
         }
     }

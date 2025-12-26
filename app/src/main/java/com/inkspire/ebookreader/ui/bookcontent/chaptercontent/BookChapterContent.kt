@@ -44,9 +44,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -57,7 +57,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -76,6 +75,7 @@ import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 @Composable
 fun BookChapterContent(
@@ -97,7 +97,7 @@ fun BookChapterContent(
     var originalOffset by remember { mutableStateOf(Offset.Zero) }
     var size by remember { mutableStateOf(IntSize.Zero) }
     var originalZoom by remember { mutableFloatStateOf(1f) }
-    val density = LocalDensity.current
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(currentChapter) {
         onBookContentDataAction(BookContentDataAction.LoadChapter(currentChapter))
@@ -136,8 +136,6 @@ fun BookChapterContent(
                     !listState.canScrollForward && listState.layoutInfo.totalItemsCount > 0
                 }
             }
-
-            var previousParagraphIndex by remember { mutableIntStateOf(-1) }
 
             DisposableEffect(listState) {
                 onListStateLoaded(listState)
@@ -262,27 +260,13 @@ fun BookChapterContent(
                 ttsPlaybackState.isActivated,
                 ttsPlaybackState.paragraphIndex
             ) {
-                if (!isCurrentChapter || !ttsPlaybackState.isActivated) {
-                    previousParagraphIndex = -1
-                    return@LaunchedEffect
-                }
+                if (!isCurrentChapter || !ttsPlaybackState.isActivated) return@LaunchedEffect
 
                 val currentIndex = ttsPlaybackState.paragraphIndex
-                if (previousParagraphIndex == -1) {
-                    listState.animateScrollToItem(listState.firstVisibleItemIndex)
-                    previousParagraphIndex = currentIndex
-                    return@LaunchedEffect
-                }
-
-                if (currentIndex != previousParagraphIndex) {
-                    val isAtBottomEdge = currentIndex >= currentContentState.lastVisibleItemIndex
-                    val isOffScreen = currentIndex !in currentContentState.firstVisibleItemIndex..currentContentState.lastVisibleItemIndex
-
-                    if (isAtBottomEdge || isOffScreen) {
-                        listState.animateScrollToItem(currentIndex)
-                    }
-
-                    previousParagraphIndex = currentIndex
+                val isAtBottomEdge = currentIndex >= currentContentState.lastVisibleItemIndex
+                val isOffScreen = currentIndex !in currentContentState.firstVisibleItemIndex..currentContentState.lastVisibleItemIndex
+                if (isAtBottomEdge || isOffScreen) {
+                    listState.animateScrollToItem(currentIndex)
                 }
             }
 
@@ -405,17 +389,8 @@ fun BookChapterContent(
                                 } while (event.changes.any { it.pressed })
                             }
                         }
-                        .onSizeChanged {
-                            size = it
-                        }
+                        .onSizeChanged { size = it }
                         .onGloballyPositioned { coordinates ->
-                            onBookChapterContentAction(
-                                BookChapterContentAction.UpdateScreenWidth(
-                                    coordinates.size.width - (with(
-                                        density
-                                    ) { 32.dp.toPx() }.toInt())
-                                )
-                            )
                             onBookChapterContentAction(
                                 BookChapterContentAction.UpdateScreenHeight(
                                     coordinates.size.height
@@ -439,7 +414,32 @@ fun BookChapterContent(
                         ChapterContent(
                             paragraph = paragraph,
                             stylingState = stylingState,
-                            isHighlighted = ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index
+                            isHighlighted = ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index,
+                            currentCharOffset = if(ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index)
+                                ttsPlaybackState.charOffset else 0,
+                            onRequestScrollToOffset = { lineBottomY ->
+                                coroutineScope.launch {
+                                    if (ttsPlaybackState.isActivated && !listState.isScrollInProgress) {
+                                        val itemInfo = listState.layoutInfo.visibleItemsInfo.find { it.index == index }
+                                        if (itemInfo != null) {
+                                            val absoluteLineY = itemInfo.offset + lineBottomY
+                                            val viewportHeight = listState.layoutInfo.viewportSize.height
+
+                                            val triggerThreshold = viewportHeight * 0.95
+
+                                            if (absoluteLineY > triggerThreshold) {
+                                                val targetY = viewportHeight * 0.15
+                                                val scrollAmount = absoluteLineY - targetY
+
+                                                if (scrollAmount > 0) {
+                                                    listState.animateScrollBy(scrollAmount.toFloat(), tween(800))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            onContentAction = onBookChapterContentAction
                         )
                     }
                 }

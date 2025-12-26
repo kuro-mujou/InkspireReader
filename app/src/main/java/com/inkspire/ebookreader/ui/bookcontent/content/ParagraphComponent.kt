@@ -11,11 +11,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
@@ -23,6 +29,7 @@ import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.inkspire.ebookreader.R
+import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
 import com.inkspire.ebookreader.ui.bookcontent.common.customPopupPositionProvider
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 
@@ -32,29 +39,33 @@ fun ParagraphComponent(
     stylingState: StylingState,
     isHighlighted: Boolean,
     text: AnnotatedString,
+    currentCharOffset: Int,
+    onRequestScrollToOffset: (Float) -> Unit,
+    onContentAction: (BookChapterContentAction) -> Unit
 ) {
-    val color = if (isHighlighted)
-        stylingState.textBackgroundColor
-    else
-        Color.Transparent
+    val color = if (isHighlighted) stylingState.textBackgroundColor else Color.Transparent
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+
+    LaunchedEffect(currentCharOffset, isHighlighted, textLayoutResult) {
+        if (isHighlighted && textLayoutResult != null) {
+            val layout = textLayoutResult!!
+            val validOffset = currentCharOffset.coerceIn(0, layout.layoutInput.text.length)
+            val cursorRect = layout.getCursorRect(validOffset)
+            onRequestScrollToOffset(cursorRect.bottom)
+        }
+    }
+
     val tooltipState = rememberTooltipState()
     TooltipBox(
         positionProvider = customPopupPositionProvider(),
         tooltip = {
             IconButton(
-                modifier = Modifier
-                    .background(
-                        color = stylingState.textBackgroundColor,
-                        shape = CircleShape
-                    ),
+                modifier = Modifier.background(color = stylingState.textBackgroundColor, shape = CircleShape),
                 onClick = {
-//                    openNoteDialog()
+                    onContentAction(BookChapterContentAction.ChangeNoteDialogVisibility)
                 }
             ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_comment),
-                    contentDescription = null
-                )
+                Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_comment), contentDescription = null)
             }
         },
         state = tooltipState,
@@ -64,11 +75,9 @@ fun ParagraphComponent(
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
             text = text,
+            onTextLayout = { textLayoutResult = it },
             style = TextStyle(
-                textIndent = if (stylingState.textIndent)
-                    TextIndent(firstLine = (stylingState.fontSize * 2).sp)
-                else
-                    TextIndent.None,
+                textIndent = if (stylingState.textIndent) TextIndent(firstLine = (stylingState.fontSize * 2).sp) else TextIndent.None,
                 fontSize = stylingState.fontSize.sp,
                 fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
                 textAlign = if (stylingState.textAlign) TextAlign.Justify else TextAlign.Left,
