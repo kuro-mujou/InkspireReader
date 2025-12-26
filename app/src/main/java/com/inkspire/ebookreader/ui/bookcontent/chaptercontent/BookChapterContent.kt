@@ -44,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -135,6 +136,8 @@ fun BookChapterContent(
                     !listState.canScrollForward && listState.layoutInfo.totalItemsCount > 0
                 }
             }
+
+            var previousParagraphIndex by remember { mutableIntStateOf(-1) }
 
             DisposableEffect(listState) {
                 onListStateLoaded(listState)
@@ -256,10 +259,30 @@ fun BookChapterContent(
 
             LaunchedEffect(
                 isCurrentChapter,
+                ttsPlaybackState.isActivated,
                 ttsPlaybackState.paragraphIndex
             ) {
-                if (ttsPlaybackState.isActivated && isCurrentChapter) {
-                    listState.animateScrollToItem(ttsPlaybackState.paragraphIndex)
+                if (!isCurrentChapter || !ttsPlaybackState.isActivated) {
+                    previousParagraphIndex = -1
+                    return@LaunchedEffect
+                }
+
+                val currentIndex = ttsPlaybackState.paragraphIndex
+                if (previousParagraphIndex == -1) {
+                    listState.animateScrollToItem(listState.firstVisibleItemIndex)
+                    previousParagraphIndex = currentIndex
+                    return@LaunchedEffect
+                }
+
+                if (currentIndex != previousParagraphIndex) {
+                    val isAtBottomEdge = currentIndex >= currentContentState.lastVisibleItemIndex
+                    val isOffScreen = currentIndex !in currentContentState.firstVisibleItemIndex..currentContentState.lastVisibleItemIndex
+
+                    if (isAtBottomEdge || isOffScreen) {
+                        listState.animateScrollToItem(currentIndex)
+                    }
+
+                    previousParagraphIndex = currentIndex
                 }
             }
 

@@ -39,6 +39,7 @@ class TTSManager(
                     lastWordStartInSegment = 0
                     checkPLayNextParagraph()
                 }
+                @Deprecated("Deprecated in Java")
                 override fun onError(utteranceId: String?) {
 
                 }
