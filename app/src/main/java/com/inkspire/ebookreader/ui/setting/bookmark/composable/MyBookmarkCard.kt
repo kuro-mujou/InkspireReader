@@ -53,7 +53,7 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @UnstableApi
 @Composable
-fun BookmarkSettingCard(
+fun MyBookmarkCard(
     bookmarkContent: String,
     bookmarkIndex: Int,
     stylingState: StylingState?,

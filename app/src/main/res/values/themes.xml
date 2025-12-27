@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.Bookshelf" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.InkSpire" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.InkSpire.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="android:windowSplashScreenBackground">@color/background</item>
+        <item name="windowSplashScreenAnimationDuration">400</item>
+        <item name="postSplashScreenTheme">@style/Theme.InkSpire</item>
+    </style>
 </resources>

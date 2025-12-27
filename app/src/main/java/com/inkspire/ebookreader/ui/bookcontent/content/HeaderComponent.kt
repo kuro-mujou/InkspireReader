@@ -31,22 +31,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
+import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
 import com.inkspire.ebookreader.ui.bookcontent.common.customPopupPositionProvider
+import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
+import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HeaderComponent(
-    stylingState: StylingState,
-    isHighlighted: Boolean,
+    index: Int,
     text: String,
+    isHighlighted: Boolean,
     textSize: Float,
     currentWordRange: TextRange,
+    stylingState: StylingState,
+    chapterContentState: BookChapterContentState,
     onRequestScrollToOffset: (Float) -> Unit,
-    onContentAction: (BookChapterContentAction) -> Unit
+    onNoteAction: (NoteAction) -> Unit
 ) {
-    val paragraphBgColor = if (isHighlighted) stylingState.textBackgroundColor else Color.Transparent
+    var isOpenDialog by remember { mutableStateOf(false) }
+    val paragraphBgColor = if (isHighlighted) stylingState.drawerContainerColor else Color.Transparent
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     val displayedText = remember(text, isHighlighted, currentWordRange) {
         if (!isHighlighted || currentWordRange.start == currentWordRange.end) {
@@ -60,7 +65,7 @@ fun HeaderComponent(
 
             if (start < end) {
                 builder.addStyle(
-                    style = SpanStyle(background = stylingState.backgroundColor),
+                    style = SpanStyle(background = stylingState.textBackgroundColor),
                     start = start,
                     end = end
                 )
@@ -85,7 +90,7 @@ fun HeaderComponent(
             IconButton(
                 modifier = Modifier.background(color = stylingState.textBackgroundColor, shape = CircleShape),
                 onClick = {
-                    onContentAction(BookChapterContentAction.ChangeNoteDialogVisibility)
+                    isOpenDialog = true
                 }
             ) {
                 Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_comment), contentDescription = null)
@@ -109,6 +114,26 @@ fun HeaderComponent(
                 lineBreak = LineBreak.Paragraph,
                 lineHeight = (stylingState.fontSize + stylingState.lineSpacing).sp
             )
+        )
+    }
+
+    if (isOpenDialog) {
+        NoteDialog(
+            stylingState = stylingState,
+            note = text,
+            onDismiss = {
+                isOpenDialog = false
+            },
+            onNoteChanged = { noteInput ->
+                onNoteAction(
+                    NoteAction.AddNote(
+                        noteBody = text,
+                        noteInput = noteInput,
+                        tocId = chapterContentState.currentChapterIndex,
+                        contentId = index
+                    )
+                )
+            }
         )
     }
 }

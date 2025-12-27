@@ -5,13 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,10 +21,9 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -38,13 +35,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import com.inkspire.ebookreader.R
@@ -65,8 +64,9 @@ fun RecentBookRootScreen(
     val viewModel = koinViewModel<RecentBookViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val screenWidth = with(LocalDensity.current) {
+        LocalWindowInfo.current.containerSize.width.toDp()
+    }
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -84,50 +84,36 @@ fun RecentBookRootScreen(
                 Text(text = "Error loading book content")
             }
             is UiState.Empty -> {
-                Text(
-                    modifier = Modifier
-                        .padding(
-                            end = WindowInsets.safeContent
-                                .only(WindowInsetsSides.End)
-                                .asPaddingValues()
-                                .calculateEndPadding(LayoutDirection.Ltr)
-                        )
-                        .padding(horizontal = 8.dp),
-                    text = "No Recent Books Found",
-                    style = TextStyle(
-                        fontSize = MaterialTheme.typography.displaySmall.fontSize,
-                        fontWeight = FontWeight.Bold
-                    ),
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            end = WindowInsets.safeContent
-                                .only(WindowInsetsSides.End)
-                                .asPaddingValues()
-                                .calculateEndPadding(LayoutDirection.Ltr)
-                        )
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ){
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Text(
-                        modifier = Modifier
-                            .weight(1f, false)
-                            .padding(end = 8.dp),
-                        text = "Add more books to your Library",
-                        style = TextStyle(
-                            fontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                        text = "No Recent Books Found",
+                        style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
+                            lineHeight = 36.sp
                         ),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        textAlign = TextAlign.Center
                     )
-                    OutlinedIconButton(
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Your history is empty. Tap the arrow to go to your Library and pick your next read.",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            lineHeight = 24.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FilledTonalIconButton(
                         onClick = {
                             homeNavigatorAction(Route.Home.Library)
-                        },
-                        colors = IconButtonDefaults.outlinedIconButtonColors(),
+                        }
                     ) {
                         Icon(
                             modifier = Modifier.rotate(180f),

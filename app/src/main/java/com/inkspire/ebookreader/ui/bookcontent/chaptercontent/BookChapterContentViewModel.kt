@@ -53,16 +53,13 @@ class BookChapterContentViewModel: ViewModel() {
             is BookChapterContentAction.RequestScrollToChapter -> {
                 viewModelScope.launch {
                     _event.send(BookChapterContentEvent.ScrollToChapter(action.index))
+                    _state.update { it.copy(firstVisibleItemIndex = 0) }
                 }
-                _state.update { it.copy(firstVisibleItemIndex = 0) }
             }
             is BookChapterContentAction.RequestScrollToParagraph -> {
                 viewModelScope.launch {
                     _event.send(BookChapterContentEvent.ScrollToParagraph(action.chapterIndex, action.paragraphIndex))
                 }
-            }
-            is BookChapterContentAction.ChangeNoteDialogVisibility -> {
-                _state.update { it.copy(noteDialogVisibility = !_state.value.noteDialogVisibility) }
             }
             else -> {}
         }

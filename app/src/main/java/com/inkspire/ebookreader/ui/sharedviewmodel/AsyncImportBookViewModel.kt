@@ -9,7 +9,6 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.inkspire.ebookreader.worker.CBZImportWorker
-import com.inkspire.ebookreader.worker.DriveEPUBImportWorker
 import com.inkspire.ebookreader.worker.EPUBImportWorker
 import com.inkspire.ebookreader.worker.PDFImportWorker
 import kotlinx.coroutines.launch
@@ -75,15 +74,5 @@ class AsyncImportBookViewModel: ViewModel() {
             e.printStackTrace()
             Toast.makeText(context, "Can't open CBZ file", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    fun enqueueImportFromDriveLink(context: Context, driveLink: String) {
-        val inputData = workDataOf(
-            DriveEPUBImportWorker.INPUT_DRIVE_LINK_KEY to driveLink,
-        )
-        val importWorkRequest = OneTimeWorkRequest.Builder(DriveEPUBImportWorker::class.java)
-            .setInputData(inputData)
-            .build()
-        WorkManager.getInstance(context).enqueue(importWorkRequest)
     }
 }

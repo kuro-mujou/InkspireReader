@@ -4,12 +4,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -25,8 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,8 +56,10 @@ import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContent
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.composable.CustomNavigationDrawerItem
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.ui.composable.MySearchBox
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TableOfContentScreen(
     bookChapterContentState: BookChapterContentState,
@@ -69,9 +71,16 @@ fun TableOfContentScreen(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val isImeVisible = WindowInsets.isImeVisible
     var searchInput by remember { mutableStateOf("") }
     val lazyColumnState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(isImeVisible) {
+        if (!isImeVisible) {
+            focusManager.clearFocus()
+        }
+    }
     LaunchedEffect(tableOfContentState.searchState) {
         if (tableOfContentState.searchState) {
             lazyColumnState.scrollToItem(tableOfContentState.targetSearchIndex)
@@ -94,18 +103,22 @@ fun TableOfContentScreen(
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            OutlinedTextField(
+            MySearchBox(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
                 value = searchInput,
                 onValueChange = { newValue ->
-                    if (newValue.all { it.isDigit() }) {
-                        searchInput = newValue
-                    }
+                    searchInput = newValue
                 },
+                textColor = stylingState.textColor,
+                backgroundColor = stylingState.textColor,
+                cursorColor = stylingState.textColor,
                 textStyle = TextStyle(
                     color = stylingState.textColor,
                     fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
                 ),
-                label = {
+                hint = {
                     Text(
                         text = "Enter a chapter number",
                         style = TextStyle(
@@ -136,15 +149,6 @@ fun TableOfContentScreen(
                             focusManager.clearFocus()
                         }
                     }
-                ),
-                modifier = Modifier
-                    .fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = stylingState.textColor,
-                    unfocusedLabelColor = stylingState.textColor,
-                    focusedBorderColor = stylingState.textColor,
-                    focusedLabelColor = stylingState.textColor,
-                    cursorColor = stylingState.textColor,
                 )
             )
             LazyColumn(

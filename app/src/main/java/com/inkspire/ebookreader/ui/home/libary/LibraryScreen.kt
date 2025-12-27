@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -22,11 +23,11 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -35,8 +36,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -44,10 +43,11 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -63,6 +63,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -70,9 +71,11 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavKey
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.BookImporter
@@ -80,9 +83,9 @@ import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.MiniFabItem
 import com.inkspire.ebookreader.navigation.Route
-import com.inkspire.ebookreader.ui.composable.MyArrowAnimation
 import com.inkspire.ebookreader.ui.composable.MyBookChip
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
+import com.inkspire.ebookreader.ui.composable.MySearchBox
 import com.inkspire.ebookreader.ui.home.libary.composable.MyBookMenuBottomSheet
 import com.inkspire.ebookreader.ui.home.libary.composable.MyExpandableFab
 import com.inkspire.ebookreader.ui.home.libary.composable.MyGridBookView
@@ -94,6 +97,7 @@ import kotlinx.coroutines.launch
 fun LibraryScreen(
     state: LibraryState,
     onAction: (LibraryAction) -> Unit,
+    homeNavigatorAction: (NavKey) -> Unit,
     parentNavigatorAction: (NavKey) -> Unit
 ) {
     val context = LocalContext.current
@@ -188,18 +192,18 @@ fun LibraryScreen(
                 )
             }
         ),
-        MiniFabItem(
-            icon = R.drawable.ic_write_ebook,
-            title = "Write new Book",
-            tint = if (isSystemInDarkTheme())
-                Color(155, 212, 161)
-            else
-                Color(52, 105, 63),
-            onClick = {
-                onAction(LibraryAction.ChangeFabExpandState(false))
-                parentNavigatorAction(Route.BookWriter(""))
-            }
-        )
+//        MiniFabItem(
+//            icon = R.drawable.ic_write_ebook,
+//            title = "Write new Book",
+//            tint = if (isSystemInDarkTheme())
+//                Color(155, 212, 161)
+//            else
+//                Color(52, 105, 63),
+//            onClick = {
+//                onAction(LibraryAction.ChangeFabExpandState(false))
+//                parentNavigatorAction(Route.BookWriter(""))
+//            }
+//        )
     )
 
     LaunchedEffect(isKeyboardVisible) {
@@ -292,7 +296,8 @@ fun LibraryScreen(
                                     .only(WindowInsetsSides.End)
                                     .asPaddingValues()
                                     .calculateEndPadding(LayoutDirection.Ltr)
-                            ).clickable(
+                            )
+                            .clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
                                 onClick = { focusManager.clearFocus() }
@@ -332,16 +337,26 @@ fun LibraryScreen(
                                                 )
                                             }
                                         }
-                                        OutlinedTextField(
-                                            state = searchState,
-                                            modifier = Modifier
-                                                .weight(1f),
-                                            placeholder = {
-                                                Text(text = "Search")
-                                            },
-                                            lineLimits = TextFieldLineLimits.SingleLine,
-                                            shape = RoundedCornerShape(25.dp)
+                                        MySearchBox(
+                                            modifier = Modifier.weight(1f),
+                                            textFieldState = searchState,
+                                            hint = {
+                                                Text(
+                                                    text = "Search",
+                                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                                                )
+                                            }
                                         )
+//                                        OutlinedTextField(
+//                                            state = searchState,
+//                                            modifier = Modifier
+//                                                .weight(1f),
+//                                            placeholder = {
+//                                                Text(text = "Search")
+//                                            },
+//                                            lineLimits = TextFieldLineLimits.SingleLine,
+//                                            shape = RoundedCornerShape(25.dp)
+//                                        )
                                         Box {
                                             IconButton(onClick = { dropdownMenuState = !dropdownMenuState }) {
                                                 Icon(
@@ -353,23 +368,27 @@ fun LibraryScreen(
                                                 expanded = dropdownMenuState,
                                                 onDismissRequest = { dropdownMenuState = false }
                                             ) {
-                                                DropdownMenuItem(
-                                                    text = { Text("Delete") },
-                                                    leadingIcon = {
-                                                        Icon(
-                                                            imageVector = ImageVector.vectorResource(R.drawable.ic_delete),
-                                                            contentDescription = "Delete Icon",
-                                                            tint = if (isSystemInDarkTheme())
-                                                                Color(250, 160, 160)
-                                                            else
-                                                                Color(194, 59, 34)
-                                                        )
-                                                    },
-                                                    onClick = {
-                                                        onAction(LibraryAction.UpdateDeletingState)
-                                                        dropdownMenuState = false
-                                                    }
-                                                )
+                                                if (state.bookList is UiState.Success) {
+                                                    DropdownMenuItem(
+                                                        text = { Text("Delete") },
+                                                        leadingIcon = {
+                                                            Icon(
+                                                                imageVector = ImageVector.vectorResource(
+                                                                    R.drawable.ic_delete
+                                                                ),
+                                                                contentDescription = "Delete Icon",
+                                                                tint = if (isSystemInDarkTheme())
+                                                                    Color(250, 160, 160)
+                                                                else
+                                                                    Color(194, 59, 34)
+                                                            )
+                                                        },
+                                                        onClick = {
+                                                            onAction(LibraryAction.UpdateDeletingState)
+                                                            dropdownMenuState = false
+                                                        }
+                                                    )
+                                                }
                                                 DropdownMenuItem(
                                                     text = { Text("Sort") },
                                                     leadingIcon = {
@@ -451,24 +470,50 @@ fun LibraryScreen(
                                 MyLoadingAnimation()
                             }
                             is UiState.Empty -> {
-                                Box(modifier = Modifier.fillMaxSize()){
-                                    Box(
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
                                         modifier = Modifier
-                                            .align(Alignment.BottomEnd)
                                             .fillMaxWidth()
+                                            .padding(horizontal = 32.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
                                     ) {
                                         Text(
-                                            text ="Press here to add your book",
-                                            modifier = Modifier.align(Alignment.TopCenter)
+                                            text = "Your Library is Empty",
+                                            style = MaterialTheme.typography.headlineMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                lineHeight = 36.sp
+                                            ),
+                                            color = MaterialTheme.colorScheme.onBackground,
+                                            textAlign = TextAlign.Center
                                         )
-                                        MyArrowAnimation(
-                                            modifier = Modifier
-                                                .align(Alignment.BottomEnd)
-                                                .size(150.dp)
-                                                .padding(end = 64.dp)
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Text(
+                                            text = "Tap the '+' to import books from your device, or use the arrow to browse for books on the internet.",
+                                            style = MaterialTheme.typography.bodyLarge.copy(
+                                                lineHeight = 24.sp
+                                            ),
+                                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                                            textAlign = TextAlign.Center
                                         )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        FilledTonalIconButton(
+                                            onClick = {
+                                                homeNavigatorAction(Route.Home.Explore)
+                                            }
+                                        ) {
+                                            Icon(
+                                                modifier = Modifier.rotate(180f),
+                                                imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow),
+                                                contentDescription = "Add Books"
+                                            )
+                                        }
                                     }
                                 }
+
                             }
                             is UiState.Error -> {
                                 Text(text = "Error loading books")

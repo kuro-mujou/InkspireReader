@@ -70,6 +70,7 @@ import com.inkspire.ebookreader.domain.model.Chapter
 import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollAction
 import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
 import com.inkspire.ebookreader.ui.bookcontent.content.ChapterContent
+import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
@@ -92,6 +93,7 @@ fun BookChapterContent(
     onBookContentDataAction: (BookContentDataAction) -> Unit,
     onBookChapterContentAction: (BookChapterContentAction) -> Unit,
     onAutoScrollAction: (AutoScrollAction) -> Unit,
+    onNoteAction: (NoteAction) -> Unit,
     onListStateLoaded: (LazyListState) -> Unit,
     onDispose: () -> Unit
 ) {
@@ -414,7 +416,9 @@ fun BookChapterContent(
                 ) {
                     itemsIndexed(paragraphs) { index, paragraph ->
                         ChapterContent(
+                            index = index,
                             paragraph = paragraph,
+                            chapterContentState = bookChapterContentState,
                             stylingState = stylingState,
                             isHighlighted = ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index,
                             currentWordRange = if (ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index)
@@ -441,7 +445,7 @@ fun BookChapterContent(
                                     }
                                 }
                             },
-                            onContentAction = onBookChapterContentAction
+                            onNoteAction = onNoteAction
                         )
                     }
                 }

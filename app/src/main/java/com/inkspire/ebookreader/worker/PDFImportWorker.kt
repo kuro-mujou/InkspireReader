@@ -647,7 +647,7 @@ class PDFImportWorker(
     ): NotificationCompat.Builder {
         val displayFileName = fileName.substringBeforeLast(".")
         return NotificationCompat.Builder(appContext, PROGRESS_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setContentTitle("Importing PDF: ${displayFileName.take(35)}${if (displayFileName.length > 35) "..." else ""}")
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -694,7 +694,7 @@ class PDFImportWorker(
             else -> "Import failed for '$defaultTitle'."
         }
         val builder = NotificationCompat.Builder(appContext, COMPLETION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))

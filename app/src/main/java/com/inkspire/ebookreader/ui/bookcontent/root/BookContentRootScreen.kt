@@ -23,6 +23,8 @@ import com.inkspire.ebookreader.ui.bookcontent.composable.PushDrawer
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerAction
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerRoot
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerViewModel
+import com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark.BookmarkViewModel
+import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentAction
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentViewModel
 import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingViewModel
@@ -45,6 +47,8 @@ fun BookContentRootScreen(
     val stylingViewModel = koinViewModel<BookContentStylingViewModel>()
     val chapterContentViewModel = koinViewModel<BookChapterContentViewModel>()
     val tableOfContentViewModel = koinViewModel<TableOfContentViewModel>()
+    val noteViewModel = koinViewModel<NoteViewModel>(parameters = { parametersOf(bookId) })
+    val bookmarkListViewModel = koinViewModel<BookmarkViewModel>()
     val topBarViewModel = koinViewModel<BookContentTopBarViewModel>()
     val bottomBarViewModel = koinViewModel<BookContentBottomBarViewModel>()
     val bottomBarTTSViewModel = koinViewModel<BottomBarTTSViewModel>(parameters = { parametersOf(bookId) })
@@ -58,6 +62,8 @@ fun BookContentRootScreen(
     val stylingState by stylingViewModel.state.collectAsStateWithLifecycle()
     val bookChapterContentState by chapterContentViewModel.state.collectAsStateWithLifecycle()
     val tableOfContentState by tableOfContentViewModel.state.collectAsStateWithLifecycle()
+    val noteState by noteViewModel.state.collectAsStateWithLifecycle()
+    val bookmarkListState by bookmarkListViewModel.state.collectAsStateWithLifecycle()
     val bookContentTopBarState by topBarViewModel.state.collectAsStateWithLifecycle()
     val bookContentBottomBarState by bottomBarViewModel.state.collectAsStateWithLifecycle()
     val bottomBarTTSState by bottomBarTTSViewModel.state.collectAsStateWithLifecycle()
@@ -141,6 +147,8 @@ fun BookContentRootScreen(
                                 stylingState = stylingState,
                                 bookChapterContentState = bookChapterContentState,
                                 tableOfContentState = tableOfContentState,
+                                noteState = noteState,
+                                bookmarkListState = bookmarkListState,
                                 onDrawerAction = drawerViewModel::onAction,
                                 onTableOfContentAction = {
                                     when (it) {
@@ -148,9 +156,17 @@ fun BookContentRootScreen(
                                             drawerViewModel.onAction(DrawerAction.CloseDrawer)
                                             chapterContentViewModel.onAction(BookChapterContentAction.RequestScrollToChapter(it.chapterIndex))
                                         }
-                                        else -> {}
+                                        is TableOfContentAction.NavigateToParagraph -> {
+                                            drawerViewModel.onAction(DrawerAction.CloseDrawer)
+                                            chapterContentViewModel.onAction(BookChapterContentAction.RequestScrollToParagraph(it.chapterIndex, it.paragraphIndex))
+                                        }
+                                        else -> {
+                                            tableOfContentViewModel.onAction(it)
+                                        }
                                     }
-                                }
+                                },
+                                onBookmarkListAction = bookmarkListViewModel::onAction,
+                                onNoteAction = noteViewModel::onAction
                             )
                         },
                         mainContent = {
@@ -174,6 +190,7 @@ fun BookContentRootScreen(
                                     bookChapterContentEvent = bookChapterContentEvent,
                                     onAutoScrollAction = autoScrollViewModel::onAction,
                                     onTTSAction = ttsViewModel::onAction,
+                                    onNoteAction = noteViewModel::onAction,
                                     onBookContentDataAction = dataViewModel::onAction,
                                     onBookChapterContentAction = {
                                         when (it) {

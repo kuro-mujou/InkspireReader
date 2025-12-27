@@ -39,7 +39,7 @@ fun MyBookmarkItemView(
                 checkmarkColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.background
             )
         )
-        BookmarkSettingCard(
+        MyBookmarkCard(
             bookmarkContent = listItem.title,
             bookmarkIndex = listItem.id,
             bookmarkStyle = listItem.bookmarkStyle,

@@ -391,7 +391,7 @@ class CBZImportWorker(
     ): NotificationCompat.Builder {
         val displayFileName = fileName.substringBeforeLast(".")
         return NotificationCompat.Builder(context, PROGRESS_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setContentTitle("Importing: ${displayFileName.take(40)}${if (displayFileName.length > 40) "..." else ""}")
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -442,7 +442,7 @@ class CBZImportWorker(
             else -> "Import failed for '$defaultTitle'."
         }
         val builder = NotificationCompat.Builder(context, COMPLETION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))

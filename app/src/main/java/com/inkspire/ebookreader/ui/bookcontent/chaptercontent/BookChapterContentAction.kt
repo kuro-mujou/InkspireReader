@@ -11,5 +11,4 @@ sealed interface BookChapterContentAction {
     data class UpdateEnablePagerScroll(val enable: Boolean) : BookChapterContentAction
     data class RequestScrollToChapter(val index: Int) : BookChapterContentAction
     data class RequestScrollToParagraph(val chapterIndex: Int, val paragraphIndex: Int) : BookChapterContentAction
-    data object ChangeNoteDialogVisibility : BookChapterContentAction
 }

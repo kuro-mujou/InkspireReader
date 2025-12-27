@@ -44,13 +44,4 @@ class BookImporter(
             }
         }
     }
-    fun importBookViaGoogleDrive(link: String){
-        try {
-            scope.launch {
-                importBookViewModel.enqueueImportFromDriveLink(context, link)
-            }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Can't open book file", Toast.LENGTH_SHORT).show()
-        }
-    }
 }

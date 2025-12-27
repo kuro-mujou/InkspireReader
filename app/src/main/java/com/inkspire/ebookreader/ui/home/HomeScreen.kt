@@ -58,6 +58,7 @@ fun HomeScreen(
                 }
                 entry<Route.Home.Library> {
                     LibraryRootScreen(
+                        homeNavigatorAction = homeNavigator::switchTab,
                         parentNavigatorAction = parentNavigator::navigateTo
                     )
                 }

@@ -725,7 +725,7 @@ class EPUBImportWorker(
         message: String
     ): NotificationCompat.Builder {
         return NotificationCompat.Builder(context, PROGRESS_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setContentTitle("Importing EPUB: ${fileName.take(35)}${if (fileName.length > 35) "..." else ""}")
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -770,7 +770,7 @@ class EPUBImportWorker(
             else -> "Import failed for '$defaultTitle'."
         }
         val builder = NotificationCompat.Builder(context, COMPLETION_CHANNEL_ID).apply {
-            setSmallIcon(R.drawable.ic_launcher_foreground)
+            setSmallIcon(R.mipmap.ic_launcher_foreground)
             setContentTitle(title)
             setContentText(text)
             setStyle(

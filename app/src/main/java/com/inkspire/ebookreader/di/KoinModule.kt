@@ -41,6 +41,8 @@ import com.inkspire.ebookreader.ui.bookcontent.bottombar.autoscroll.BottomBarAut
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentViewModel
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerViewModel
+import com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark.BookmarkViewModel
+import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentViewModel
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataViewModel
 import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingViewModel
@@ -148,6 +150,13 @@ object KoinModule {
         }
         viewModelOf(::BookChapterContentViewModel)
         viewModelOf(::TableOfContentViewModel)
+        viewModelOf(::BookmarkViewModel)
+        viewModel {
+            NoteViewModel(
+                bookId = it.get(),
+                noteRepository = get()
+            )
+        }
         viewModelOf(::DrawerViewModel)
         viewModelOf(::BookContentStylingViewModel)
         viewModelOf(::BookContentTopBarViewModel)

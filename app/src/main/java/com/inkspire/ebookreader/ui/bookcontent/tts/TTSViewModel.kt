@@ -104,12 +104,32 @@ class TTSViewModel(
                 when (event) {
                     TTSEvent.CheckPlayNextChapter -> {
                         if (_state.value.chapterIndex < bookInfo.totalChapter - 1) {
-                            _state.update { it.copy(chapterIndex = it.chapterIndex + 1) }
+                            val nextIndex = _state.value.chapterIndex + 1
+
+                            _state.update {
+                                it.copy(chapterIndex = nextIndex, paragraphIndex = 0)
+                            }
+
+                            loadChapterData(
+                                chapterIndex = nextIndex,
+                                autoPlay = true
+                            )
+                        } else {
+                            ttsManager.stopReading()
                         }
                     }
                     TTSEvent.CheckPlayPreviousChapter -> {
                         if (_state.value.chapterIndex > 0) {
-                            _state.update { it.copy(chapterIndex = it.chapterIndex - 1) }
+                            val prevIndex = _state.value.chapterIndex - 1
+
+                            _state.update {
+                                it.copy(chapterIndex = prevIndex, paragraphIndex = 0)
+                            }
+
+                            loadChapterData(
+                                chapterIndex = prevIndex,
+                                autoPlay = true
+                            )
                         }
                     }
                     TTSEvent.CheckPlayNextParagraph -> {
@@ -152,7 +172,6 @@ class TTSViewModel(
                         )
                     }
                 } else {
-                    //reach end of book
                     ttsManager.stopReading()
                 }
             }
@@ -190,7 +209,6 @@ class TTSViewModel(
                         )
                     }
                 } else {
-                    //read from start of first chapter
                     ttsManager.startReading(0)
                 }
             }
@@ -254,44 +272,55 @@ class TTSViewModel(
                     _state.update {
                         it.copy(
                             chapterIndex = action.chapterIndexToLoadData,
-                            paragraphIndex = if (isSameChapter) it.paragraphIndex else 0
+                            paragraphIndex = 0
                         )
                     }
 
-                    val chapter = contentUseCase.getChapterContent(bookInfo.id, action.chapterIndexToLoadData)
-                    chapter?.let { chapter ->
-                        currentChapterTitle = chapter.chapterTitle
-                        val contentToRead = chapter.content.map { raw ->
-                            val cleaned = htmlTagPattern.replace(raw, replacement = "")
-                            if (linkPattern.containsMatchIn(cleaned)) " " else cleaned.trim()
-                        }
+                    loadChapterData(
+                        chapterIndex = action.chapterIndexToLoadData,
+                        autoPlay = false
+                    )
 
-                        _state.update { it.copy(chapterText = contentToRead) }
-                        ttsManager.updateChapter(contentToRead)
-
-                        // 3. MediaController Metadata Update
-                        mediaController?.apply {
-                            if (_state.value.isActivated) {
-                                val updatedMetadata = currentMediaItem?.mediaMetadata?.buildUpon()
-                                    ?.setArtist(chapter.chapterTitle)?.build()
-                                val updatedMediaItem = updatedMetadata?.let {
-                                    currentMediaItem?.buildUpon()?.setMediaMetadata(updatedMetadata)?.build()
-                                }
-                                updatedMediaItem?.let { replaceMediaItem(0, it) }
-                            }
-                        }
-
-                        // 4. SMART RESTART: Only start reading if this is a NEW chapter
-                        // If it's a rotation (isSameChapter == true), the TTS is already speaking!
-                        if (_state.value.isActivated && !isSameChapter) {
-                            if (!_state.value.isPaused) {
-                                ttsManager.stopReading()
-                                delay(500)
-                                ttsManager.startReading(_state.value.paragraphIndex)
-                            }
+                    if (_state.value.isActivated && !isSameChapter) {
+                        if (!_state.value.isPaused) {
+                            ttsManager.stopReading()
+                            delay(500)
+                            ttsManager.startReading(_state.value.paragraphIndex)
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private suspend fun loadChapterData(chapterIndex: Int, autoPlay: Boolean) {
+        val chapter = contentUseCase.getChapterContent(bookInfo.id, chapterIndex)
+
+        chapter?.let { ch ->
+            currentChapterTitle = ch.chapterTitle
+            val contentToRead = ch.content.map { raw ->
+                val cleaned = htmlTagPattern.replace(raw, replacement = "")
+                if (linkPattern.containsMatchIn(cleaned)) " " else cleaned.trim()
+            }
+
+            _state.update { it.copy(chapterText = contentToRead) }
+
+            ttsManager.updateChapter(contentToRead)
+
+            mediaController?.apply {
+                if (_state.value.isActivated) {
+                    val updatedMetadata = currentMediaItem?.mediaMetadata?.buildUpon()
+                        ?.setArtist(ch.chapterTitle)?.build()
+                    val updatedMediaItem = updatedMetadata?.let {
+                        currentMediaItem?.buildUpon()?.setMediaMetadata(updatedMetadata)?.build()
+                    }
+                    updatedMediaItem?.let { replaceMediaItem(0, it) }
+                }
+            }
+
+            if (autoPlay && _state.value.isActivated && !_state.value.isPaused) {
+                delay(100)
+                ttsManager.startReading(0)
             }
         }
     }

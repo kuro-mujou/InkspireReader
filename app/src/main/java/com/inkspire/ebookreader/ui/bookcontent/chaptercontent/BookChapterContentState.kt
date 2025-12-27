@@ -7,5 +7,4 @@ data class BookChapterContentState(
     val firstVisibleItemIndex: Int = -1,
     val lastVisibleItemIndex: Int = -1,
     val screenHeight: Int = 0,
-    val noteDialogVisibility: Boolean = false,
 )

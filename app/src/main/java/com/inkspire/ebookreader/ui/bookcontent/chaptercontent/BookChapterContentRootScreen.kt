@@ -29,6 +29,7 @@ import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSAction
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.tts.BottomBarTTSState
 import com.inkspire.ebookreader.ui.bookcontent.composable.CustomFab
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
+import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataState
 import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingAction
@@ -42,7 +43,6 @@ import com.inkspire.ebookreader.ui.setting.SettingAction
 import com.inkspire.ebookreader.ui.setting.SettingState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
 
@@ -67,6 +67,7 @@ fun BookChapterContentRootScreen(
     bookChapterContentEvent: Flow<BookChapterContentEvent>,
     onAutoScrollAction: (AutoScrollAction) -> Unit,
     onTTSAction: (TTSAction) -> Unit,
+    onNoteAction: (NoteAction) -> Unit,
     onBookContentDataAction: (BookContentDataAction) -> Unit,
     onBookChapterContentAction: (BookChapterContentAction) -> Unit,
     onBookContentTopBarAction: (BookContentTopBarAction) -> Unit,
@@ -93,28 +94,33 @@ fun BookChapterContentRootScreen(
     }
 
     LaunchedEffect(pagerState.targetPage) {
+        if (ttsPlaybackState.chapterIndex != pagerState.targetPage) {
+            onTTSAction(TTSAction.UpdateCurrentChapterData(
+                pagerState.targetPage,
+                bookChapterContentState.currentChapterIndex
+            ))
+        }
         onBookChapterContentAction(BookChapterContentAction.UpdateCurrentChapterIndex(pagerState.targetPage))
-        onTTSAction(TTSAction.UpdateCurrentChapterData(pagerState.targetPage, bookChapterContentState.currentChapterIndex))
     }
+
     LaunchedEffect(bookChapterContentEvent) {
         bookChapterContentEvent.collect { event ->
             when (event) {
                 is BookChapterContentEvent.ScrollToChapter -> {
-                    delay(300)
-                    pagerState.animateScrollToPage(event.page)
+                    pagerState.scrollToPage(event.page)
                 }
                 is BookChapterContentEvent.ScrollToParagraph -> {
-                    delay(300)
-                    pagerState.animateScrollToPage(event.page)
+                    pagerState.scrollToPage(event.page)
                     val currentListState = lazyListStates[event.page]
-                    currentListState?.animateScrollToItem(event.paragraphIndex)
+                    currentListState?.scrollToItem(event.paragraphIndex)
                 }
             }
         }
     }
+
     LaunchedEffect(ttsPlaybackState.chapterIndex) {
-        if (ttsPlaybackState.isActivated && ttsPlaybackState.chapterIndex != bookChapterContentState.currentChapterIndex) {
-            onBookChapterContentAction(BookChapterContentAction.RequestScrollToChapter(ttsPlaybackState.chapterIndex))
+        if (ttsPlaybackState.chapterIndex != -1 && ttsPlaybackState.chapterIndex != pagerState.currentPage) {
+            pagerState.scrollToPage(ttsPlaybackState.chapterIndex)
         }
     }
     Scaffold(
@@ -189,6 +195,7 @@ fun BookChapterContentRootScreen(
                         onBookContentDataAction = onBookContentDataAction,
                         onBookChapterContentAction = onBookChapterContentAction,
                         onAutoScrollAction = onAutoScrollAction,
+                        onNoteAction = onNoteAction,
                         onListStateLoaded = { loadedState ->
                             lazyListStates[pageIndex] = loadedState
                         },

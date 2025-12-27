@@ -8,6 +8,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun LibraryRootScreen(
+    homeNavigatorAction: (NavKey) -> Unit,
     parentNavigatorAction: (NavKey) -> Unit
 ) {
     val viewModel = koinViewModel<LibraryViewModel>()
@@ -15,6 +16,7 @@ fun LibraryRootScreen(
     LibraryScreen(
         state = state,
         onAction = viewModel::onAction,
+        homeNavigatorAction = homeNavigatorAction,
         parentNavigatorAction = parentNavigatorAction
     )
 }

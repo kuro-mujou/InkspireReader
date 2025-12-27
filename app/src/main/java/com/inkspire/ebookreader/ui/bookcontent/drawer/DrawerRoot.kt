@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
@@ -43,7 +43,13 @@ import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.TableOfContent
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
+import com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark.BookmarkList
+import com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark.BookmarkListAction
+import com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark.BookmarkListState
 import com.inkspire.ebookreader.ui.bookcontent.drawer.model.TabItem
+import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
+import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteList
+import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteState
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentAction
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentScreen
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentState
@@ -57,8 +63,12 @@ fun DrawerRoot(
     stylingState: StylingState,
     bookChapterContentState: BookChapterContentState,
     tableOfContentState: TableOfContentState,
+    noteState: NoteState,
+    bookmarkListState: BookmarkListState,
     onDrawerAction: (DrawerAction) -> Unit,
-    onTableOfContentAction: (TableOfContentAction) -> Unit
+    onTableOfContentAction: (TableOfContentAction) -> Unit,
+    onBookmarkListAction: (BookmarkListAction) -> Unit,
+    onNoteAction: (NoteAction) -> Unit,
 ) {
     val tabItems = listOf(
         TabItem(title = "Table of Contents"),
@@ -70,11 +80,11 @@ fun DrawerRoot(
     }
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
-    val imageWidth = when (deviceConfiguration) {
-        DeviceConfiguration.PHONE_PORTRAIT -> 100.dp
-        DeviceConfiguration.PHONE_LANDSCAPE -> 70.dp
-        DeviceConfiguration.TABLET_PORTRAIT -> 120.dp
-        DeviceConfiguration.TABLET_LANDSCAPE -> 160.dp
+    val imageHeight = when (deviceConfiguration) {
+        DeviceConfiguration.PHONE_PORTRAIT -> 140.dp
+        DeviceConfiguration.PHONE_LANDSCAPE -> 80.dp
+        DeviceConfiguration.TABLET_PORTRAIT -> 160.dp
+        DeviceConfiguration.TABLET_LANDSCAPE -> 140.dp
     }
     Column(
         modifier = Modifier
@@ -104,10 +114,10 @@ fun DrawerRoot(
                     bookInfo.coverImagePath
                 },
                 contentDescription = null,
-                contentScale = ContentScale.FillWidth,
+                contentScale = ContentScale.FillHeight,
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .width(imageWidth)
+                    .height(imageHeight)
                     .clip(RoundedCornerShape(8.dp))
             )
             Column(
@@ -203,11 +213,25 @@ fun DrawerRoot(
                 }
 
                 1 -> {
-
+                    NoteList(
+                        drawerState = drawerState,
+                        noteState = noteState,
+                        stylingState = stylingState,
+                        onNoteAction = onNoteAction,
+                        onTableOfContentAction = onTableOfContentAction
+                    )
                 }
 
                 2 -> {
-
+                    BookmarkList(
+                        bookId = bookInfo.id,
+                        tableOfContents = tableOfContents,
+                        drawerState = drawerState,
+                        stylingState = stylingState,
+                        bookmarkListState = bookmarkListState,
+                        onBookmarkListAction = onBookmarkListAction,
+                        onTableOfContentAction = onTableOfContentAction
+                    )
                 }
             }
         }

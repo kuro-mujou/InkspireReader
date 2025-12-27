@@ -7,6 +7,7 @@ sealed interface TableOfContentAction {
     data class ChangeFabVisibility(val visibility: Boolean) : TableOfContentAction
     data class UpdateSearchState(val searchState: Boolean) : TableOfContentAction
     data class NavigateToChapter(val chapterIndex: Int) : TableOfContentAction
+    data class NavigateToParagraph(val chapterIndex: Int, val paragraphIndex: Int) : TableOfContentAction
     data class UpdateCurrentChapterFavoriteState(
         val bookId: String,
         val chapterIndex: Int,
