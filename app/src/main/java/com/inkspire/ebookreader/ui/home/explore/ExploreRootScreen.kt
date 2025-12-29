@@ -1,5 +1,6 @@
 package com.inkspire.ebookreader.ui.home.explore
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +44,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.ui.composable.MySearchBox
 import com.inkspire.ebookreader.ui.home.explore.common.supportedWebsites
+import com.inkspire.ebookreader.ui.home.explore.truyenfull.TruyenFullRoot
+import com.inkspire.ebookreader.ui.home.explore.truyenfull.TruyenFullViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -51,7 +54,9 @@ fun ExploreRootScreen (
 
 ) {
     val exploreViewModel = koinViewModel<ExploreViewModel>()
-    val state by exploreViewModel.state.collectAsStateWithLifecycle()
+    val exploreState by exploreViewModel.state.collectAsStateWithLifecycle()
+    val truyenFullViewModel = koinViewModel<TruyenFullViewModel>()
+    val truyenFullState by truyenFullViewModel.state.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
     val isImeVisible = WindowInsets.isImeVisible
     var searchInput by remember { mutableStateOf("") }
@@ -90,8 +95,8 @@ fun ExploreRootScreen (
                     label = {
                         Text(it)
                     },
-                    selected = it == state.selectedWebsite,
-                    leadingIcon = if (it == state.selectedWebsite) {
+                    selected = it == exploreState.selectedWebsite,
+                    leadingIcon = if (it == exploreState.selectedWebsite) {
                         {
                             Icon(
                                 imageVector = ImageVector.vectorResource(R.drawable.ic_confirm),
@@ -147,5 +152,20 @@ fun ExploreRootScreen (
                 )
             }
         )
+
+        Crossfade(targetState = exploreState.selectedWebsite) { targetState ->
+            when (targetState) {
+                supportedWebsites[0] -> {
+                    TruyenFullRoot(
+                        truyenFullState = truyenFullState,
+                        onAction = truyenFullViewModel::onAction
+                    )
+                }
+
+                supportedWebsites[1] -> {
+
+                }
+            }
+        }
     }
 }
