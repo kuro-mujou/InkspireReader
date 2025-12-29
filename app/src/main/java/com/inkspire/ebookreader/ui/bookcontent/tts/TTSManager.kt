@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
+import java.text.BreakIterator
 import java.util.Locale
 import java.util.UUID
 
@@ -28,13 +29,24 @@ class TTSManager(
     private var paragraphOffset: Int = 0
     private var lastWordStartInSegment: Int = 0
 
-    private var currentChunkOffsets = mutableListOf<Int>()
+    private data class ChunkMetadata(
+        val textToSpeak: String,
+        val audioStartOffset: Int,
+        val sentenceStart: Int,
+        val sentenceEnd: Int
+    )
+
+    private val currentChunks = mutableListOf<ChunkMetadata>()
+
+    private var currentHighlightedSentenceStart: Int = -1
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             tts.language = Locale.getDefault()
             tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                override fun onStart(utteranceId: String?) {}
+                override fun onStart(utteranceId: String?) {
+                    updateHighlightAndResume(utteranceId, 0)
+                }
 
                 override fun onDone(utteranceId: String?) {
                     if (utteranceId?.startsWith("para_") == true) {
@@ -57,25 +69,32 @@ class TTSManager(
 
                 override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
                     super.onRangeStart(utteranceId, start, end, frame)
-
-                    if (utteranceId != null && utteranceId.startsWith("para_")) {
-                        try {
-                            val parts = utteranceId.split("_")
-                            val chunkIndex = parts[3].toInt()
-
-                            val chunkStartOffset = currentChunkOffsets.getOrElse(chunkIndex) { 0 }
-                            val globalStart = chunkStartOffset + start
-                            val globalEnd = chunkStartOffset + end
-
-                            lastWordStartInSegment = globalStart
-
-                            _events.tryEmit(TTSEvent.OnRangeStart(globalStart, globalEnd))
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
+                    updateHighlightAndResume(utteranceId, start)
                 }
             })
+        }
+    }
+
+    private fun updateHighlightAndResume(utteranceId: String?, wordStartInUtterance: Int) {
+        if (utteranceId != null && utteranceId.startsWith("para_")) {
+            try {
+                val parts = utteranceId.split("_")
+                val chunkIndex = parts[3].toInt()
+                val metadata = currentChunks.getOrNull(chunkIndex) ?: return
+
+                val absoluteWordOffset = metadata.audioStartOffset + wordStartInUtterance
+
+                lastWordStartInSegment = absoluteWordOffset
+
+                _events.tryEmit(TTSEvent.OnReadOffset(absoluteWordOffset))
+
+                if (currentHighlightedSentenceStart != metadata.sentenceStart) {
+                    currentHighlightedSentenceStart = metadata.sentenceStart
+                    _events.tryEmit(TTSEvent.OnRangeStart(metadata.sentenceStart, metadata.sentenceEnd))
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -124,76 +143,66 @@ class TTSManager(
         if (chapterContent.isEmpty() || paragraphIndex !in chapterContent.indices) return
 
         val fullText = chapterContent[paragraphIndex]
-
         val resumeIndex = paragraphOffset.coerceIn(0, fullText.length)
-        val textToSpeak = fullText.substring(resumeIndex)
 
-        if (textToSpeak.isBlank()) {
+        if (resumeIndex >= fullText.length && fullText.isNotEmpty()) {
             checkPLayNextParagraph()
             return
         }
 
-        speakInternal(textToSpeak, paragraphIndex, baseOffset = resumeIndex)
+        speakInternal(fullText, paragraphIndex, baseOffset = resumeIndex)
     }
 
     private fun speakInternal(text: String, paragraphIndex: Int, baseOffset: Int = 0) {
-        val chunks = splitTextIdeally(text)
-        currentChunkOffsets.clear()
+        currentChunks.clear()
+        currentHighlightedSentenceStart = -1
 
-        var runningLength = baseOffset
+        val targetLocale = tts.voice?.locale ?: Locale.getDefault()
+        val iterator = BreakIterator.getSentenceInstance(targetLocale)
+        iterator.setText(text)
+
+        var start = iterator.first()
+        var end = iterator.next()
+
+        while (end != BreakIterator.DONE) {
+            if (end > baseOffset) {
+                val audioStart = if (start < baseOffset) baseOffset else start
+
+                val textToSpeak = text.substring(audioStart, end)
+
+                if (textToSpeak.isNotBlank()) {
+                    currentChunks.add(
+                        ChunkMetadata(
+                            textToSpeak = textToSpeak,
+                            audioStartOffset = audioStart,
+                            sentenceStart = start,
+                            sentenceEnd = end
+                        )
+                    )
+                }
+            }
+            start = end
+            end = iterator.next()
+        }
+
+        if (currentChunks.isEmpty()) {
+            checkPLayNextParagraph()
+            return
+        }
+
         val uniqueId = UUID.randomUUID().toString()
+        val totalChunks = currentChunks.size
 
-        chunks.forEachIndexed { index, chunk ->
-            currentChunkOffsets.add(runningLength)
-
-            val utteranceId = "para_${paragraphIndex}_chunk_${index}_of_${chunks.size}_$uniqueId"
+        currentChunks.forEachIndexed { index, metadata ->
+            val utteranceId = "para_${paragraphIndex}_sent_${index}_of_${totalChunks}_$uniqueId"
 
             tts.speak(
-                chunk,
+                metadata.textToSpeak,
                 if (index == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD,
                 null,
                 utteranceId
             )
-
-            runningLength += chunk.length
         }
-    }
-
-    private fun splitTextIdeally(text: String, maxLength: Int = 3900): List<String> {
-        if (text.length <= maxLength) return listOf(text)
-
-        val result = mutableListOf<String>()
-        var remaining = text
-
-        while (remaining.length > maxLength) {
-            var splitIndex = -1
-
-            val searchStart = (maxLength - 500).coerceAtLeast(0)
-            for (i in maxLength downTo searchStart) {
-                val c = remaining[i]
-                if (c == '.' || c == '?' || c == '!') {
-                    splitIndex = i
-                    break
-                }
-            }
-
-            if (splitIndex == -1) {
-                splitIndex = remaining.lastIndexOf(' ', maxLength)
-            }
-
-            if (splitIndex == -1) {
-                splitIndex = maxLength
-            }
-
-            val cut = (splitIndex + 1).coerceAtMost(remaining.length)
-            result.add(remaining.take(cut))
-            remaining = remaining.substring(cut)
-        }
-
-        if (remaining.isNotEmpty()) {
-            result.add(remaining)
-        }
-        return result
     }
 
     suspend fun getAvailableVoicesAndLanguages() = withContext(Dispatchers.IO) {

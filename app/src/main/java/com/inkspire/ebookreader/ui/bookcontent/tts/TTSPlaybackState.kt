@@ -1,7 +1,6 @@
 package com.inkspire.ebookreader.ui.bookcontent.tts
 
 import android.speech.tts.Voice
-import androidx.compose.ui.text.TextRange
 import java.util.Locale
 
 data class TTSPlaybackState(
@@ -12,7 +11,6 @@ data class TTSPlaybackState(
     val currentVoice: Voice? = null,
     val chapterIndex: Int = -1,
     val paragraphIndex: Int = -1,
-    val currentWordRange: TextRange = TextRange.Zero,
 
     //content state
     val currentParagraphText: String = "",

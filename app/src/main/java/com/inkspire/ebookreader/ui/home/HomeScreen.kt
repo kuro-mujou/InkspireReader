@@ -13,6 +13,7 @@ import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
 import com.inkspire.ebookreader.ui.home.composable.MyNavigationSuiteScaffold
+import com.inkspire.ebookreader.ui.home.explore.ExploreRootScreen
 import com.inkspire.ebookreader.ui.home.libary.LibraryRootScreen
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookRootScreen
 import com.inkspire.ebookreader.ui.home.setting.SettingRootScreen
@@ -63,8 +64,7 @@ fun HomeScreen(
                     )
                 }
                 entry<Route.Home.Explore> {
-                    //todo add explore screen for search truyenfull/tangthuvien
-//                    ExploreRootScreen()
+                    ExploreRootScreen()
                 }
                 entry<Route.Home.Settings> {
                     SettingRootScreen()

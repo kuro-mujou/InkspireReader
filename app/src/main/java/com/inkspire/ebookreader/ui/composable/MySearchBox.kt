@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -38,12 +39,15 @@ fun MySearchBox(
     onValueChange: (String) -> Unit,
     alpha: Float = 0.08f,
     hint: @Composable () -> Unit,
+    decorationAlwaysVisible: Boolean = false,
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     cursorColor: Color = MaterialTheme.colorScheme.primary,
     backgroundColor: Color = MaterialTheme.colorScheme.onSurface,
     textStyle: TextStyle = TextStyle(
         color = textColor
     ),
+    leadingIcon: @Composable () -> Unit = {},
+    trailingIcon: @Composable () -> Unit = {},
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
@@ -53,17 +57,17 @@ fun MySearchBox(
     val focusRequester = remember { FocusRequester() }
 
     val backgroundAlpha by animateFloatAsState(
-        targetValue = if (isFocused || value.isNotEmpty()) alpha else 0f,
+        targetValue = if (decorationAlwaysVisible || isFocused || value.isNotEmpty()) alpha else 0f,
         label = "bgAlpha"
     )
 
     val underlineAlpha by animateFloatAsState(
-        targetValue = if (isFocused || value.isNotEmpty()) 1f else 0f,
+        targetValue = if (decorationAlwaysVisible || isFocused || value.isNotEmpty()) 1f else 0f,
         label = "lineAlpha"
     )
 
     val verticalPadding by animateDpAsState(
-        targetValue = if (isFocused || value.isNotEmpty()) 12.dp else 0.dp,
+        targetValue = if (decorationAlwaysVisible || isFocused || value.isNotEmpty()) 12.dp else 0.dp,
         label = "padding"
     )
 
@@ -94,16 +98,21 @@ fun MySearchBox(
                 if (value.isEmpty() && !isFocused) {
                     hint()
                 }
-
-                Column {
-                    innerTextField()
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 6.dp)
-                            .height(1.dp)
-                            .fillMaxWidth()
-                            .background(textColor.copy(alpha = underlineAlpha))
-                    )
+                Row {
+                    leadingIcon()
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        innerTextField()
+                        Box(
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .height(1.dp)
+                                .fillMaxWidth()
+                                .background(textColor.copy(alpha = underlineAlpha))
+                        )
+                    }
+                    trailingIcon()
                 }
             }
         },

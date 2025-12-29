@@ -64,7 +64,6 @@ class EPUBImportWorker(
         const val INPUT_URI_KEY = "input_uri"
         private const val PROGRESS_CHANNEL_ID = "book_import_progress_channel"
         private const val COMPLETION_CHANNEL_ID = "book_import_completion_channel"
-        private const val TAG = "EPUBImportWorker"
         private const val MAX_BITMAP_DIMENSION = 2048
     }
 
@@ -187,7 +186,6 @@ class EPUBImportWorker(
                 continue
             }
             val mainResourceLink = Url(resourceBaseHref)
-            var resourceFetchError: String? = null
             var rawHtml = ""
             try {
                 publication.get(mainResourceLink!!)?.buffered().use {
@@ -195,9 +193,7 @@ class EPUBImportWorker(
                         rawHtml = HtmlUtil.cleanHtmlForJsoup(byteArray.decodeToString())
                     }
                 }
-            } catch (_: Exception) {
-                resourceFetchError = "[ERR: Load/Parse Resource Exception]"
-            }
+            } catch (_: Exception) {}
 
             val needsSplitting = tocLinksInResource.any {
                 it.href.toString().contains('#')
@@ -316,9 +312,11 @@ class EPUBImportWorker(
                         segmentError = "[ERR: Parse Segment]"
                     }
 
-                    val contentToSave = parsedContent?.first ?: (if (segmentError != null) listOf(
-                        segmentError
-                    ) else emptyList())
+                    val contentToSave = parsedContent?.first ?: (
+                        if (segmentError != null)
+                            listOf(segmentError)
+                        else emptyList()
+                    )
                     val imagePathsFound = parsedContent?.second ?: emptyList()
 
                     if (contentToSave.isNotEmpty()) {
@@ -694,15 +692,6 @@ class EPUBImportWorker(
         index: Int
     ) {
         saveChapterContent(bookId, title, index, emptyList())
-    }
-
-    private suspend fun saveErrorChapterContent(
-        bookId: String,
-        title: String,
-        index: Int,
-        errorMessage: String
-    ) {
-        saveChapterContent(bookId, title, index, listOf(errorMessage))
     }
 
     private fun createNotificationChannel(

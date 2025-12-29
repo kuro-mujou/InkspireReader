@@ -23,11 +23,13 @@ import com.inkspire.ebookreader.domain.usecase.TTSDatastoreUseCase
 import com.inkspire.ebookreader.service.TTSService
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.htmlTagPattern
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.linkPattern
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -45,19 +47,28 @@ class TTSViewModel(
         SharingStarted.WhileSubscribed(5000),
         _state.value
     )
+    private val _currentHighlightRange = MutableStateFlow(TextRange.Zero)
+    val currentHighlightRange = _currentHighlightRange.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        TextRange.Zero
+    )
+
+    private val _currentReadingWordOffset = MutableStateFlow(0)
+    val currentReadingWordOffset = _currentReadingWordOffset.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        0
+    )
+    private val _event = Channel<TTSUiEvent>(Channel.BUFFERED)
+    val event = _event.receiveAsFlow()
     private lateinit var bookInfo: Book
     private var currentChapterTitle: String = ""
     private var mediaController: MediaController? = null
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private val controllerListener = object : MediaController.Listener {
         override fun onDisconnected(controller: MediaController) {
-            ttsManager.stopReading()
-            _state.update {
-                it.copy(
-                    isPaused = false,
-                    isActivated = false
-                )
-            }
+            ttsManager.stopReading(true)
         }
     }
     private val playerListener = object : Player.Listener {
@@ -106,8 +117,13 @@ class TTSViewModel(
                         if (_state.value.chapterIndex < bookInfo.totalChapter - 1) {
                             val nextIndex = _state.value.chapterIndex + 1
 
+                            contentUseCase.saveBookInfoParagraphIndex(bookInfo.id, 0)
                             _state.update {
-                                it.copy(chapterIndex = nextIndex, paragraphIndex = 0)
+                                it.copy(
+                                    isPaused = false,
+                                    chapterIndex = nextIndex,
+                                    paragraphIndex = 0
+                                )
                             }
 
                             loadChapterData(
@@ -121,9 +137,12 @@ class TTSViewModel(
                     TTSEvent.CheckPlayPreviousChapter -> {
                         if (_state.value.chapterIndex > 0) {
                             val prevIndex = _state.value.chapterIndex - 1
-
+                            contentUseCase.saveBookInfoParagraphIndex(bookInfo.id, 0)
                             _state.update {
-                                it.copy(chapterIndex = prevIndex, paragraphIndex = 0)
+                                it.copy(
+                                    isPaused = false,
+                                    chapterIndex = prevIndex, paragraphIndex = 0
+                                )
                             }
 
                             loadChapterData(
@@ -134,9 +153,13 @@ class TTSViewModel(
                     }
                     TTSEvent.CheckPlayNextParagraph -> {
                         if (_state.value.paragraphIndex < _state.value.chapterText.size - 1) {
+                            contentUseCase.saveBookInfoParagraphIndex(bookInfo.id, _state.value.paragraphIndex + 1)
                             _state.update { currentState ->
                                 ttsManager.startReading(currentState.paragraphIndex + 1)
-                                currentState.copy(paragraphIndex = currentState.paragraphIndex + 1)
+                                currentState.copy(
+                                    isPaused = false,
+                                    paragraphIndex = currentState.paragraphIndex + 1
+                                )
                             }
                         } else {
                             ttsManager.checkPlayNextChapter()
@@ -150,10 +173,15 @@ class TTSViewModel(
                             )
                         }
                         mediaController?.clearMediaItems()
+                        _event.send(TTSUiEvent.StopReading)
                     }
 
                     is TTSEvent.OnRangeStart -> {
-                        _state.update { it.copy(currentWordRange = TextRange(event.startOffset, event.endOffset)) }
+                        _currentHighlightRange.value = TextRange(event.startOffset, event.endOffset)
+                    }
+
+                    is TTSEvent.OnReadOffset -> {
+                        _currentReadingWordOffset.value = event.offset
                     }
                 }
             }
@@ -167,6 +195,7 @@ class TTSViewModel(
                 if (_state.value.chapterIndex < bookInfo.totalChapter - 1) {
                     _state.update {
                         it.copy(
+                            isPaused = false,
                             chapterIndex = it.chapterIndex + 1,
                             paragraphIndex = 0
                         )
@@ -177,9 +206,15 @@ class TTSViewModel(
             }
             TTSAction.OnPlayNextParagraphClick -> {
                 if (_state.value.paragraphIndex < _state.value.chapterText.size - 1) {
+                    viewModelScope.launch {
+                        contentUseCase.saveBookInfoParagraphIndex(bookInfo.id, _state.value.paragraphIndex + 1)
+                    }
                     _state.update { currentState ->
                         ttsManager.startReading(currentState.paragraphIndex + 1)
-                        currentState.copy(paragraphIndex = currentState.paragraphIndex + 1)
+                        currentState.copy(
+                            isPaused = false,
+                            paragraphIndex = currentState.paragraphIndex + 1
+                        )
                     }
                 } else {
                     ttsManager.checkPlayNextChapter()
@@ -204,6 +239,7 @@ class TTSViewModel(
                 if (_state.value.chapterIndex > 0) {
                     _state.update {
                         it.copy(
+                            isPaused = false,
                             chapterIndex = it.chapterIndex - 1,
                             paragraphIndex = 0
                         )
@@ -214,9 +250,15 @@ class TTSViewModel(
             }
             TTSAction.OnPlayPreviousParagraphClick -> {
                 if (_state.value.paragraphIndex > 0) {
+                    viewModelScope.launch {
+                        contentUseCase.saveBookInfoParagraphIndex(bookInfo.id, _state.value.paragraphIndex - 1)
+                    }
                     _state.update { currentState ->
                         ttsManager.startReading(currentState.paragraphIndex - 1)
-                        currentState.copy(paragraphIndex = currentState.paragraphIndex - 1)
+                        currentState.copy(
+                            isPaused = false,
+                            paragraphIndex = currentState.paragraphIndex - 1
+                        )
                     }
                 } else {
                     ttsManager.checkPlayPreviousChapter()
@@ -322,6 +364,7 @@ class TTSViewModel(
                 delay(100)
                 ttsManager.startReading(0)
             }
+            contentUseCase.saveBookInfoChapterIndex(bookInfo.id, chapterIndex)
         }
     }
 

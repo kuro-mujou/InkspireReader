@@ -52,6 +52,7 @@ import com.inkspire.ebookreader.ui.bookcontent.tts.TTSViewModel
 import com.inkspire.ebookreader.ui.bookdetail.BookDetailViewModel
 import com.inkspire.ebookreader.ui.home.libary.LibraryViewModel
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookViewModel
+import com.inkspire.ebookreader.ui.home.explore.ExploreViewModel
 import com.inkspire.ebookreader.ui.setting.SettingViewModel
 import com.inkspire.ebookreader.ui.setting.autoscroll.AutoScrollSettingViewModel
 import com.inkspire.ebookreader.ui.setting.bookcategory.BookCategorySettingViewModel
@@ -136,6 +137,7 @@ object KoinModule {
         viewModelOf(::BookmarkSettingViewModel)
         viewModelOf(::MusicSettingViewModel)
         viewModelOf(::RecentBookViewModel)
+        viewModelOf(::ExploreViewModel)
         viewModel {
             BookContentDataViewModel(
                 bookId = it.get(),

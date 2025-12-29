@@ -10,11 +10,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextRange
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.TableOfContent
@@ -61,6 +64,8 @@ fun BookChapterContentRootScreen(
     drawerState: DrawerState,
     settingState: SettingState,
     ttsPlaybackState: TTSPlaybackState,
+    highlightRange: () -> TextRange,
+    readingOffset: () -> Int,
     autoScrollState: AutoScrollState,
     bottomBarTTSState: BottomBarTTSState,
     bottomBarAutoScrollState: BottomBarAutoScrollState,
@@ -182,16 +187,31 @@ fun BookChapterContentRootScreen(
                     beyondViewportPageCount = 1
                 ) { pageIndex ->
                     val paragraphToLoad = if (pageIndex == initialChapter) initialParagraph else 0
+                    val isCurrentChapter = pageIndex == pagerState.currentPage
+                    val wordOffset by rememberUpdatedState(
+                        if (isCurrentChapter)
+                            readingOffset()
+                        else 0
+                    )
+                    val highlightRange by rememberUpdatedState(
+                        if (isCurrentChapter)
+                            highlightRange()
+                        else TextRange.Zero
+                    )
                     BookChapterContent(
                         bookInfo = bookInfo,
                         initialParagraphIndex = paragraphToLoad,
                         currentChapter = pageIndex,
                         stylingState = stylingState,
                         bookChapterContentState = bookChapterContentState,
-                        chapterUiState = bookContentDataState.chapterStates[pageIndex] ?: UiState.None,
-                        ttsPlaybackState = ttsPlaybackState,
+                        chapterUiState = bookContentDataState.chapterStates[pageIndex]
+                            ?: UiState.None,
+                        isTTSActivated = ttsPlaybackState.isActivated,
+                        ttsCurrentParagraphIndex = ttsPlaybackState.paragraphIndex,
+                        highlightRange = { highlightRange },
+                        wordOffset = { wordOffset },
                         autoScrollState = autoScrollState,
-                        isCurrentChapter = pagerState.currentPage == pageIndex,
+                        isCurrentChapter = isCurrentChapter,
                         onBookContentDataAction = onBookContentDataAction,
                         onBookChapterContentAction = onBookChapterContentAction,
                         onAutoScrollAction = onAutoScrollAction,

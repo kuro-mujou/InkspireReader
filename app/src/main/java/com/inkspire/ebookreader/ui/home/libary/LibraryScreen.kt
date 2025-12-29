@@ -347,16 +347,6 @@ fun LibraryScreen(
                                                 )
                                             }
                                         )
-//                                        OutlinedTextField(
-//                                            state = searchState,
-//                                            modifier = Modifier
-//                                                .weight(1f),
-//                                            placeholder = {
-//                                                Text(text = "Search")
-//                                            },
-//                                            lineLimits = TextFieldLineLimits.SingleLine,
-//                                            shape = RoundedCornerShape(25.dp)
-//                                        )
                                         Box {
                                             IconButton(onClick = { dropdownMenuState = !dropdownMenuState }) {
                                                 Icon(

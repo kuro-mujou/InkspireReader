@@ -73,7 +73,6 @@ import com.inkspire.ebookreader.ui.bookcontent.content.ChapterContent
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
-import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -87,7 +86,10 @@ fun BookChapterContent(
     chapterUiState: UiState<Chapter>,
     stylingState: StylingState,
     bookChapterContentState: BookChapterContentState,
-    ttsPlaybackState: TTSPlaybackState,
+    isTTSActivated: Boolean,
+    ttsCurrentParagraphIndex: Int,
+    highlightRange: () -> TextRange,
+    wordOffset: () -> Int,
     autoScrollState: AutoScrollState,
     isCurrentChapter: Boolean,
     onBookContentDataAction: (BookContentDataAction) -> Unit,
@@ -129,7 +131,7 @@ fun BookChapterContent(
             val listState = rememberLazyListState(
                 initialFirstVisibleItemIndex = initialParagraphIndex
             )
-            val isModeActive = ttsPlaybackState.isActivated || autoScrollState.isActivated
+            val isModeActive = isTTSActivated || autoScrollState.isActivated
 
             val currentAutoScrollState by rememberUpdatedState(autoScrollState)
             val currentContentState by rememberUpdatedState(bookChapterContentState)
@@ -260,17 +262,16 @@ fun BookChapterContent(
 
             LaunchedEffect(
                 isCurrentChapter,
-                ttsPlaybackState.isActivated,
-                ttsPlaybackState.paragraphIndex
+                isTTSActivated,
+                ttsCurrentParagraphIndex
             ) {
-                if (!isCurrentChapter || !ttsPlaybackState.isActivated) return@LaunchedEffect
+                if (!isCurrentChapter || !isTTSActivated) return@LaunchedEffect
 
-                val currentIndex = ttsPlaybackState.paragraphIndex
-                val isAtTopEdge = currentIndex == currentContentState.firstVisibleItemIndex
-                val isAtBottomEdge = currentIndex == currentContentState.lastVisibleItemIndex
-                val isOffScreen = currentIndex !in currentContentState.firstVisibleItemIndex..currentContentState.lastVisibleItemIndex
+                val isAtTopEdge = ttsCurrentParagraphIndex == currentContentState.firstVisibleItemIndex
+                val isAtBottomEdge = ttsCurrentParagraphIndex == currentContentState.lastVisibleItemIndex
+                val isOffScreen = ttsCurrentParagraphIndex !in currentContentState.firstVisibleItemIndex..currentContentState.lastVisibleItemIndex
                 if (isAtTopEdge || isAtBottomEdge || isOffScreen) {
-                    listState.animateScrollToItem(currentIndex)
+                    listState.animateScrollToItem(ttsCurrentParagraphIndex)
                 }
             }
 
@@ -414,29 +415,32 @@ fun BookChapterContent(
                             .calculateEndPadding(LayoutDirection.Ltr),
                     ),
                 ) {
-                    itemsIndexed(paragraphs) { index, paragraph ->
+                    itemsIndexed(
+                        items = paragraphs,
+                        key = { index, _ -> index }
+                    ) { index, paragraph ->
+                        val isHighlighted = isCurrentChapter && isTTSActivated && ttsCurrentParagraphIndex == index
+                        val offset by rememberUpdatedState(if (isHighlighted) wordOffset() else 0)
+                        val highlightRange by rememberUpdatedState(if (isHighlighted) highlightRange() else TextRange.Zero)
                         ChapterContent(
                             index = index,
                             paragraph = paragraph,
                             chapterContentState = bookChapterContentState,
                             stylingState = stylingState,
-                            isHighlighted = ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index,
-                            currentWordRange = if (ttsPlaybackState.isActivated && ttsPlaybackState.paragraphIndex == index)
-                                ttsPlaybackState.currentWordRange else TextRange.Zero,
+                            isHighlighted = isHighlighted,
+                            highlightRange = { highlightRange },
+                            wordOffset = { offset },
                             onRequestScrollToOffset = { lineBottomY ->
                                 coroutineScope.launch {
-                                    if (ttsPlaybackState.isActivated && !listState.isScrollInProgress && isCurrentChapter) {
+                                    if (isTTSActivated && !listState.isScrollInProgress && isCurrentChapter) {
                                         val itemInfo = listState.layoutInfo.visibleItemsInfo.find { it.index == index }
                                         if (itemInfo != null) {
                                             val absoluteLineY = itemInfo.offset + lineBottomY
                                             val viewportHeight = listState.layoutInfo.viewportSize.height
-
                                             val triggerThreshold = viewportHeight * 0.95
-
                                             if (absoluteLineY > triggerThreshold) {
                                                 val targetY = viewportHeight * 0.15
                                                 val scrollAmount = absoluteLineY - targetY
-
                                                 if (scrollAmount > 0) {
                                                     listState.animateScrollBy(scrollAmount.toFloat(), tween(800))
                                                 }

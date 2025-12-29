@@ -31,6 +31,7 @@ import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingViewMod
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarAction
 import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBarViewModel
 import com.inkspire.ebookreader.ui.bookcontent.tts.TTSAction
+import com.inkspire.ebookreader.ui.bookcontent.tts.TTSUiEvent
 import com.inkspire.ebookreader.ui.bookcontent.tts.TTSViewModel
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import com.inkspire.ebookreader.ui.setting.SettingViewModel
@@ -70,9 +71,12 @@ fun BookContentRootScreen(
     val bottomBarAutoScrollState by bottomBarAutoScrollViewModel.state.collectAsStateWithLifecycle()
     val settingState by settingViewModel.state.collectAsStateWithLifecycle()
     val ttsPlaybackState by ttsViewModel.state.collectAsStateWithLifecycle()
+    val highlightRange by ttsViewModel.currentHighlightRange.collectAsStateWithLifecycle()
+    val readingOffset by ttsViewModel.currentReadingWordOffset.collectAsStateWithLifecycle()
     val autoScrollState by autoScrollViewModel.state.collectAsStateWithLifecycle()
 
     val bookChapterContentEvent = chapterContentViewModel.event
+    val ttsUiEvent = ttsViewModel.event
 
     when (val state = bookContentDataState.bookState) {
         is UiState.None -> {
@@ -171,6 +175,15 @@ fun BookContentRootScreen(
                         },
                         mainContent = {
                             if (bookChapterContentState.currentChapterIndex != -1) {
+                                LaunchedEffect(ttsUiEvent) {
+                                    ttsUiEvent.collect { event ->
+                                        when (event) {
+                                            is TTSUiEvent.StopReading -> {
+                                                bottomBarViewModel.onAction(BookContentBottomBarAction.ResetBottomBarMode)
+                                            }
+                                        }
+                                    }
+                                }
                                 BookChapterContentRootScreen(
                                     bookInfo = bookInfo,
                                     initialChapter = bookChapterContentState.currentChapterIndex,
@@ -184,6 +197,8 @@ fun BookContentRootScreen(
                                     drawerState = drawerState,
                                     settingState = settingState,
                                     ttsPlaybackState = ttsPlaybackState,
+                                    highlightRange = { highlightRange },
+                                    readingOffset = { readingOffset },
                                     autoScrollState = autoScrollState,
                                     bottomBarTTSState = bottomBarTTSState,
                                     bottomBarAutoScrollState = bottomBarAutoScrollState,

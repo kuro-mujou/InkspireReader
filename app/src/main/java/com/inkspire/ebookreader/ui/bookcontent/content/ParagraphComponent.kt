@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastCoerceIn
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
 import com.inkspire.ebookreader.ui.bookcontent.common.customPopupPositionProvider
@@ -43,7 +44,8 @@ fun ParagraphComponent(
     index: Int,
     isHighlighted: Boolean,
     text: AnnotatedString,
-    currentWordRange: TextRange,
+    highlightRange: () -> TextRange,
+    wordOffset: () -> Int,
     stylingState: StylingState,
     chapterContentState: BookChapterContentState,
     onRequestScrollToOffset: (Float) -> Unit,
@@ -52,31 +54,25 @@ fun ParagraphComponent(
     var isOpenDialog by remember { mutableStateOf(false) }
     val paragraphBgColor = if (isHighlighted) stylingState.drawerContainerColor else Color.Transparent
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    val displayedText = remember(text, isHighlighted, currentWordRange) {
-        if (!isHighlighted || currentWordRange.start == currentWordRange.end) {
+    val displayedText = remember(text, isHighlighted, highlightRange()) {
+        if (!isHighlighted || highlightRange().start == highlightRange().end) {
             text
         } else {
             val builder = AnnotatedString.Builder(text)
-
-            val start = currentWordRange.start.coerceIn(0, text.length)
-            val end = currentWordRange.end.coerceIn(0, text.length)
-
+            val start = highlightRange().start.fastCoerceIn(0, text.length)
+            val end = highlightRange().end.fastCoerceIn(0, text.length)
             if (start < end) {
-                builder.addStyle(
-                    style = SpanStyle(background = stylingState.textBackgroundColor),
-                    start = start,
-                    end = end
-                )
+                builder.addStyle(style = SpanStyle(background = stylingState.textBackgroundColor), start = start, end = end)
             }
             builder.toAnnotatedString()
         }
     }
 
-    LaunchedEffect(currentWordRange, isHighlighted, textLayoutResult) {
+    LaunchedEffect(wordOffset(), isHighlighted, textLayoutResult) {
         if (isHighlighted && textLayoutResult != null) {
             val layout = textLayoutResult!!
-            val safeOffset = currentWordRange.start.coerceIn(0, layout.layoutInput.text.length)
-            val cursorRect = layout.getCursorRect(safeOffset)
+            val coercedWordOffset = { wordOffset().fastCoerceIn(0, layout.layoutInput.text.length) }
+            val cursorRect = layout.getCursorRect(coercedWordOffset())
             onRequestScrollToOffset(cursorRect.bottom)
         }
     }

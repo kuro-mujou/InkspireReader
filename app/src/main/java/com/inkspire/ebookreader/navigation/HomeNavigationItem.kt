@@ -22,7 +22,7 @@ val homeNavItems = listOf(
     ),
     HomeNavItem(
         label = "Explore",
-        icon = R.drawable.ic_book_list,
+        icon = R.drawable.ic_search,
         route = Route.Home.Explore
     ),
     HomeNavItem(
