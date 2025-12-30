@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.ui.composable.MySearchBox
 import com.inkspire.ebookreader.ui.home.explore.common.supportedWebsites
+import com.inkspire.ebookreader.ui.home.explore.truyenfull.TruyenFullAction
 import com.inkspire.ebookreader.ui.home.explore.truyenfull.TruyenFullRoot
 import com.inkspire.ebookreader.ui.home.explore.truyenfull.TruyenFullViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -128,9 +129,10 @@ fun ExploreRootScreen (
             ),
             keyboardActions = KeyboardActions(
                 onSearch = {
-                    val chapterIndex = searchInput.toIntOrNull()
-                    if (chapterIndex != null) {
-                        //perform search
+                    if (searchInput.isNotBlank()) {
+                        if (exploreState.selectedWebsite == supportedWebsites[0]) {
+                            truyenFullViewModel.onAction(TruyenFullAction.PerformSearchQuery(searchInput))
+                        }
                         focusManager.clearFocus()
                     }
                 }
@@ -146,7 +148,7 @@ fun ExploreRootScreen (
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() },
                         ) {
-                            //perform search
+                            truyenFullViewModel.onAction(TruyenFullAction.PerformSearchQuery(searchInput))
                             focusManager.clearFocus()
                         }
                 )
