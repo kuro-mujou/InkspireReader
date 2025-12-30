@@ -9,4 +9,6 @@ class TTSDatastoreUseCase (
     fun getTtsSpeed() = datastoreRepository.getTtsSpeed()
     fun getTtsPitch() = datastoreRepository.getTtsPitch()
     fun getTtsVoice() = datastoreRepository.getTtsVoice()
+    fun getEnableBackgroundMusic() = datastoreRepository.getEnableBackgroundMusic()
+    fun getPlayerVolume() = datastoreRepository.getPlayerVolume()
 }

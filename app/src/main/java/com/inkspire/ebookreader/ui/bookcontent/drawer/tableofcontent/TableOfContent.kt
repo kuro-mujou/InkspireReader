@@ -106,7 +106,7 @@ fun TableOfContentScreen(
                     .padding(vertical = 8.dp),
                 textFieldState = searchState,
                 textColor = stylingState.textColor,
-                backgroundColor = stylingState.textColor,
+                backgroundColor = stylingState.containerColor,
                 cursorColor = stylingState.textColor,
                 textStyle = TextStyle(
                     color = stylingState.textColor,

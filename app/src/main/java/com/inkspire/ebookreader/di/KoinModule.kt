@@ -29,6 +29,7 @@ import com.inkspire.ebookreader.domain.usecase.LibraryDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.LibraryUseCase
 import com.inkspire.ebookreader.domain.usecase.MusicSettingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.MusicSettingUseCase
+import com.inkspire.ebookreader.domain.usecase.MusicUseCase
 import com.inkspire.ebookreader.domain.usecase.RecentBookUseCase
 import com.inkspire.ebookreader.domain.usecase.SettingDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.TTSContentUseCase
@@ -126,6 +127,7 @@ object KoinModule {
         factoryOf(::TableOfContentUseCase)
         factoryOf(::TTSContentUseCase)
         factoryOf(::TTSDatastoreUseCase)
+        factoryOf(::MusicUseCase)
     }
 
     val viewModelModule = module {
@@ -172,7 +174,16 @@ object KoinModule {
         viewModelOf(::BottomBarTTSViewModel)
         viewModelOf(::BottomBarAutoScrollViewModel)
         viewModelOf(::AutoScrollViewModel)
-        viewModelOf(::TTSViewModel)
+        viewModel {
+            TTSViewModel(
+                isInReaderMode = it.get(),
+                application = get(),
+                ttsManager = get(),
+                datastoreUseCase = get(),
+                contentUseCase = get(),
+                musicUseCase = get()
+            )
+        }
     }
 
     val datastoreModule = module {

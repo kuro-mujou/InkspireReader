@@ -40,7 +40,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +56,7 @@ import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.theme.composable.ThemeColorItem
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.theme.composable.ThemeFontItem
+import com.inkspire.ebookreader.ui.bookcontent.colorpicker.ColorPicker
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
 import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
@@ -82,39 +82,30 @@ fun BottomBarTheme(
     var openChangeColorMenu by remember { mutableStateOf(false) }
     var textWidth by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
-    val scope = rememberCoroutineScope()
-//    if (openColorPickerForBackground) {
-//        ColorPicker(
-//            onDismiss = {
-//                openColorPickerForBackground = false
-//            },
-//            onColorSelected = {
-//                colorPaletteViewModel.updateBackgroundColor(it)
-//                colorPaletteViewModel.updateSelectedColorSet(18)
-//                scope.launch {
-//                    datastore.setSelectedColorSet(18)
-//                    datastore.setBackgroundColor(it.toArgb())
-//                }
-//                openColorPickerForBackground = false
-//            }
-//        )
-//    }
-//    if (openColorPickerForText) {
-//        ColorPicker(
-//            onDismiss = {
-//                openColorPickerForText = false
-//            },
-//            onColorSelected = {
-//                colorPaletteViewModel.updateTextColor(it)
-//                colorPaletteViewModel.updateSelectedColorSet(18)
-//                scope.launch {
-//                    datastore.setSelectedColorSet(18)
-//                    datastore.setTextColor(it.toArgb())
-//                }
-//                openColorPickerForText = false
-//            }
-//        )
-//    }
+    if (openColorPickerForBackground) {
+        ColorPicker(
+            onDismiss = {
+                openColorPickerForBackground = false
+            },
+            onColorSelected = {
+                onStyleAction(BookContentStylingAction.UpdateBackgroundColor(it.toArgb()))
+                onStyleAction(BookContentStylingAction.UpdateSelectedColorSet(18))
+                openColorPickerForBackground = false
+            }
+        )
+    }
+    if (openColorPickerForText) {
+        ColorPicker(
+            onDismiss = {
+                openColorPickerForText = false
+            },
+            onColorSelected = {
+                onStyleAction(BookContentStylingAction.UpdateTextColor(it.toArgb()))
+                onStyleAction(BookContentStylingAction.UpdateSelectedColorSet(18))
+                openColorPickerForText = false
+            }
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -243,7 +234,7 @@ fun BottomBarTheme(
                     border = BorderStroke(width = 2.dp, color = stylingState.textColor)
                 ) {
                     Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_add_music),
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_add),
                         tint = stylingState.textColor,
                         contentDescription = null
                     )

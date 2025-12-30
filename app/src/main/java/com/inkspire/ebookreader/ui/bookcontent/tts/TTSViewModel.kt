@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.Builder
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -18,6 +19,7 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.inkspire.ebookreader.domain.model.Book
+import com.inkspire.ebookreader.domain.usecase.MusicUseCase
 import com.inkspire.ebookreader.domain.usecase.TTSContentUseCase
 import com.inkspire.ebookreader.domain.usecase.TTSDatastoreUseCase
 import com.inkspire.ebookreader.service.TTSService
@@ -28,6 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -36,10 +39,12 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 class TTSViewModel(
+    private val isInReaderMode: Boolean,
     private val application: Application,
     private val ttsManager: TTSManager,
     private val datastoreUseCase: TTSDatastoreUseCase,
-    private val contentUseCase: TTSContentUseCase
+    private val contentUseCase: TTSContentUseCase,
+    private val musicUseCase: MusicUseCase
 ) : ViewModel() {
     private val _state = MutableStateFlow(TTSPlaybackState())
     val state = _state.stateIn(
@@ -66,6 +71,7 @@ class TTSViewModel(
     private var currentChapterTitle: String = ""
     private var mediaController: MediaController? = null
     private var controllerFuture: ListenableFuture<MediaController>? = null
+    private val mediaItemList = mutableListOf<MediaItem>()
     private val controllerListener = object : MediaController.Listener {
         override fun onDisconnected(controller: MediaController) {
             ttsManager.stopReading(true)
@@ -74,12 +80,22 @@ class TTSViewModel(
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
-            if (!isPlaying) {
-                ttsManager.pauseReading()
-                _state.update { it.copy(isPaused = true) }
-            } else {
-                ttsManager.resumeReading(_state.value.paragraphIndex)
-                _state.update { it.copy(isPaused = false) }
+            if (_state.value.isActivated) {
+                if (!isPlaying) {
+                    ttsManager.pauseReading()
+                    if (_state.value.isEnableMusic)
+                        mediaController?.apply {
+                            volume = 1f
+                        }
+                    _state.update { it.copy(isPaused = true) }
+                } else {
+                    ttsManager.resumeReading(_state.value.paragraphIndex)
+                    if (_state.value.isEnableMusic)
+                        mediaController?.apply {
+                            volume = 0.15f
+                        }
+                    _state.update { it.copy(isPaused = false) }
+                }
             }
         }
     }
@@ -141,7 +157,8 @@ class TTSViewModel(
                             _state.update {
                                 it.copy(
                                     isPaused = false,
-                                    chapterIndex = prevIndex, paragraphIndex = 0
+                                    chapterIndex = prevIndex,
+                                    paragraphIndex = 0
                                 )
                             }
 
@@ -186,6 +203,51 @@ class TTSViewModel(
                 }
             }
         }
+        viewModelScope.launch {
+            musicUseCase.getSelectedMusicPaths().collectLatest { selectedItems ->
+                mediaItemList.clear()
+                mediaItemList.addAll(selectedItems.map { media3Item ->
+                    Builder()
+                        .setUri(media3Item.uri)
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setTitle(media3Item.name)
+                                .build()
+                        )
+                        .build()
+                })
+                if (mediaItemList.isNotEmpty()) {
+                    mediaController?.apply {
+                        if (_state.value.isEnableMusic) {
+                            mediaItemList.shuffle()
+                            setMediaItems(mediaItemList)
+                            prepare()
+                            play()
+                        }
+                    }
+                }
+            }
+        }
+        viewModelScope.launch {
+            datastoreUseCase.getEnableBackgroundMusic().collectLatest { value ->
+                _state.update { it.copy(isEnableMusic = value) }
+            }
+        }
+        viewModelScope.launch {
+            datastoreUseCase.getPlayerVolume().collectLatest { value ->
+                if (_state.value.isActivated && !_state.value.isPaused) {
+                    mediaController?.apply {
+                        volume = 0.15f * value
+                    }
+                } else {
+                    mediaController?.apply {
+                        volume = value
+                    }
+                }
+            }
+        }
+        if (isInReaderMode)
+            startService()
     }
 
     @OptIn(UnstableApi::class)
@@ -193,11 +255,19 @@ class TTSViewModel(
         when (action) {
             TTSAction.OnPlayNextChapterClick -> {
                 if (_state.value.chapterIndex < bookInfo.totalChapter - 1) {
+                    val nextIndex = _state.value.chapterIndex + 1
                     _state.update {
                         it.copy(
                             isPaused = false,
-                            chapterIndex = it.chapterIndex + 1,
+                            chapterIndex = nextIndex,
                             paragraphIndex = 0
+                        )
+                    }
+                    viewModelScope.launch {
+                        contentUseCase.saveBookInfoParagraphIndex(bookInfo.id, 0)
+                        loadChapterData(
+                            chapterIndex = nextIndex,
+                            autoPlay = true
                         )
                     }
                 } else {
@@ -225,23 +295,37 @@ class TTSViewModel(
                     ttsManager.resumeReading(_state.value.paragraphIndex)
                     _state.update { it.copy(isPaused = false) }
                     mediaController?.apply {
+                        if (_state.value.isEnableMusic)
+                            volume = 0.15f
                         play()
                     }
                 } else {
                     ttsManager.pauseReading()
                     _state.update { it.copy(isPaused = true) }
                     mediaController?.apply {
-                        pause()
+                        if (_state.value.isEnableMusic)
+                            volume = 1f
+                        else
+                            pause()
                     }
                 }
             }
             TTSAction.OnPlayPreviousChapterClick -> {
                 if (_state.value.chapterIndex > 0) {
+                    val prevIndex = _state.value.chapterIndex - 1
                     _state.update {
                         it.copy(
                             isPaused = false,
-                            chapterIndex = it.chapterIndex - 1,
+                            chapterIndex = prevIndex,
                             paragraphIndex = 0
+                        )
+                    }
+                    viewModelScope.launch {
+                        contentUseCase.saveBookInfoParagraphIndex(bookInfo.id, 0)
+
+                        loadChapterData(
+                            chapterIndex = prevIndex,
+                            autoPlay = true
                         )
                     }
                 } else {
@@ -265,7 +349,12 @@ class TTSViewModel(
                 }
             }
             TTSAction.OnStopClick -> {
-                mediaController?.clearMediaItems()
+                if (_state.value.isEnableMusic)
+                    mediaController?.apply {
+                        volume = 1f
+                    }
+                else
+                    mediaController?.clearMediaItems()
                 ttsManager.stopReading()
                 _state.update {
                     it.copy(
@@ -277,30 +366,8 @@ class TTSViewModel(
             is TTSAction.StartTTS -> {
                 _state.update { it.copy(
                     paragraphIndex = action.paragraphIndex,
-                    isActivated = true,
-                    isPaused = false
                 )}
-
-                viewModelScope.launch {
-                    val intent = Intent(application, TTSService::class.java)
-                    Util.startForegroundService(application, intent)
-                }
-
-                val serviceComponentName = ComponentName(application, TTSService::class.java)
-                val sessionToken = SessionToken(application, serviceComponentName)
-                controllerFuture = MediaController
-                    .Builder(application, sessionToken)
-                    .setListener(controllerListener)
-                    .buildAsync()
-                controllerFuture?.addListener({
-                    try {
-                        mediaController = controllerFuture?.get()
-                        mediaController?.addListener(playerListener)
-                        prepareAndStart()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }, ContextCompat.getMainExecutor(application))
+                prepareAndStart()
             }
 
             is TTSAction.SetBookInfo -> {
@@ -351,8 +418,13 @@ class TTSViewModel(
 
             mediaController?.apply {
                 if (_state.value.isActivated) {
-                    val updatedMetadata = currentMediaItem?.mediaMetadata?.buildUpon()
-                        ?.setArtist(ch.chapterTitle)?.build()
+                    val updatedMetadata = currentMediaItem
+                        ?.mediaMetadata
+                        ?.buildUpon()
+                        ?.setArtworkUri(bookInfo.coverImagePath.toUri())
+                        ?.setTitle(bookInfo.title)
+                        ?.setArtist(ch.chapterTitle)
+                        ?.build()
                     val updatedMediaItem = updatedMetadata?.let {
                         currentMediaItem?.buildUpon()?.setMediaMetadata(updatedMetadata)?.build()
                     }
@@ -361,7 +433,7 @@ class TTSViewModel(
             }
 
             if (autoPlay && _state.value.isActivated && !_state.value.isPaused) {
-                delay(100)
+                delay(200)
                 ttsManager.startReading(0)
             }
             contentUseCase.saveBookInfoChapterIndex(bookInfo.id, chapterIndex)
@@ -371,28 +443,83 @@ class TTSViewModel(
     private fun prepareAndStart() {
         val controller = mediaController ?: return
         viewModelScope.launch {
-            val mediaItem = Builder()
-                .setUri("asset:///silent.mp3".toUri())
-                .setMediaMetadata(
-                    MediaMetadata.Builder()
-                        .setArtworkUri(bookInfo.coverImagePath.toUri())
-                        .setTitle(bookInfo.title)
-                        .setArtist(currentChapterTitle)
-                        .build()
-                )
-                .build()
-
-            if (controller.isPlaying) {
+            if (_state.value.isEnableMusic) {
                 controller.apply {
-                    volume = 0.3f
+                    volume = 0.15f
+                    if (!isPlaying){
+                        setMediaItems(mediaItemList)
+                        prepare()
+                        play()
+                    } else {
+                        val updatedMetadata = currentMediaItem
+                            ?.mediaMetadata
+                            ?.buildUpon()
+                            ?.setArtworkUri(bookInfo.coverImagePath.toUri())
+                            ?.setTitle(bookInfo.title)
+                            ?.setArtist(currentChapterTitle)
+                            ?.build()
+                        val updatedMediaItem = updatedMetadata?.let {
+                            currentMediaItem?.buildUpon()?.setMediaMetadata(updatedMetadata)?.build()
+                        }
+                        updatedMediaItem?.let { replaceMediaItem(0, it) }
+                    }
                 }
-                ttsManager.startReading(_state.value.paragraphIndex)
             } else {
+                val mediaItem = Builder()
+                    .setUri("asset:///silent.mp3".toUri())
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setArtworkUri(bookInfo.coverImagePath.toUri())
+                            .setTitle(bookInfo.title)
+                            .setArtist(currentChapterTitle)
+                            .build()
+                    )
+                    .build()
                 controller.apply {
                     setMediaItems(listOf(mediaItem))
                     prepare()
                     play()
-                    ttsManager.startReading(_state.value.paragraphIndex)
+                }
+            }
+            _state.update { it.copy(
+                isActivated = true,
+                isPaused = false
+            )}
+            ttsManager.startReading(_state.value.paragraphIndex)
+        }
+    }
+
+    private fun startService() {
+        viewModelScope.launch {
+            val intent = Intent(application, TTSService::class.java)
+            Util.startForegroundService(application, intent)
+        }
+
+        val serviceComponentName = ComponentName(application, TTSService::class.java)
+        val sessionToken = SessionToken(application, serviceComponentName)
+        controllerFuture = MediaController
+            .Builder(application, sessionToken)
+            .setListener(controllerListener)
+            .buildAsync()
+        controllerFuture?.addListener({
+            try {
+                mediaController = controllerFuture?.get()
+                mediaController?.addListener(playerListener)
+                checkIsMusicEnable()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, ContextCompat.getMainExecutor(application))
+    }
+
+    private fun checkIsMusicEnable() {
+        viewModelScope.launch {
+            if (_state.value.isEnableMusic && mediaItemList.isNotEmpty() && isInReaderMode) {
+                mediaController?.apply {
+                    mediaItemList.shuffle()
+                    setMediaItems(mediaItemList, true)
+                    prepare()
+                    play()
                 }
             }
         }

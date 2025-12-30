@@ -17,6 +17,7 @@ data class TTSPlaybackState(
     val chapterText: List<String> = emptyList(),
 
     //playback state
+    val isEnableMusic: Boolean = false,
     val isActivated: Boolean = false,
     val isPaused: Boolean = false,
 )

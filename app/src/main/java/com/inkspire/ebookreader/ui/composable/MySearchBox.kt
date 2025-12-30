@@ -37,12 +37,11 @@ import androidx.compose.ui.unit.dp
 fun MySearchBox(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
-    alpha: Float = 0.08f,
     hint: @Composable () -> Unit,
     decorationAlwaysVisible: Boolean = false,
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     cursorColor: Color = MaterialTheme.colorScheme.primary,
-    backgroundColor: Color = MaterialTheme.colorScheme.onSurface,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     textStyle: TextStyle = TextStyle(
         color = textColor
     ),
@@ -57,7 +56,7 @@ fun MySearchBox(
     val focusRequester = remember { FocusRequester() }
 
     val backgroundAlpha by animateFloatAsState(
-        targetValue = if (decorationAlwaysVisible || isFocused || textFieldState.text.isNotEmpty()) alpha else 0f,
+        targetValue = if (decorationAlwaysVisible || isFocused || textFieldState.text.isNotEmpty()) 1f else 0f,
         label = "bgAlpha"
     )
 

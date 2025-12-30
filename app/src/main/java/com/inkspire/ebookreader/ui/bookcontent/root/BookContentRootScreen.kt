@@ -55,7 +55,7 @@ fun BookContentRootScreen(
     val bottomBarTTSViewModel = koinViewModel<BottomBarTTSViewModel>(parameters = { parametersOf(bookId) })
     val bottomBarAutoScrollViewModel = koinViewModel<BottomBarAutoScrollViewModel>()
     val settingViewModel = koinViewModel<SettingViewModel>()
-    val ttsViewModel = koinViewModel<TTSViewModel>()
+    val ttsViewModel = koinViewModel<TTSViewModel>(parameters = { parametersOf(true) })
     val autoScrollViewModel = koinViewModel<AutoScrollViewModel>()
 
     val bookContentDataState by dataViewModel.state.collectAsStateWithLifecycle()

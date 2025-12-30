@@ -17,6 +17,12 @@ class MusicPathRepositoryImpl(
         }
     }
 
+    override fun getSelectedMusicPathsFlow(): Flow<List<MusicItem>> {
+        return musicDao.getMusicPaths().map { musicEntity ->
+            musicEntity.filter { it.isSelected }.map { it.toDataClass() }
+        }
+    }
+
     override suspend fun getSelectedMusicPaths(): List<MusicItem> {
         return musicDao.getSelectedMusicPaths().map { musicEntity ->
             musicEntity.toDataClass()

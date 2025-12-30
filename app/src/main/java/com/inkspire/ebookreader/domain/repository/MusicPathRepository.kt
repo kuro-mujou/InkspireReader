@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface MusicPathRepository {
     fun getMusicPaths(): Flow<List<MusicItem>>
+    fun getSelectedMusicPathsFlow(): Flow<List<MusicItem>>
     suspend fun getSelectedMusicPaths(): List<MusicItem>
     suspend fun deleteByName(names: List<String>)
     suspend fun saveMusicPaths(musicPathEntity: List<MusicItem>)
