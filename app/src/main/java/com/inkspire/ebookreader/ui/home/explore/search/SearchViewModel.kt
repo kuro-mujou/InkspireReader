@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.ui.home.explore.truyenfull
+package com.inkspire.ebookreader.ui.home.explore.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,41 +11,63 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class TruyenFullViewModel : ViewModel() {
-    private val _state = MutableStateFlow(TruyenFullState())
+class SearchViewModel : ViewModel() {
+    private val _state = MutableStateFlow(SearchState())
     val state = _state
         .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            _state.value
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = _state.value
         )
 
     private val baseUrl = "https://truyenfull.vision"
 
-    fun onAction(action: TruyenFullAction) {
+    fun onAction(action: SearchAction) {
         when (action) {
-            is TruyenFullAction.PerformSearchQuery -> {
+            is SearchAction.ChangeSelectedWebsite -> {
+                _state.update {
+                    it.copy(
+                        selectedWebsite = action.selectedWebsite,
+                        searchResult = UiState.None,
+                        currentPage = 1,
+                        maxPage = 1,
+                        currentQuery = null,
+                        currentCategory = null
+                    )
+                }
+            }
+            is SearchAction.PerformSearchQuery -> {
                 if (action.query.isBlank()) return
                 searchByQuery(action.query, 1)
             }
-            is TruyenFullAction.PerformSearchCategory -> {
+            is SearchAction.PerformSearchCategory -> {
                 searchByCategory(action.category, 1)
             }
-            is TruyenFullAction.NextPage -> {
+            is SearchAction.NextPage -> {
                 val s = _state.value
                 if (s.currentPage < s.maxPage) {
                     loadPage(s.currentPage + 1)
                 }
             }
-            is TruyenFullAction.PreviousPage -> {
+            is SearchAction.PreviousPage -> {
                 val s = _state.value
                 if (s.currentPage > 1) {
                     loadPage(s.currentPage - 1)
                 }
             }
-            is TruyenFullAction.ClearResult -> {
-                _state.update { TruyenFullState() }
+            is SearchAction.ClearResult -> {
+                _state.update {
+                    it.copy(
+                        searchResult = UiState.None,
+                        currentPage = 1,
+                        maxPage = 1,
+                        currentQuery = null,
+                        currentCategory = null
+                    )
+                }
             }
+
+            else -> {}
         }
     }
 

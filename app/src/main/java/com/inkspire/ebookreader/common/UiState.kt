@@ -11,3 +11,18 @@ sealed interface UiState<out T> {
 
     data class Error(val throwable: Throwable) : UiState<Nothing>
 }
+
+val UiState<*>.isNone: Boolean
+    get() = this is UiState.None
+
+val UiState<*>.isLoading: Boolean
+    get() = this is UiState.Loading
+
+val UiState<*>.isSuccess: Boolean
+    get() = this is UiState.Success<*>
+
+val UiState<*>.isEmpty: Boolean
+    get() = this is UiState.Empty
+
+val UiState<*>.isError: Boolean
+    get() = this is UiState.Error

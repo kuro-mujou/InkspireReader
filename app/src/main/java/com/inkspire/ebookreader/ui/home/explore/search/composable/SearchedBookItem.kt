@@ -1,7 +1,9 @@
-package com.inkspire.ebookreader.ui.home.explore.truyenfull.composable
+package com.inkspire.ebookreader.ui.home.explore.search.composable
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -25,10 +28,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.inkspire.ebookreader.common.ScrapedSearchResult
+import com.inkspire.ebookreader.ui.home.explore.search.SearchAction
 
 @Composable
 fun SearchedBookItem(
     searchedBook: ScrapedSearchResult,
+    onAction: (SearchAction) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -37,8 +42,8 @@ fun SearchedBookItem(
             .height(150.dp)
             .clip(RoundedCornerShape(15.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .clickable{
-
+            .clickable {
+                onAction(SearchAction.PerformSearchBookDetail(searchedBook.url))
             }
     ) {
         Row(
@@ -66,7 +71,7 @@ fun SearchedBookItem(
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     style = TextStyle(
-                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
                         fontWeight = FontWeight.Medium
                     ),
                 )
@@ -78,6 +83,40 @@ fun SearchedBookItem(
                         fontSize = MaterialTheme.typography.bodyMedium.fontSize
                     )
                 )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    if(searchedBook.isFull) {
+                        Box(
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(2.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Full")
+                        }
+                    }
+                    if(searchedBook.isHot) {
+                        Box(
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(2.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Hot")
+                        }
+                    }
+                }
             }
         }
     }

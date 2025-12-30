@@ -1,5 +1,6 @@
 package com.inkspire.ebookreader.ui.composable
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -12,8 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.MaterialTheme
@@ -35,8 +36,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun MySearchBox(
     modifier: Modifier = Modifier,
-    value: String,
-    onValueChange: (String) -> Unit,
+    textFieldState: TextFieldState,
     alpha: Float = 0.08f,
     hint: @Composable () -> Unit,
     decorationAlwaysVisible: Boolean = false,
@@ -49,7 +49,7 @@ fun MySearchBox(
     leadingIcon: @Composable () -> Unit = {},
     trailingIcon: @Composable () -> Unit = {},
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    keyboardActions: KeyboardActions = KeyboardActions.Default
+    keyboardActions: KeyboardActionHandler? = null
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -57,100 +57,21 @@ fun MySearchBox(
     val focusRequester = remember { FocusRequester() }
 
     val backgroundAlpha by animateFloatAsState(
-        targetValue = if (decorationAlwaysVisible || isFocused || value.isNotEmpty()) alpha else 0f,
+        targetValue = if (decorationAlwaysVisible || isFocused || textFieldState.text.isNotEmpty()) alpha else 0f,
         label = "bgAlpha"
     )
 
     val underlineAlpha by animateFloatAsState(
-        targetValue = if (decorationAlwaysVisible || isFocused || value.isNotEmpty()) 1f else 0f,
+        targetValue = if (decorationAlwaysVisible || isFocused || textFieldState.text.isNotEmpty()) 1f else 0f,
         label = "lineAlpha"
     )
 
-    val verticalPadding by animateDpAsState(
-        targetValue = if (decorationAlwaysVisible || isFocused || value.isNotEmpty()) 12.dp else 0.dp,
-        label = "padding"
-    )
-
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        singleLine = true,
-        interactionSource = interactionSource,
-        modifier = modifier
-            .focusRequester(focusRequester)
-            .onFocusChanged { isFocused = it.isFocused }
-            .fillMaxWidth(),
-        textStyle = textStyle,
-        cursorBrush = SolidColor(cursorColor),
-        decorationBox = { innerTextField ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = backgroundColor.copy(
-                            alpha = backgroundAlpha
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(horizontal = 16.dp, vertical = verticalPadding),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                if (value.isEmpty() && !isFocused) {
-                    hint()
-                }
-                Row {
-                    leadingIcon()
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        innerTextField()
-                        Box(
-                            modifier = Modifier
-                                .padding(top = 6.dp)
-                                .height(1.dp)
-                                .fillMaxWidth()
-                                .background(textColor.copy(alpha = underlineAlpha))
-                        )
-                    }
-                    trailingIcon()
-                }
-            }
-        },
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions
-    )
-}
-
-@Composable
-fun MySearchBox(
-    modifier: Modifier = Modifier,
-    textFieldState: TextFieldState,
-    alpha: Float = 0.08f,
-    hint: @Composable () -> Unit,
-    textColor: Color = MaterialTheme.colorScheme.onSurface,
-    cursorColor: Color = MaterialTheme.colorScheme.primary,
-    backgroundColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-    textStyle: TextStyle = TextStyle(
-        color = textColor
-    )
-) {
-    var isFocused by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
-
-    val focusRequester = remember { FocusRequester() }
-
-    val backgroundAlpha by animateFloatAsState(
-        targetValue = if (isFocused || textFieldState.text.isNotEmpty()) alpha else 0f,
-        label = "bgAlpha"
-    )
-
-    val underlineAlpha by animateFloatAsState(
-        targetValue = if (isFocused || textFieldState.text.isNotEmpty()) 1f else 0f,
-        label = "lineAlpha"
+    val underlineColor by animateColorAsState(
+        targetValue = if (isFocused) cursorColor else textColor
     )
 
     val verticalPadding by animateDpAsState(
-        targetValue = if (isFocused || textFieldState.text.isNotEmpty()) 12.dp else 0.dp,
+        targetValue = if (decorationAlwaysVisible || isFocused || textFieldState.text.isNotEmpty()) 12.dp else 0.dp,
         label = "padding"
     )
 
@@ -180,18 +101,25 @@ fun MySearchBox(
                 if (textFieldState.text.isEmpty() && !isFocused) {
                     hint()
                 }
-
-                Column {
-                    innerTextField()
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 6.dp)
-                            .height(1.dp)
-                            .fillMaxWidth()
-                            .background(cursorColor.copy(alpha = underlineAlpha))
-                    )
+                Row {
+                    leadingIcon()
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        innerTextField()
+                        Box(
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .height(1.dp)
+                                .fillMaxWidth()
+                                .background(underlineColor.copy(alpha = underlineAlpha))
+                        )
+                    }
+                    trailingIcon()
                 }
             }
-        }
+        },
+        keyboardOptions = keyboardOptions,
+        onKeyboardAction = keyboardActions
     )
 }

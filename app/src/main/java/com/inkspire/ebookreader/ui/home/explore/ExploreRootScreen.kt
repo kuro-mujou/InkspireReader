@@ -1,173 +1,103 @@
 package com.inkspire.ebookreader.ui.home.explore
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.ui.composable.MySearchBox
-import com.inkspire.ebookreader.ui.home.explore.common.supportedWebsites
-import com.inkspire.ebookreader.ui.home.explore.truyenfull.TruyenFullAction
-import com.inkspire.ebookreader.ui.home.explore.truyenfull.TruyenFullRoot
-import com.inkspire.ebookreader.ui.home.explore.truyenfull.TruyenFullViewModel
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
+import com.inkspire.ebookreader.navigation.Route
+import com.inkspire.ebookreader.navigation.rememberNavigator
+import com.inkspire.ebookreader.ui.home.explore.detail.DetailScreen
+import com.inkspire.ebookreader.ui.home.explore.detail.DetailViewModel
+import com.inkspire.ebookreader.ui.home.explore.search.ExploreSearchScreen
+import com.inkspire.ebookreader.ui.home.explore.search.SearchAction
+import com.inkspire.ebookreader.ui.home.explore.search.SearchViewModel
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ExploreRootScreen (
+fun ExploreRootScreen(
 
 ) {
-    val exploreViewModel = koinViewModel<ExploreViewModel>()
-    val exploreState by exploreViewModel.state.collectAsStateWithLifecycle()
-    val truyenFullViewModel = koinViewModel<TruyenFullViewModel>()
-    val truyenFullState by truyenFullViewModel.state.collectAsStateWithLifecycle()
-    val focusManager = LocalFocusManager.current
-    val isImeVisible = WindowInsets.isImeVisible
-    var searchInput by remember { mutableStateOf("") }
-    LaunchedEffect(isImeVisible) {
-        if (!isImeVisible) {
-            focusManager.clearFocus()
+    val config = remember {
+        SavedStateConfiguration {
+            serializersModule = SerializersModule {
+                polymorphic(baseClass = NavKey::class) {
+                    subclass(serializer = Route.Home.Explore.Search.serializer())
+                    subclass(serializer = Route.Home.Explore.Detail.serializer())
+                }
+            }
         }
     }
-    Column(
+    val exploreNavigator = rememberNavigator(config, Route.Home.Explore.Search)
+    BackHandler(enabled = exploreNavigator.currentScreen != Route.Home.Explore.Search) {
+        exploreNavigator.handleBack()
+    }
+    NavDisplay(
         modifier = Modifier
             .fillMaxSize()
             .padding(
-                top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
-            )
-    ) {
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(
-                start = 8.dp,
+                top = WindowInsets.systemBars
+                    .asPaddingValues()
+                    .calculateTopPadding(),
                 end = WindowInsets.systemBars
                     .union(WindowInsets.displayCutout)
                     .asPaddingValues()
                     .calculateEndPadding(LayoutDirection.Ltr)
-            )
-        ) {
-            stickyHeader {
-                Text("Website:")
-            }
-            items(supportedWebsites) {
-                FilterChip(
-                    onClick = {
-                        exploreViewModel.onAction(ExploreAction.ChangeSelectedWebsite(it))
-                    },
-                    label = {
-                        Text(it)
-                    },
-                    selected = it == exploreState.selectedWebsite,
-                    leadingIcon = if (it == exploreState.selectedWebsite) {
-                        {
-                            Icon(
-                                imageVector = ImageVector.vectorResource(R.drawable.ic_confirm),
-                                contentDescription = "Done icon",
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
-                    } else {
-                        null
-                    },
-                )
-            }
-        }
-
-        MySearchBox(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            value = searchInput,
-            onValueChange = { newValue ->
-                searchInput = newValue
-            },
-            hint = {
-                Text("Search")
-            },
-            decorationAlwaysVisible = true,
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Search
             ),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    if (searchInput.isNotBlank()) {
-                        if (exploreState.selectedWebsite == supportedWebsites[0]) {
-                            truyenFullViewModel.onAction(TruyenFullAction.PerformSearchQuery(searchInput))
+        backStack = exploreNavigator.backStack,
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator(),
+        ),
+        entryProvider = entryProvider {
+            entry<Route.Home.Explore.Search> {
+                val searchViewModel = koinViewModel<SearchViewModel>()
+                val exploreState by searchViewModel.state.collectAsStateWithLifecycle()
+                ExploreSearchScreen(
+                    searchState = exploreState,
+                    onAction = {
+                        when (it) {
+                            is SearchAction.PerformSearchBookDetail -> {
+                                exploreNavigator.navigateTo(Route.Home.Explore.Detail(it.bookUrl))
+                            }
+
+                            else -> {
+                                searchViewModel.onAction(it)
+                            }
                         }
-                        focusManager.clearFocus()
                     }
-                }
-            ),
-            trailingIcon = {
-                Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_search),
-                    contentDescription = "Search icon",
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .size(24.dp)
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() },
-                        ) {
-                            truyenFullViewModel.onAction(TruyenFullAction.PerformSearchQuery(searchInput))
-                            focusManager.clearFocus()
-                        }
                 )
             }
-        )
-
-        Crossfade(targetState = exploreState.selectedWebsite) { targetState ->
-            when (targetState) {
-                supportedWebsites[0] -> {
-                    TruyenFullRoot(
-                        truyenFullState = truyenFullState,
-                        onAction = truyenFullViewModel::onAction
-                    )
-                }
-
-                supportedWebsites[1] -> {
-
-                }
+            entry<Route.Home.Explore.Detail> {
+                val detailViewModel = koinViewModel<DetailViewModel>(parameters = { parametersOf(it.bookUrl) })
+                val detailState by detailViewModel.state.collectAsStateWithLifecycle()
+                DetailScreen(
+                    detailState = detailState,
+                    onAction = detailViewModel::onAction
+                )
             }
         }
-    }
+    )
 }

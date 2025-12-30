@@ -21,8 +21,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -30,11 +31,7 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,8 +69,8 @@ fun TableOfContentScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val isImeVisible = WindowInsets.isImeVisible
-    var searchInput by remember { mutableStateOf("") }
     val lazyColumnState = rememberLazyListState()
+    val searchState = rememberTextFieldState()
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(isImeVisible) {
@@ -91,7 +88,7 @@ fun TableOfContentScreen(
         if (drawerState.visibility) {
             lazyColumnState.scrollToItem(bookChapterContentState.currentChapterIndex)
         } else {
-            searchInput = ""
+            searchState.clearText()
             onAction(TableOfContentAction.UpdateTargetSearchIndex(-1))
             keyboardController?.hide()
             focusManager.clearFocus()
@@ -107,10 +104,7 @@ fun TableOfContentScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                value = searchInput,
-                onValueChange = { newValue ->
-                    searchInput = newValue
-                },
+                textFieldState = searchState,
                 textColor = stylingState.textColor,
                 backgroundColor = stylingState.textColor,
                 cursorColor = stylingState.textColor,
@@ -131,25 +125,23 @@ fun TableOfContentScreen(
                     keyboardType = KeyboardType.Number,
                     imeAction = ImeAction.Search
                 ),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        val chapterIndex = searchInput.toIntOrNull()
-                        if (chapterIndex != null) {
-                            onAction(
-                                TableOfContentAction.UpdateTargetSearchIndex(
-                                    if (chapterIndex < tableOfContents.size)
-                                        chapterIndex
-                                    else
-                                        tableOfContents.size - 1
-                                )
+                keyboardActions = {
+                    val chapterIndex = searchState.text.toString().toIntOrNull()
+                    if (chapterIndex != null) {
+                        onAction(
+                            TableOfContentAction.UpdateTargetSearchIndex(
+                                if (chapterIndex < tableOfContents.size)
+                                    chapterIndex
+                                else
+                                    tableOfContents.size - 1
                             )
-                            onAction(
-                                TableOfContentAction.UpdateSearchState(true)
-                            )
-                            focusManager.clearFocus()
-                        }
+                        )
+                        onAction(
+                            TableOfContentAction.UpdateSearchState(true)
+                        )
+                        focusManager.clearFocus()
                     }
-                )
+                }
             )
             LazyColumn(
                 modifier = Modifier.weight(1f),
