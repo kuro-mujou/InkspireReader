@@ -21,7 +21,7 @@ sealed interface Route : NavKey {
             data object Search : Explore
 
             @Serializable
-            data class Detail(val bookUrl: String) : Explore
+            data class Detail(val bookUrl: String, val chapter: String) : Explore
         }
 
         @Serializable

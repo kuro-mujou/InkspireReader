@@ -12,6 +12,7 @@ import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
 import com.inkspire.ebookreader.ui.home.composable.MyNavigationSuiteScaffold
+import com.inkspire.ebookreader.ui.home.explore.detail.DetailAction
 import com.inkspire.ebookreader.ui.home.explore.detail.DetailScreen
 import com.inkspire.ebookreader.ui.home.explore.detail.DetailViewModel
 import com.inkspire.ebookreader.ui.home.explore.search.ExploreSearchScreen
@@ -61,7 +62,7 @@ fun HomeScreen(
                         onAction = {
                             when (it) {
                                 is SearchAction.PerformSearchBookDetail -> {
-                                    homeNavigator.navigateTo(Route.Home.Explore.Detail(it.bookUrl))
+                                    homeNavigator.navigateTo(Route.Home.Explore.Detail(it.bookUrl, it.chapter))
                                 }
 
                                 else -> {
@@ -71,12 +72,24 @@ fun HomeScreen(
                         }
                     )
                 }
-                entry<Route.Home.Explore.Detail> {
-                    val detailViewModel = koinViewModel<DetailViewModel>(parameters = { parametersOf(it.bookUrl) })
+                entry<Route.Home.Explore.Detail> { params ->
+                    val detailViewModel = koinViewModel<DetailViewModel>(parameters = { parametersOf(params.bookUrl) })
                     val detailState by detailViewModel.state.collectAsStateWithLifecycle()
                     DetailScreen(
                         detailState = detailState,
-                        onAction = detailViewModel::onAction
+                        chapterInfo = params.chapter,
+                        onAction = {
+                            when (it) {
+                                is DetailAction.NavigateBack -> {
+                                    homeNavigator.handleBack()
+                                }
+                                else -> {
+                                    detailViewModel.onAction(it)
+                                    homeNavigator.handleBack()
+                                    homeNavigator.switchTab(Route.Home.Library)
+                                }
+                            }
+                        }
                     )
                 }
                 entry<Route.Home.Settings> {

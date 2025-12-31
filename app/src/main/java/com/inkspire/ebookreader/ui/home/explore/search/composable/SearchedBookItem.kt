@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,7 +42,7 @@ fun SearchedBookItem(
             .clip(RoundedCornerShape(15.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .clickable {
-                onAction(SearchAction.PerformSearchBookDetail(searchedBook.url))
+                onAction(SearchAction.PerformSearchBookDetail(searchedBook.url, searchedBook.latestChapter))
             }
     ) {
         Row(
@@ -57,7 +56,6 @@ fun SearchedBookItem(
                 contentScale = ContentScale.FillHeight,
                 modifier = Modifier
                     .fillMaxHeight()
-                    .widthIn(max = 150.dp)
                     .clip(RoundedCornerShape(15.dp))
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -83,11 +81,22 @@ fun SearchedBookItem(
                         fontSize = MaterialTheme.typography.bodyMedium.fontSize
                     )
                 )
+                Spacer(modifier = Modifier.weight(1f))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.Bottom
                 ) {
+                    Text(
+                        text = searchedBook.latestChapter,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                        )
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
                     if(searchedBook.isFull) {
                         Box(
                             modifier = Modifier
@@ -95,11 +104,17 @@ fun SearchedBookItem(
                                 .border(
                                     width = 1.dp,
                                     color = MaterialTheme.colorScheme.primary,
-                                    shape = RoundedCornerShape(2.dp)
-                                ),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .padding(4.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("Full")
+                            Text(
+                                text = "Full",
+                                style = TextStyle(
+                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                                )
+                            )
                         }
                     }
                     if(searchedBook.isHot) {
@@ -109,11 +124,17 @@ fun SearchedBookItem(
                                 .border(
                                     width = 1.dp,
                                     color = MaterialTheme.colorScheme.primary,
-                                    shape = RoundedCornerShape(2.dp)
-                                ),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .padding(4.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("Hot")
+                            Text(
+                                text = "Hot",
+                                style = TextStyle(
+                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                                )
+                            )
                         }
                     }
                 }

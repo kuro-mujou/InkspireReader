@@ -27,6 +27,14 @@ class DetailViewModel(
     }
 
     fun onAction(action: DetailAction) {
+        when (action) {
+            is DetailAction.DownloadBook -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    //lets start a worker here
+                }
+            }
+            else -> {}
+        }
     }
 
     private fun searchBookDetail(bookUrl: String) {

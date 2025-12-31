@@ -1,5 +1,8 @@
 package com.inkspire.ebookreader.ui.home.explore.detail
 
-sealed interface DetailAction {
+import com.inkspire.ebookreader.common.ScrapedBookInfo
 
+sealed interface DetailAction {
+    data object NavigateBack : DetailAction
+    data class DownloadBook(val book: ScrapedBookInfo) : DetailAction
 }
