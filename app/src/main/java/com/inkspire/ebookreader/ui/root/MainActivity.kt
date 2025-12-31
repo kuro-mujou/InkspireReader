@@ -19,11 +19,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import androidx.savedstate.serialization.SavedStateConfiguration
 import com.inkspire.ebookreader.common.BookImporter
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
@@ -37,9 +35,6 @@ import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import dev.icerock.moko.permissions.notifications.REMOTE_NOTIFICATION
 import kotlinx.coroutines.launch
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,20 +63,7 @@ class MainActivity : ComponentActivity() {
                         } catch (_: Exception) {}
                     }
                 }
-
-                val config = remember {
-                    SavedStateConfiguration {
-                        serializersModule = SerializersModule {
-                            polymorphic(baseClass = NavKey::class) {
-                                subclass(serializer = Route.Home.serializer())
-                                subclass(serializer = Route.BookDetail.serializer())
-                                subclass(serializer = Route.BookContent.serializer())
-                                subclass(serializer = Route.BookWriter.serializer())
-                            }
-                        }
-                    }
-                }
-                val navigator = rememberNavigator(config, Route.Home)
+                val navigator = rememberNavigator(Route.Home.RecentBooks)
 
                 BackHandler(enabled = true) {
                     if (!navigator.handleBack()) finish()
@@ -96,7 +78,7 @@ class MainActivity : ComponentActivity() {
                             rememberViewModelStoreNavEntryDecorator(),
                         ),
                         entryProvider = entryProvider {
-                            entry<Route.Home> {
+                            entry<Route.Home.RecentBooks> {
                                 HomeScreen(
                                     parentNavigator = navigator
                                 )

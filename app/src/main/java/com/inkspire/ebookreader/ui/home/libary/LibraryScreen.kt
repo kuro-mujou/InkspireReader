@@ -492,7 +492,7 @@ fun LibraryScreen(
                                         Spacer(modifier = Modifier.height(4.dp))
                                         FilledTonalIconButton(
                                             onClick = {
-                                                homeNavigatorAction(Route.Home.Explore)
+                                                homeNavigatorAction(Route.Home.Explore.Search)
                                             }
                                         ) {
                                             Icon(

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import com.inkspire.ebookreader.navigation.Navigator
+import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.homeNavItems
 
 @Composable
@@ -29,6 +30,8 @@ fun MyBottomNavigation(
                 },
                 selected = currentTab == item.route,
                 onClick = {
+                    if (navigator.currentScreen is Route.Home.Explore.Detail)
+                        navigator.handleBack()
                     navigator.switchTab(item.route)
                 }
             )

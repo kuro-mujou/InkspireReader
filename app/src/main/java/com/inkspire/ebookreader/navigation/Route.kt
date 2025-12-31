@@ -6,34 +6,34 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface Route : NavKey {
     @Serializable
-    data object Home : Route, NavKey {
+    sealed interface Home : Route {
 
         @Serializable
-        data object RecentBooks : Route, NavKey
+        data object RecentBooks : Home
 
         @Serializable
-        data object Library : Route, NavKey
+        data object Library : Home
 
         @Serializable
-        data object Explore : Route, NavKey {
+        sealed interface Explore : Home {
 
             @Serializable
-            data object Search : Route, NavKey
+            data object Search : Explore
 
             @Serializable
-            data class Detail(val bookUrl: String) : Route, NavKey
+            data class Detail(val bookUrl: String) : Explore
         }
 
         @Serializable
-        data object Settings : Route, NavKey
+        data object Settings : Route
     }
 
     @Serializable
-    data class BookDetail(val bookId: String) : Route, NavKey
+    data class BookDetail(val bookId: String) : Route
 
     @Serializable
-    data class BookContent(val bookId: String) : Route, NavKey
+    data class BookContent(val bookId: String) : Route
 
     @Serializable
-    data class BookWriter(val bookId: String) : Route, NavKey
+    data class BookWriter(val bookId: String) : Route
 }

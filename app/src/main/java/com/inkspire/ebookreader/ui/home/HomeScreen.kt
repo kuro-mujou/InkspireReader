@@ -2,42 +2,32 @@ package com.inkspire.ebookreader.ui.home
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import androidx.savedstate.serialization.SavedStateConfiguration
 import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
 import com.inkspire.ebookreader.ui.home.composable.MyNavigationSuiteScaffold
-import com.inkspire.ebookreader.ui.home.explore.ExploreRootScreen
+import com.inkspire.ebookreader.ui.home.explore.detail.DetailScreen
+import com.inkspire.ebookreader.ui.home.explore.detail.DetailViewModel
+import com.inkspire.ebookreader.ui.home.explore.search.ExploreSearchScreen
+import com.inkspire.ebookreader.ui.home.explore.search.SearchAction
+import com.inkspire.ebookreader.ui.home.explore.search.SearchViewModel
 import com.inkspire.ebookreader.ui.home.libary.LibraryRootScreen
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookRootScreen
 import com.inkspire.ebookreader.ui.home.setting.SettingRootScreen
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun HomeScreen(
     parentNavigator: Navigator
 ) {
-    val config = remember {
-        SavedStateConfiguration {
-            serializersModule = SerializersModule {
-                polymorphic(baseClass = NavKey::class) {
-                    subclass(serializer = Route.Home.RecentBooks.serializer())
-                    subclass(serializer = Route.Home.Library.serializer())
-                    subclass(serializer = Route.Home.Explore.serializer())
-                    subclass(serializer = Route.Home.Settings.serializer())
-                }
-            }
-        }
-    }
-    val homeNavigator = rememberNavigator(config, Route.Home.RecentBooks)
+    val homeNavigator = rememberNavigator(Route.Home.RecentBooks)
     BackHandler(enabled = homeNavigator.currentTab != Route.Home.RecentBooks) {
         homeNavigator.handleBack()
     }
@@ -63,8 +53,31 @@ fun HomeScreen(
                         parentNavigatorAction = parentNavigator::navigateTo
                     )
                 }
-                entry<Route.Home.Explore> {
-                    ExploreRootScreen()
+                entry<Route.Home.Explore.Search> {
+                    val searchViewModel = koinViewModel<SearchViewModel>()
+                    val exploreState by searchViewModel.state.collectAsStateWithLifecycle()
+                    ExploreSearchScreen(
+                        searchState = exploreState,
+                        onAction = {
+                            when (it) {
+                                is SearchAction.PerformSearchBookDetail -> {
+                                    homeNavigator.navigateTo(Route.Home.Explore.Detail(it.bookUrl))
+                                }
+
+                                else -> {
+                                    searchViewModel.onAction(it)
+                                }
+                            }
+                        }
+                    )
+                }
+                entry<Route.Home.Explore.Detail> {
+                    val detailViewModel = koinViewModel<DetailViewModel>(parameters = { parametersOf(it.bookUrl) })
+                    val detailState by detailViewModel.state.collectAsStateWithLifecycle()
+                    DetailScreen(
+                        detailState = detailState,
+                        onAction = detailViewModel::onAction
+                    )
                 }
                 entry<Route.Home.Settings> {
                     SettingRootScreen()

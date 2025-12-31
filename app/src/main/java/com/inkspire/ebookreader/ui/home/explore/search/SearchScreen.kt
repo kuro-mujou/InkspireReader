@@ -76,6 +76,15 @@ fun ExploreSearchScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(
+                top = WindowInsets.systemBars
+                    .asPaddingValues()
+                    .calculateTopPadding(),
+                end = WindowInsets.systemBars
+                    .union(WindowInsets.displayCutout)
+                    .asPaddingValues()
+                    .calculateEndPadding(LayoutDirection.Ltr)
+            )
     ) {
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
