@@ -1,12 +1,17 @@
 package com.inkspire.ebookreader.ui.bookcontent.root
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.BookImporter
 import com.inkspire.ebookreader.common.UiState
@@ -97,11 +102,31 @@ fun BookContentRootScreen(
         }
 
         is UiState.Error -> {
-            Text(text = "Error loading book")
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Error while loading book",
+                    color = stylingState.textColor,
+                    fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                    fontSize = stylingState.fontSize.sp
+                )
+            }
         }
 
         is UiState.Empty -> {
-            Text(text = "No book found")
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Data might corrupted, please re-import this book",
+                    color = stylingState.textColor,
+                    fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                    fontSize = stylingState.fontSize.sp
+                )
+            }
         }
 
         is UiState.Success -> {
@@ -128,11 +153,31 @@ fun BookContentRootScreen(
                 }
 
                 is UiState.Error -> {
-                    Text(text = "Error loading book")
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Error while loading book",
+                            color = stylingState.textColor,
+                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                            fontSize = stylingState.fontSize.sp
+                        )
+                    }
                 }
 
                 is UiState.Empty -> {
-                    Text(text = "No book found")
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Data might corrupted, please re-import this book",
+                            color = stylingState.textColor,
+                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                            fontSize = stylingState.fontSize.sp
+                        )
+                    }
                 }
 
                 is UiState.Success -> {

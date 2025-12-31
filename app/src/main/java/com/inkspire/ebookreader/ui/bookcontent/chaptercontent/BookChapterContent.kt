@@ -69,6 +69,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.Chapter
@@ -117,6 +118,11 @@ fun BookChapterContent(
         UiState.None -> {
 
         }
+        UiState.Empty -> {
+            MyLoadingAnimation(
+                stylingState = stylingState
+            )
+        }
         is UiState.Loading -> {
             MyLoadingAnimation(
                 stylingState = stylingState
@@ -127,7 +133,12 @@ fun BookChapterContent(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Error: ${chapterUiState.throwable.message}")
+                Text(
+                    text = "Error: ${chapterUiState.throwable.message}",
+                    color = stylingState.textColor,
+                    fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                    fontSize = stylingState.fontSize.sp
+                )
             }
         }
         is UiState.Success -> {
@@ -520,7 +531,7 @@ fun BookChapterContent(
                                         .calculateBottomPadding()
                                 )
                             ),
-                        text = "${currentContentState.lastVisibleItemIndex + 1} / ${paragraphs.size}",
+                        text = "${currentContentState.lastVisibleItemIndex} / ${paragraphs.size}",
                         style = TextStyle(
                             color = stylingState.textColor,
                             textAlign = TextAlign.Right,
@@ -530,9 +541,6 @@ fun BookChapterContent(
                     )
                 }
             }
-        }
-        UiState.Empty -> {
-
         }
     }
 }
