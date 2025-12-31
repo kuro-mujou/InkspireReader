@@ -1,6 +1,9 @@
 package com.inkspire.ebookreader.service
 
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Bundle
 import androidx.media3.common.C
 import androidx.media3.common.ForwardingPlayer
@@ -23,7 +26,37 @@ import org.koin.android.ext.android.inject
 class TTSService : MediaSessionService() {
 
     private val ttsManager by inject<TTSManager>()
+    private var audioFocusChangeListener =
+        AudioManager.OnAudioFocusChangeListener { focusChange ->
+            when (focusChange) {
+                AudioManager.AUDIOFOCUS_GAIN -> {
+                    ttsManager.checkResume()
+                }
 
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                    ttsManager.checkPause()
+                }
+
+                AudioManager.AUDIOFOCUS_LOSS -> {
+                    ttsManager.checkPause()
+                }
+
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                    ttsManager.checkPause()
+                }
+            }
+        }
+    private val playbackAttributes = AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_MEDIA)
+        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+        .build()
+    private val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+        .setAudioAttributes(playbackAttributes)
+        .setAcceptsDelayedFocusGain(true)
+        .setOnAudioFocusChangeListener(audioFocusChangeListener)
+        .build()
+
+    private lateinit var audioManager: AudioManager
     private var mediaSession: MediaSession? = null
 
     private val customCommandStop = SessionCommand(ACTION_STOP, Bundle.EMPTY)
@@ -81,6 +114,9 @@ class TTSService : MediaSessionService() {
                 ImmutableList.of(previousButton, nextButton, stopButton)
             )
             .build()
+
+        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        audioManager.requestAudioFocus(focusRequest)
     }
 
     override fun onDestroy() {
@@ -89,6 +125,7 @@ class TTSService : MediaSessionService() {
             release()
             mediaSession = null
         }
+        audioManager.abandonAudioFocusRequest(focusRequest)
         super.onDestroy()
     }
 

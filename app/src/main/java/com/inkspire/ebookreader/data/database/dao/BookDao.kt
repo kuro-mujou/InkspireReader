@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BookDao {
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBook(book: BookEntity): Long
 
     @Transaction
@@ -112,10 +112,10 @@ interface BookDao {
     @Query("SELECT * FROM books WHERE bookId = :bookId")
     suspend fun getBookWithCategories(bookId: String): BookWithCategories?
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: CategoryEntity): Long
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBookCategoryCrossRef(crossRef: BookCategoryCrossRef)
 
     @Delete

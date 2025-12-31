@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.usecase.LibraryDatastoreUseCase
 import com.inkspire.ebookreader.domain.usecase.LibraryUseCase
+import com.inkspire.ebookreader.util.BitmapUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
-import java.io.File
 
 class LibraryViewModel(
     private val libraryUseCase : LibraryUseCase,
@@ -148,10 +148,7 @@ class LibraryViewModel(
         viewModelScope.launch {
             val imagePaths = libraryUseCase.getImagePathsByBookIds(bookIds)
             for (imagePathEntity in imagePaths) {
-                val file = File(imagePathEntity.imagePath)
-                if (file.exists()) {
-                    file.delete()
-                }
+                BitmapUtil.deleteImageFromPrivateStorage(imagePathEntity.imagePath)
             }
             libraryUseCase.deleteByBookIds(bookIds)
         }

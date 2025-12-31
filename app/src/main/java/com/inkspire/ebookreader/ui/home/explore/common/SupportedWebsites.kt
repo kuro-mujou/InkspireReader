@@ -10,8 +10,8 @@ enum class SupportedWebsite(
         categories = TruyenFullCategory.entries
     ),
 
-    TANG_THU_VIEN(
-        displayName = "Tàng Thư Viện",
-        categories = emptyList()
-    );
+//    TANG_THU_VIEN(
+//        displayName = "Tàng Thư Viện",
+//        categories = emptyList()
+//    );
 }

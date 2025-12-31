@@ -1,6 +1,8 @@
 package com.inkspire.ebookreader.di
 
 import androidx.room.Room
+import com.inkspire.ebookreader.common.AndroidConnectivityObserver
+import com.inkspire.ebookreader.common.ConnectivityObserver
 import com.inkspire.ebookreader.data.database.LocalBookDatabase
 import com.inkspire.ebookreader.data.datastore.DatastoreManager
 import com.inkspire.ebookreader.data.network.HttpClientFactory
@@ -77,6 +79,7 @@ object KoinModule {
     val networkModule = module {
         single<HttpClientEngine> { Android.create {} }
         single<HttpClient> { HttpClientFactory.create(get()) }
+        singleOf(::AndroidConnectivityObserver) bind ConnectivityObserver::class
     }
 
     val databaseModule = module {
@@ -174,16 +177,7 @@ object KoinModule {
         viewModelOf(::BottomBarTTSViewModel)
         viewModelOf(::BottomBarAutoScrollViewModel)
         viewModelOf(::AutoScrollViewModel)
-        viewModel {
-            TTSViewModel(
-                isInReaderMode = it.get(),
-                application = get(),
-                ttsManager = get(),
-                datastoreUseCase = get(),
-                contentUseCase = get(),
-                musicUseCase = get()
-            )
-        }
+        viewModelOf(::TTSViewModel)
     }
 
     val datastoreModule = module {

@@ -2,6 +2,7 @@ package com.inkspire.ebookreader.ui.bookcontent.chaptercontent
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -37,6 +39,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -451,6 +456,47 @@ fun BookChapterContent(
                             },
                             onNoteAction = onNoteAction
                         )
+                    }
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                text = "·:*¨༺ ♱✮♱ ༻¨*:·",
+                                style = TextStyle(
+                                    color = stylingState.textColor,
+                                    fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                )
+                            )
+                            if(bookInfo.fileType == "epub-online" && currentChapter + 1 == bookInfo.totalChapter) {
+                                OutlinedButton(
+                                    onClick = {
+                                        onBookContentDataAction(BookContentDataAction.CheckForNewChapter)
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = stylingState.backgroundColor,
+                                        contentColor = stylingState.textColor,
+                                    ),
+                                    border = BorderStroke(
+                                        width = 2.dp,
+                                        color = stylingState.textColor
+                                    )
+                                ) {
+                                    Text(
+                                        text = "Check for new chapter",
+                                        style = TextStyle(
+                                            color = stylingState.textColor,
+                                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
                 Row(

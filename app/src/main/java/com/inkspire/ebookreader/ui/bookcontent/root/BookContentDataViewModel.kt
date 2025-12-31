@@ -88,6 +88,7 @@ class BookContentDataViewModel(
                     bookContentUseCase.saveBookInfoParagraphIndex(bookId, action.paragraphIndex)
                 }
             }
+            else -> {}
         }
     }
 

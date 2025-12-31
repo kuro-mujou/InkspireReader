@@ -113,6 +113,14 @@ class TTSManager(
         _events.tryEmit(TTSEvent.CheckPlayNextParagraph)
     }
 
+    fun checkPause() {
+        _events.tryEmit(TTSEvent.CheckPauseReading)
+    }
+
+    fun checkResume() {
+        _events.tryEmit(TTSEvent.CheckResumeReading)
+    }
+
     fun startReading(paragraphIndex: Int) {
         if (chapterContent.isNotEmpty() && paragraphIndex in chapterContent.indices) {
             paragraphOffset = 0

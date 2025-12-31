@@ -2,6 +2,7 @@ package com.inkspire.ebookreader.ui.home.explore.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.inkspire.ebookreader.common.ConnectivityObserver
 import com.inkspire.ebookreader.common.TruyenFullScraper
 import com.inkspire.ebookreader.common.UiState
 import kotlinx.coroutines.Dispatchers
@@ -11,13 +12,23 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SearchViewModel : ViewModel() {
+class SearchViewModel(
+    connectivityObserver: ConnectivityObserver
+) : ViewModel() {
     private val _state = MutableStateFlow(SearchState())
     val state = _state
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = _state.value
+        )
+
+    val isConnected = connectivityObserver
+        .isConnected
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            false
         )
 
     private val baseUrl = "https://truyenfull.vision"

@@ -3,6 +3,7 @@ package com.inkspire.ebookreader.common
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
+import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.ui.sharedviewmodel.AsyncImportBookViewModel
 import com.inkspire.ebookreader.util.FilePickerUtil
 import kotlinx.coroutines.CoroutineScope
@@ -39,9 +40,21 @@ class BookImporter(
                         }
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 Toast.makeText(context, "Can't open book file", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    fun importTruyenFullBook(boolUrl: String, book: ScrapedBookInfo) {
+        scope.launch {
+            importBookViewModel.processTruyenFullBook(context, boolUrl, book)
+        }
+    }
+
+    fun fetchNewChapter(book: Book) {
+        scope.launch {
+            importBookViewModel.fetchNewChapter(context, book)
         }
     }
 }

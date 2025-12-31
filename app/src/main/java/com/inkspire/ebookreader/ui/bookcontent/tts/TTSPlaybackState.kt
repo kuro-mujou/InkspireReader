@@ -18,6 +18,7 @@ data class TTSPlaybackState(
 
     //playback state
     val isEnableMusic: Boolean = false,
+    val playerVolumeScale: Float = 1f,
     val isActivated: Boolean = false,
     val isPaused: Boolean = false,
 )

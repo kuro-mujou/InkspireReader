@@ -1,10 +1,14 @@
 package com.inkspire.ebookreader.ui.bookcontent.root
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.inkspire.ebookreader.common.BookImporter
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollAction
@@ -55,7 +59,7 @@ fun BookContentRootScreen(
     val bottomBarTTSViewModel = koinViewModel<BottomBarTTSViewModel>(parameters = { parametersOf(bookId) })
     val bottomBarAutoScrollViewModel = koinViewModel<BottomBarAutoScrollViewModel>()
     val settingViewModel = koinViewModel<SettingViewModel>()
-    val ttsViewModel = koinViewModel<TTSViewModel>(parameters = { parametersOf(true) })
+    val ttsViewModel = koinViewModel<TTSViewModel>()
     val autoScrollViewModel = koinViewModel<AutoScrollViewModel>()
 
     val bookContentDataState by dataViewModel.state.collectAsStateWithLifecycle()
@@ -78,6 +82,9 @@ fun BookContentRootScreen(
     val bookChapterContentEvent = chapterContentViewModel.event
     val ttsUiEvent = ttsViewModel.event
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     when (val state = bookContentDataState.bookState) {
         is UiState.None -> {
 
@@ -99,6 +106,7 @@ fun BookContentRootScreen(
 
         is UiState.Success -> {
             val bookInfo = state.data
+            BackHandler(true) {}
             LaunchedEffect(bookInfo) {
                 chapterContentViewModel.onAction(
                     BookChapterContentAction.InitFromDatabase(
@@ -206,7 +214,20 @@ fun BookContentRootScreen(
                                     onAutoScrollAction = autoScrollViewModel::onAction,
                                     onTTSAction = ttsViewModel::onAction,
                                     onNoteAction = noteViewModel::onAction,
-                                    onBookContentDataAction = dataViewModel::onAction,
+                                    onBookContentDataAction = {
+                                        when (it) {
+                                            is BookContentDataAction.CheckForNewChapter -> {
+                                                BookImporter(
+                                                    context = context,
+                                                    scope = scope,
+                                                    specialIntent = "null",
+                                                ).fetchNewChapter(bookInfo)
+                                            }
+                                            else -> {
+                                                dataViewModel.onAction(it)
+                                            }
+                                        }
+                                    },
                                     onBookChapterContentAction = {
                                         when (it) {
                                             is BookChapterContentAction.UpdateSystemBar -> {

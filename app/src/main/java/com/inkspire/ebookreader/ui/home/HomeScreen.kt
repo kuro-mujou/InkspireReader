@@ -3,11 +3,14 @@ package com.inkspire.ebookreader.ui.home
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.inkspire.ebookreader.common.BookImporter
 import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
@@ -28,6 +31,8 @@ import org.koin.core.parameter.parametersOf
 fun HomeScreen(
     parentNavigator: Navigator
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val homeNavigator = rememberNavigator(Route.Home.RecentBooks)
     BackHandler(enabled = homeNavigator.currentTab != Route.Home.RecentBooks) {
         homeNavigator.handleBack()
@@ -57,8 +62,10 @@ fun HomeScreen(
                 entry<Route.Home.Explore.Search> {
                     val searchViewModel = koinViewModel<SearchViewModel>()
                     val exploreState by searchViewModel.state.collectAsStateWithLifecycle()
+                    val isConnected by searchViewModel.isConnected.collectAsStateWithLifecycle()
                     ExploreSearchScreen(
                         searchState = exploreState,
+                        isConnected = isConnected,
                         onAction = {
                             when (it) {
                                 is SearchAction.PerformSearchBookDetail -> {
@@ -83,8 +90,12 @@ fun HomeScreen(
                                 is DetailAction.NavigateBack -> {
                                     homeNavigator.handleBack()
                                 }
-                                else -> {
-                                    detailViewModel.onAction(it)
+                                is DetailAction.DownloadBook -> {
+                                    BookImporter(
+                                        context = context,
+                                        scope = scope,
+                                        specialIntent = "null"
+                                    ).importTruyenFullBook(params.bookUrl, it.book)
                                     homeNavigator.handleBack()
                                     homeNavigator.switchTab(Route.Home.Library)
                                 }

@@ -8,9 +8,12 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.inkspire.ebookreader.common.ScrapedBookInfo
+import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.worker.CBZImportWorker
 import com.inkspire.ebookreader.worker.EPUBImportWorker
 import com.inkspire.ebookreader.worker.PDFImportWorker
+import com.inkspire.ebookreader.worker.TruyenFullImportWorker
 import kotlinx.coroutines.launch
 
 class AsyncImportBookViewModel: ViewModel() {
@@ -73,6 +76,52 @@ class AsyncImportBookViewModel: ViewModel() {
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(context, "Can't open CBZ file", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun processTruyenFullBook(
+        context: Context,
+        bookUrl: String,
+        book: ScrapedBookInfo,
+    ) = viewModelScope.launch {
+        try {
+            Toast.makeText(context, "Importing...", Toast.LENGTH_SHORT).show()
+            val inputData = Data.Builder()
+                .putString(TruyenFullImportWorker.INPUT_BOOK_URL_KEY, bookUrl)
+                .putString(TruyenFullImportWorker.INPUT_BOOK_TITLE_KEY, book.title)
+                .putString(TruyenFullImportWorker.INPUT_BOOK_AUTHOR_KEY, book.author)
+                .putString(TruyenFullImportWorker.INPUT_BOOK_DESCRIPTION_KEY, book.descriptionHtml)
+                .putString(TruyenFullImportWorker.INPUT_BOOK_CATEGORY_KEY, book.categories.joinToString(","))
+                .putString(TruyenFullImportWorker.INPUT_BOOK_COVER_URL_KEY, book.coverUrl)
+                .putString(TruyenFullImportWorker.INPUT_BOOK_INTERNAL_ID_KEY, book.internalId)
+                .build()
+            val workRequest = OneTimeWorkRequest.Builder(TruyenFullImportWorker::class.java)
+                .setInputData(inputData)
+                .build()
+            WorkManager.getInstance(context).enqueue(workRequest)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Can't download book, something went wrong", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun fetchNewChapter(
+        context: Context,
+        book: Book,
+    ) = viewModelScope.launch {
+        try {
+            Toast.makeText(context, "Checking...", Toast.LENGTH_SHORT).show()
+            val inputData = Data.Builder()
+                .putString(TruyenFullImportWorker.INPUT_BOOK_URL_KEY, book.storagePath)
+                .putString(TruyenFullImportWorker.INPUT_BOOK_TITLE_KEY, book.title)
+                .build()
+            val workRequest = OneTimeWorkRequest.Builder(TruyenFullImportWorker::class.java)
+                .setInputData(inputData)
+                .build()
+            WorkManager.getInstance(context).enqueue(workRequest)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Current chapter is latest", Toast.LENGTH_SHORT).show()
         }
     }
 }
