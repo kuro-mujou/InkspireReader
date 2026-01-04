@@ -31,7 +31,7 @@ class DetailViewModel(
             _state.update { it.copy(searchResultDetail = UiState.Loading) }
             try {
                 val result = TruyenFullScraper.fetchBookDetails(bookUrl)
-                _state.update { it.copy(searchResultDetail = UiState.Success(result)) }
+                _state.update { it.copy(searchResultDetail = UiState.Success { result }) }
             } catch (e: Exception) {
                 _state.update { it.copy(searchResultDetail = UiState.Error(Throwable("Failed: ${e.message}"))) }
             }

@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.domain.model.Book

@@ -1,5 +1,8 @@
 package com.inkspire.ebookreader.ui.bookcontent.chaptercontent
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class BookChapterContentState(
     val enablePagerScroll: Boolean = true,
     val enableUndoButton: Boolean = false,

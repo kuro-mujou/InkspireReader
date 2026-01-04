@@ -49,8 +49,8 @@ class SettingViewModel(
 
     init {
         viewModelScope.launch {
-            settingDatastoreUseCase.getKeepScreenOn().collectLatest { keepScreenOn ->
-                _state.update { it.copy(keepScreenOn = keepScreenOn) }
+            settingDatastoreUseCase.readerSettings.collectLatest { settings ->
+                _state.update { it.copy(readerSettings = settings) }
             }
         }
     }

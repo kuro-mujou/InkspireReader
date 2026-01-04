@@ -29,9 +29,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -83,16 +81,16 @@ class TTSViewModel(
             if (_state.value.isActivated) {
                 if (!isPlaying && !_state.value.isPaused) {
                     ttsManager.pauseReading()
-                    if (_state.value.isEnableMusic)
+                    if (_state.value.musicPreferences.enable)
                         mediaController?.apply {
-                            volume = _state.value.playerVolumeScale
+                            volume = _state.value.musicPreferences.volume
                         }
                     _state.update { it.copy(isPaused = true) }
                 } else if (isPlaying && _state.value.isPaused) {
                     ttsManager.resumeReading(_state.value.paragraphIndex)
-                    if (_state.value.isEnableMusic)
+                    if (_state.value.musicPreferences.enable)
                         mediaController?.apply {
-                            volume = 0.15f * _state.value.playerVolumeScale
+                            volume = 0.15f * _state.value.musicPreferences.volume
                         }
                     _state.update { it.copy(isPaused = false) }
                 }
@@ -102,29 +100,22 @@ class TTSViewModel(
 
     init {
         viewModelScope.launch {
-            combine(
-                datastoreUseCase.getTtsSpeed(),
-                datastoreUseCase.getTtsPitch(),
-                datastoreUseCase.getTtsLocale(),
-                datastoreUseCase.getTtsVoice()
-            ) { speed, pitch, localeName, voiceName ->
+            datastoreUseCase.ttsPreferences.collectLatest { prefs ->
+                _state.update { it.copy(ttsPreferences = prefs) }
+
+                ttsManager.updateSpeed(prefs.speed)
+                ttsManager.updatePitch(prefs.pitch)
+
                 val (languages, voices) = ttsManager.getAvailableVoicesAndLanguages()
-                val selectedLocale = languages.find { it.displayName == localeName } ?: Locale.getDefault()
+                val selectedLocale = languages.find { it.displayName == prefs.locale } ?: Locale.getDefault()
                 val selectedVoice = voices.find {
-                    it.name == voiceName && it.locale == selectedLocale
+                    it.name == prefs.voice && it.locale == selectedLocale
                 } ?: voices.firstOrNull { it.locale == selectedLocale } ?: ttsManager.getTTS().defaultVoice
 
-                _state.update { it.copy(
-                    currentSpeed = speed,
-                    currentPitch = pitch,
-                    currentLanguage = selectedLocale,
-                    currentVoice = selectedVoice
-                )}
-                ttsManager.updateSpeed(speed)
-                ttsManager.updatePitch(pitch)
                 ttsManager.updateLanguage(selectedLocale)
                 ttsManager.updateVoice(selectedVoice)
-            }.collect()
+                _state.update { it.copy(currentVoiceQuality = selectedVoice.quality.toString()) }
+            }
         }
         viewModelScope.launch {
             ttsManager.events.collect { event ->
@@ -148,7 +139,7 @@ class TTSViewModel(
                             )
 
                             mediaController?.apply {
-                                volume = 0.15f * _state.value.playerVolumeScale
+                                volume = 0.15f * _state.value.musicPreferences.volume
                             }
                         } else {
                             ttsManager.stopReading()
@@ -159,9 +150,9 @@ class TTSViewModel(
                                 )
                             }
                             _event.send(TTSUiEvent.StopReading)
-                            if (_state.value.isEnableMusic)
+                            if (_state.value.musicPreferences.enable)
                                 mediaController?.apply {
-                                    volume = _state.value.playerVolumeScale
+                                    volume = _state.value.musicPreferences.volume
                                 }
                             else
                                 mediaController?.clearMediaItems()
@@ -185,7 +176,7 @@ class TTSViewModel(
                             )
 
                             mediaController?.apply {
-                                volume = 0.15f * _state.value.playerVolumeScale
+                                volume = 0.15f * _state.value.musicPreferences.volume
                             }
                         }
                     }
@@ -257,7 +248,7 @@ class TTSViewModel(
                 })
                 if (mediaItemList.isNotEmpty()) {
                     mediaController?.apply {
-                        if (_state.value.isEnableMusic) {
+                        if (_state.value.musicPreferences.enable) {
                             mediaItemList.shuffle()
                             setMediaItems(mediaItemList)
                             prepare()
@@ -268,20 +259,45 @@ class TTSViewModel(
             }
         }
         viewModelScope.launch {
-            datastoreUseCase.getEnableBackgroundMusic().collectLatest { value ->
-                _state.update { it.copy(isEnableMusic = value) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getPlayerVolume().collectLatest { value ->
-                _state.update { it.copy(playerVolumeScale = value) }
-                if (_state.value.isActivated && !_state.value.isPaused) {
-                    mediaController?.apply {
-                        volume = 0.15f * value
-                    }
+            datastoreUseCase.musicPreferences.collectLatest { musicPrefs ->
+                _state.update { it.copy(musicPreferences = musicPrefs) }
+
+                val targetVolume = if (_state.value.isActivated && !_state.value.isPaused) {
+                    0.15f * musicPrefs.volume
                 } else {
+                    musicPrefs.volume
+                }
+                mediaController?.volume = targetVolume
+
+                if (musicPrefs.enable && _state.value.isActivated && mediaItemList.isNotEmpty()) {
+                    if (mediaController?.isPlaying == false) {
+                        mediaController?.apply {
+                            setMediaItems(mediaItemList)
+                            prepare()
+                            play()
+                        }
+                    }
+                } else if (!musicPrefs.enable && _state.value.isActivated) {
+                    val silentTrackMediaItem = Builder()
+                        .setUri("asset:///silent.mp3".toUri())
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setArtworkUri(bookInfo.coverImagePath.toUri())
+                                .setTitle(bookInfo.title)
+                                .setArtist(currentChapterTitle)
+                                .build()
+                        ).build()
                     mediaController?.apply {
-                        volume = value
+                        setMediaItems(listOf(silentTrackMediaItem))
+                        volume = if (_state.value.isPaused)
+                            _state.value.musicPreferences.volume
+                        else
+                            0.15f * _state.value.musicPreferences.volume
+                    }
+                } else if (mediaController?.isPlaying == true) {
+                    mediaController?.apply {
+                        stop()
+                        clearMediaItems()
                     }
                 }
             }
@@ -309,7 +325,7 @@ class TTSViewModel(
                         )
                     }
                     mediaController?.apply {
-                        volume = 0.15f * _state.value.playerVolumeScale
+                        volume = 0.15f * _state.value.musicPreferences.volume
                     }
                 } else {
                     ttsManager.stopReading()
@@ -322,9 +338,9 @@ class TTSViewModel(
                     viewModelScope.launch {
                         _event.send(TTSUiEvent.StopReading)
                     }
-                    if (_state.value.isEnableMusic)
+                    if (_state.value.musicPreferences.enable)
                         mediaController?.apply {
-                            volume = _state.value.playerVolumeScale
+                            volume = _state.value.musicPreferences.volume
                         }
                     else
                         mediaController?.clearMediaItems()
@@ -343,7 +359,7 @@ class TTSViewModel(
                         )
                     }
                     mediaController?.apply {
-                        volume = 0.15f * _state.value.playerVolumeScale
+                        volume = 0.15f * _state.value.musicPreferences.volume
                     }
                 } else {
                     ttsManager.checkPlayNextChapter()
@@ -354,16 +370,16 @@ class TTSViewModel(
                     ttsManager.resumeReading(_state.value.paragraphIndex)
                     _state.update { it.copy(isPaused = false) }
                     mediaController?.apply {
-                        if (_state.value.isEnableMusic)
-                            volume = 0.15f * _state.value.playerVolumeScale
+                        if (_state.value.musicPreferences.enable)
+                            volume = 0.15f * _state.value.musicPreferences.volume
                         play()
                     }
                 } else {
                     ttsManager.pauseReading()
                     _state.update { it.copy(isPaused = true) }
                     mediaController?.apply {
-                        if (_state.value.isEnableMusic)
-                            volume = _state.value.playerVolumeScale
+                        if (_state.value.musicPreferences.enable)
+                            volume = _state.value.musicPreferences.volume
                         else
                             pause()
                     }
@@ -388,7 +404,7 @@ class TTSViewModel(
                         )
                     }
                     mediaController?.apply {
-                        volume = 0.15f * _state.value.playerVolumeScale
+                        volume = 0.15f * _state.value.musicPreferences.volume
                     }
                 } else {
                     ttsManager.startReading(0)
@@ -407,26 +423,28 @@ class TTSViewModel(
                         )
                     }
                     mediaController?.apply {
-                        volume = 0.15f * _state.value.playerVolumeScale
+                        volume = 0.15f * _state.value.musicPreferences.volume
                     }
                 } else {
                     ttsManager.checkPlayPreviousChapter()
                 }
             }
             TTSAction.OnStopClick -> {
-                ttsManager.stopReading()
-                _state.update {
-                    it.copy(
-                        isPaused = false,
-                        isActivated = false
-                    )
-                }
-                if (_state.value.isEnableMusic)
-                    mediaController?.apply {
-                        volume = _state.value.playerVolumeScale
+                if (_state.value.isActivated) {
+                    ttsManager.stopReading()
+                    _state.update {
+                        it.copy(
+                            isPaused = false,
+                            isActivated = false
+                        )
                     }
-                else
-                    mediaController?.clearMediaItems()
+                    if (_state.value.musicPreferences.enable)
+                        mediaController?.apply {
+                            volume = _state.value.musicPreferences.volume
+                        }
+                    else
+                        mediaController?.clearMediaItems()
+                }
             }
             is TTSAction.StartTTS -> {
                 _state.update { it.copy(paragraphIndex = action.paragraphIndex)}
@@ -510,9 +528,9 @@ class TTSViewModel(
 
     private fun prepareAndStart() {
         viewModelScope.launch {
-            if (_state.value.isEnableMusic) {
+            if (_state.value.musicPreferences.enable) {
                 mediaController?.apply {
-                    volume = 0.15f * _state.value.playerVolumeScale
+                    volume = 0.15f * _state.value.musicPreferences.volume
                     if (!isPlaying){
                         setMediaItems(mediaItemList)
                         prepare()
@@ -532,7 +550,7 @@ class TTSViewModel(
                     }
                 }
             } else {
-                val mediaItem = Builder()
+                val silentTrackMediaItem = Builder()
                     .setUri("asset:///silent.mp3".toUri())
                     .setMediaMetadata(
                         MediaMetadata.Builder()
@@ -540,10 +558,9 @@ class TTSViewModel(
                             .setTitle(bookInfo.title)
                             .setArtist(currentChapterTitle)
                             .build()
-                    )
-                    .build()
+                    ).build()
                 mediaController?.apply {
-                    setMediaItems(listOf(mediaItem))
+                    setMediaItems(listOf(silentTrackMediaItem))
                     prepare()
                     play()
                 }
@@ -556,6 +573,7 @@ class TTSViewModel(
         }
     }
 
+    @OptIn(UnstableApi::class)
     private fun startService() {
         viewModelScope.launch {
             val intent = Intent(application, TTSService::class.java)

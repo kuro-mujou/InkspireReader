@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.ui.bookcontent.bottombar.theme
 
-import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -52,14 +51,14 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.theme.composable.ThemeColorItem
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.theme.composable.ThemeFontItem
 import com.inkspire.ebookreader.ui.bookcontent.colorpicker.ColorPicker
-import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.styling.BookContentStylingAction
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
@@ -69,27 +68,30 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BottomBarTheme(
-    bookInfo: Book,
-    stylingState: StylingState,
-    drawerState: DrawerState,
     hazeState: HazeState,
-    onStyleAction: (BookContentStylingAction) -> Unit
+    hazeEnableProvider: () -> Boolean,
+    bookInfoProvider: () -> Book,
 ) {
-    val useHaze = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !drawerState.visibility && !drawerState.isAnimating
+    val stylingVM = LocalStylingViewModel.current
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+
     val style = HazeMaterials.thin(stylingState.containerColor)
+
     var openColorPickerForBackground by remember { mutableStateOf(false) }
     var openColorPickerForText by remember { mutableStateOf(false) }
     var openChangeColorMenu by remember { mutableStateOf(false) }
+
     var textWidth by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
+
     if (openColorPickerForBackground) {
         ColorPicker(
             onDismiss = {
                 openColorPickerForBackground = false
             },
             onColorSelected = {
-                onStyleAction(BookContentStylingAction.UpdateBackgroundColor(it.toArgb()))
-                onStyleAction(BookContentStylingAction.UpdateSelectedColorSet(18))
+                stylingVM.onAction(BookContentStylingAction.UpdateBackgroundColor(it.toArgb()))
+                stylingVM.onAction(BookContentStylingAction.UpdateSelectedColorSet(18))
                 openColorPickerForBackground = false
             }
         )
@@ -100,8 +102,8 @@ fun BottomBarTheme(
                 openColorPickerForText = false
             },
             onColorSelected = {
-                onStyleAction(BookContentStylingAction.UpdateTextColor(it.toArgb()))
-                onStyleAction(BookContentStylingAction.UpdateSelectedColorSet(18))
+                stylingVM.onAction(BookContentStylingAction.UpdateTextColor(it.toArgb()))
+                stylingVM.onAction(BookContentStylingAction.UpdateSelectedColorSet(18))
                 openColorPickerForText = false
             }
         )
@@ -111,7 +113,7 @@ fun BottomBarTheme(
             .fillMaxWidth()
             .wrapContentHeight()
             .then(
-                if (useHaze) {
+                if (hazeEnableProvider()) {
                     Modifier.hazeEffect(
                         state = hazeState,
                         style = style
@@ -167,8 +169,8 @@ fun BottomBarTheme(
                         Text(
                             text = "Background",
                             style = TextStyle(
-                                color = stylingState.textColor,
-                                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                                color = stylingState.stylePreferences.textColor,
+                                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                             )
                         )
                     }
@@ -178,7 +180,7 @@ fun BottomBarTheme(
                             .weight(1f)
                             .height(40.dp)
                             .border(width = 2.dp, color = Color.Gray)
-                            .background(color = stylingState.textColor)
+                            .background(color = stylingState.stylePreferences.textColor)
                             .clickable {
                                 openColorPickerForText = true
                             },
@@ -187,8 +189,8 @@ fun BottomBarTheme(
                         Text(
                             text = "Text",
                             style = TextStyle(
-                                color = stylingState.backgroundColor,
-                                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                                color = stylingState.stylePreferences.backgroundColor,
+                                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                             )
                         )
                     }
@@ -214,11 +216,11 @@ fun BottomBarTheme(
                             index = index,
                             colorSample = sample,
                             stylingState = stylingState,
-                            selected = stylingState.selectedColorSet == index,
+                            selected = stylingState.stylePreferences.selectedColorSet == index,
                             onClick = {
-                                onStyleAction(BookContentStylingAction.UpdateSelectedColorSet(index))
-                                onStyleAction(BookContentStylingAction.UpdateBackgroundColor(sample.colorBg.toArgb()))
-                                onStyleAction(BookContentStylingAction.UpdateTextColor(sample.colorTxt.toArgb()))
+                                stylingVM.onAction(BookContentStylingAction.UpdateSelectedColorSet(index))
+                                stylingVM.onAction(BookContentStylingAction.UpdateBackgroundColor(sample.colorBg.toArgb()))
+                                stylingVM.onAction(BookContentStylingAction.UpdateTextColor(sample.colorTxt.toArgb()))
                             }
                         )
                     }
@@ -229,13 +231,13 @@ fun BottomBarTheme(
                     },
                     modifier = Modifier.size(40.dp),
                     colors = IconButtonDefaults.outlinedIconButtonColors(
-                        containerColor = stylingState.backgroundColor
+                        containerColor = stylingState.stylePreferences.backgroundColor
                     ),
-                    border = BorderStroke(width = 2.dp, color = stylingState.textColor)
+                    border = BorderStroke(width = 2.dp, color = stylingState.stylePreferences.textColor)
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_add),
-                        tint = stylingState.textColor,
+                        tint = stylingState.stylePreferences.textColor,
                         contentDescription = null
                     )
                 }
@@ -260,32 +262,32 @@ fun BottomBarTheme(
                             index = index,
                             fontSample = sample,
                             fontName = stylingState.fontNames[index],
-                            selected = stylingState.selectedFontFamilyIndex == index,
+                            selected = stylingState.stylePreferences.fontFamily == index,
                             stylingState = stylingState,
                             onClick = {
-                                onStyleAction(BookContentStylingAction.UpdateSelectedFontFamilyIndex(index))
+                                stylingVM.onAction(BookContentStylingAction.UpdateSelectedFontFamilyIndex(index))
                             }
                         )
                     }
                 }
                 OutlinedIconButton(
                     onClick = {
-                        onStyleAction(BookContentStylingAction.UpdateImagePaddingState)
+                        stylingVM.onAction(BookContentStylingAction.UpdateImagePaddingState)
                     },
                     modifier = Modifier.size(40.dp),
                     colors = IconButtonDefaults.outlinedIconButtonColors(
-                        containerColor = if (stylingState.imagePaddingState) stylingState.textColor else Color.Transparent
+                        containerColor = if (stylingState.stylePreferences.imagePaddingState) stylingState.stylePreferences.textColor else Color.Transparent
                     ),
-                    border = BorderStroke(width = 2.dp, color = stylingState.textColor)
+                    border = BorderStroke(width = 2.dp, color = stylingState.stylePreferences.textColor)
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_image_padding),
                         contentDescription = null,
-                        tint = if (stylingState.imagePaddingState) stylingState.backgroundColor else stylingState.textColor
+                        tint = if (stylingState.stylePreferences.imagePaddingState) stylingState.stylePreferences.backgroundColor else stylingState.stylePreferences.textColor
                     )
                 }
             }
-            if (bookInfo.fileType != "cbz" && bookInfo.fileType != "pdf/images") {
+            if (bookInfoProvider().fileType != "cbz" && bookInfoProvider().fileType != "pdf/images") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -295,23 +297,23 @@ fun BottomBarTheme(
                         modifier = Modifier.width(with(density) { textWidth.toDp() }),
                         text = "Font Size",
                         style = TextStyle(
-                            color = stylingState.textColor,
-                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                            color = stylingState.stylePreferences.textColor,
+                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                         )
                     )
                     Slider(
                         modifier = Modifier
                             .padding(end = 8.dp)
                             .weight(1f),
-                        value = stylingState.fontSize.toFloat(),
+                        value = stylingState.stylePreferences.fontSize.toFloat(),
                         onValueChange = { value ->
-                            onStyleAction(BookContentStylingAction.UpdateFontSize(value.roundToInt()))
+                            stylingVM.onAction(BookContentStylingAction.UpdateFontSize(value.roundToInt()))
                         },
                         colors = SliderDefaults.colors(
-                            activeTrackColor = stylingState.textColor,
+                            activeTrackColor = stylingState.stylePreferences.textColor,
                             activeTickColor = stylingState.containerColor,
                             inactiveTickColor = stylingState.containerColor.copy(alpha = 0.5f),
-                            inactiveTrackColor = stylingState.textColor.copy(alpha = 0.5f),
+                            inactiveTrackColor = stylingState.stylePreferences.textColor.copy(alpha = 0.5f),
                         ),
                         valueRange = 12f..48f,
                         thumb = {
@@ -319,16 +321,16 @@ fun BottomBarTheme(
                                 modifier = Modifier
                                     .size(24.dp)
                                     .background(
-                                        color = stylingState.textColor,
+                                        color = stylingState.stylePreferences.textColor,
                                         shape = CircleShape
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "${stylingState.fontSize}",
+                                    text = "${stylingState.stylePreferences.fontSize}",
                                     style = TextStyle(
                                         color = stylingState.containerColor,
-                                        fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                                        fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                                     )
                                 )
                             }
@@ -337,23 +339,23 @@ fun BottomBarTheme(
                     )
                     OutlinedIconButton(
                         onClick = {
-                            onStyleAction(BookContentStylingAction.UpdateTextAlign)
+                            stylingVM.onAction(BookContentStylingAction.UpdateTextAlign)
                         },
                         modifier = Modifier.size(40.dp),
                         colors = IconButtonDefaults.outlinedIconButtonColors(
-                            containerColor = stylingState.textColor
+                            containerColor = stylingState.stylePreferences.textColor
                         ),
-                        border = BorderStroke(width = 2.dp, color = stylingState.textColor)
+                        border = BorderStroke(width = 2.dp, color = stylingState.stylePreferences.textColor)
                     ) {
                         Icon(
                             imageVector = ImageVector.vectorResource(
-                                id = if (stylingState.textAlign)
+                                id = if (stylingState.stylePreferences.textAlign)
                                     R.drawable.ic_align_justify
                                 else
                                     R.drawable.ic_align_left
                             ),
                             contentDescription = null,
-                            tint = stylingState.backgroundColor
+                            tint = stylingState.stylePreferences.backgroundColor
                         )
                     }
                 }
@@ -368,23 +370,23 @@ fun BottomBarTheme(
                         },
                         text = "Line Spacing",
                         style = TextStyle(
-                            color = stylingState.textColor,
-                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                            color = stylingState.stylePreferences.textColor,
+                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                         )
                     )
                     Slider(
                         modifier = Modifier
                             .padding(end = 8.dp)
                             .weight(1f),
-                        value = stylingState.lineSpacing.toFloat(),
+                        value = stylingState.stylePreferences.lineSpacing.toFloat(),
                         onValueChange = { value ->
-                            onStyleAction(BookContentStylingAction.UpdateLineSpacing(value.roundToInt()))
+                            stylingVM.onAction(BookContentStylingAction.UpdateLineSpacing(value.roundToInt()))
                         },
                         colors = SliderDefaults.colors(
-                            activeTrackColor = stylingState.textColor,
+                            activeTrackColor = stylingState.stylePreferences.textColor,
                             activeTickColor = stylingState.containerColor,
                             inactiveTickColor = stylingState.containerColor.copy(alpha = 0.5f),
-                            inactiveTrackColor = stylingState.textColor.copy(alpha = 0.5f),
+                            inactiveTrackColor = stylingState.stylePreferences.textColor.copy(alpha = 0.5f),
                         ),
                         valueRange = 4f..24f,
                         thumb = {
@@ -392,16 +394,16 @@ fun BottomBarTheme(
                                 modifier = Modifier
                                     .size(24.dp)
                                     .background(
-                                        color = stylingState.textColor,
+                                        color = stylingState.stylePreferences.textColor,
                                         shape = CircleShape
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "${stylingState.lineSpacing}",
+                                    text = "${stylingState.stylePreferences.lineSpacing}",
                                     style = TextStyle(
                                         color = stylingState.containerColor,
-                                        fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                                        fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                                     )
                                 )
                             }
@@ -410,18 +412,18 @@ fun BottomBarTheme(
                     )
                     OutlinedIconButton(
                         onClick = {
-                            onStyleAction(BookContentStylingAction.UpdateTextIndent)
+                            stylingVM.onAction(BookContentStylingAction.UpdateTextIndent)
                         },
                         modifier = Modifier.size(40.dp),
                         colors = IconButtonDefaults.outlinedIconButtonColors(
-                            if (stylingState.textIndent) stylingState.textColor else Color.Transparent
+                            if (stylingState.stylePreferences.textIndent) stylingState.stylePreferences.textColor else Color.Transparent
                         ),
-                        border = BorderStroke(width = 2.dp, color = stylingState.textColor)
+                        border = BorderStroke(width = 2.dp, color = stylingState.stylePreferences.textColor)
                     ) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.ic_text_indent),
                             contentDescription = null,
-                            tint = if (stylingState.textIndent) stylingState.backgroundColor else stylingState.textColor
+                            tint = if (stylingState.stylePreferences.textIndent) stylingState.stylePreferences.backgroundColor else stylingState.stylePreferences.textColor
                         )
                     }
                 }

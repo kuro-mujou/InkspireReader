@@ -4,18 +4,16 @@ import androidx.room.Room
 import com.inkspire.ebookreader.common.AndroidConnectivityObserver
 import com.inkspire.ebookreader.common.ConnectivityObserver
 import com.inkspire.ebookreader.data.database.LocalBookDatabase
-import com.inkspire.ebookreader.data.datastore.DatastoreManager
-import com.inkspire.ebookreader.data.network.HttpClientFactory
 import com.inkspire.ebookreader.data.repository.BookRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ChapterRepositoryImpl
-import com.inkspire.ebookreader.data.repository.DatastoreRepositoryImpl
+import com.inkspire.ebookreader.data.repository.DatastoreRepoImpl
 import com.inkspire.ebookreader.data.repository.ImagePathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.MusicPathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.NoteRepositoryImpl
 import com.inkspire.ebookreader.data.repository.TableOfContentRepositoryImpl
 import com.inkspire.ebookreader.domain.repository.BookRepository
 import com.inkspire.ebookreader.domain.repository.ChapterRepository
-import com.inkspire.ebookreader.domain.repository.DatastoreRepository
+import com.inkspire.ebookreader.domain.repository.DatastoreRepo
 import com.inkspire.ebookreader.domain.repository.ImagePathRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import com.inkspire.ebookreader.domain.repository.NoteRepository
@@ -64,9 +62,6 @@ import com.inkspire.ebookreader.ui.setting.bookmark.BookmarkSettingViewModel
 import com.inkspire.ebookreader.ui.setting.music.MusicSettingViewModel
 import com.inkspire.ebookreader.ui.setting.tts.TTSSettingViewModel
 import com.inkspire.ebookreader.ui.sharedviewmodel.AsyncImportBookViewModel
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.HttpClientEngine
-import io.ktor.client.engine.android.Android
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -77,8 +72,6 @@ import org.koin.dsl.module
 
 object KoinModule {
     val networkModule = module {
-        single<HttpClientEngine> { Android.create {} }
-        single<HttpClient> { HttpClientFactory.create(get()) }
         singleOf(::AndroidConnectivityObserver) bind ConnectivityObserver::class
     }
 
@@ -109,7 +102,7 @@ object KoinModule {
         singleOf(::ImagePathRepositoryImpl).bind<ImagePathRepository>()
         singleOf(::MusicPathRepositoryImpl).bind<MusicPathRepository>()
         singleOf(::NoteRepositoryImpl).bind<NoteRepository>()
-        singleOf(::DatastoreRepositoryImpl).bind<DatastoreRepository>()
+        singleOf(::DatastoreRepoImpl).bind<DatastoreRepo>()
     }
 
     val useCaseModule = module {
@@ -162,7 +155,12 @@ object KoinModule {
             )
         }
         viewModelOf(::BookChapterContentViewModel)
-        viewModelOf(::TableOfContentViewModel)
+        viewModel {
+            TableOfContentViewModel(
+                bookId = it.get(),
+                tableOfContentUseCase = get()
+            )
+        }
         viewModelOf(::BookmarkViewModel)
         viewModel {
             NoteViewModel(
@@ -180,9 +178,9 @@ object KoinModule {
         viewModelOf(::TTSViewModel)
     }
 
-    val datastoreModule = module {
-        single(createdAtStart = true) { DatastoreManager(androidContext()) }
-    }
+//    val datastoreModule = module {
+//        single(createdAtStart = true) { DatastoreManager(androidContext()) }
+//    }
 
     val ttsModule = module {
         single<TTSManager>(createdAtStart = true) { TTSManager(context = androidContext()) }

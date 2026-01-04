@@ -96,13 +96,13 @@ fun SettingScreen(
             style = TextStyle(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
             )
         )
         HorizontalDivider(
             thickness = 2.dp,
-            color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+            color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary
         )
         Column(
             modifier = Modifier
@@ -113,7 +113,7 @@ fun SettingScreen(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clickable {
-                        onAction(SettingAction.KeepScreenOn(!settingState.keepScreenOn))
+                        onAction(SettingAction.KeepScreenOn(!settingState.readerSettings.keepScreenOn))
                     },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -124,36 +124,36 @@ fun SettingScreen(
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_keep_screen_on),
                     contentDescription = "keep screen on",
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.secondary
                 )
                 Text(
                     text = "Keep Screen On",
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Switch(
-                    checked = settingState.keepScreenOn,
+                    checked = settingState.readerSettings.keepScreenOn,
                     onCheckedChange = {
                         onAction(SettingAction.KeepScreenOn(it))
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                        checkedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                        checkedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                        uncheckedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                        uncheckedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                        uncheckedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        checkedThumbColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = stylingState?.stylePreferences?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.primary,
+                        checkedBorderColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outline,
+                        uncheckedTrackColor = stylingState?.stylePreferences?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.surfaceContainerHighest,
+                        uncheckedBorderColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outline,
                     )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
             }
             HorizontalDivider(
                 thickness = 1.dp,
-                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outlineVariant
             )
             Row(
                 modifier = Modifier
@@ -171,14 +171,14 @@ fun SettingScreen(
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_music_background),
                     contentDescription = "background music",
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.tertiary
                 )
                 Text(
                     text = "Background Music",
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -188,12 +188,12 @@ fun SettingScreen(
                         .size(30.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
                     contentDescription = null,
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.tertiary
                 )
             }
             HorizontalDivider(
                 thickness = 1.dp,
-                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outlineVariant
             )
             Row(
                 modifier = Modifier
@@ -211,14 +211,14 @@ fun SettingScreen(
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_tag),
                     contentDescription = "Bookmark theme",
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.secondary
                 )
                 Text(
                     text = "Bookmark theme",
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -228,12 +228,12 @@ fun SettingScreen(
                         .size(30.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
                     contentDescription = null,
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.secondary
                 )
             }
             HorizontalDivider(
                 thickness = 1.dp,
-                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outlineVariant
             )
             Row(
                 modifier = Modifier
@@ -251,14 +251,14 @@ fun SettingScreen(
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_headphones),
                     contentDescription = "text to speech",
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.tertiary
                 )
                 Text(
                     text = "Text to Speech",
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -268,12 +268,12 @@ fun SettingScreen(
                         .size(30.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
                     contentDescription = null,
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.tertiary
                 )
             }
             HorizontalDivider(
                 thickness = 1.dp,
-                color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outlineVariant
             )
             Row(
                 modifier = Modifier
@@ -290,14 +290,14 @@ fun SettingScreen(
                         .size(24.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_scroll),
                     contentDescription = "auto scroll up",
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.secondary
                 )
                 Text(
                     text = "Auto Scroll Up",
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -307,11 +307,14 @@ fun SettingScreen(
                         .size(30.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
                     contentDescription = null,
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.secondary
                 )
             }
             if (stylingState == null) {
-                HorizontalDivider(thickness = 1.dp)
+                HorizontalDivider(
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -327,6 +330,7 @@ fun SettingScreen(
                             .size(24.dp),
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_grid_view),
                         contentDescription = "book category",
+                        tint = MaterialTheme.colorScheme.tertiary
                     )
                     Text(
                         text = "Book Category",
@@ -339,6 +343,7 @@ fun SettingScreen(
                             .size(30.dp),
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
                         contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary
                     )
                 }
             }
@@ -350,12 +355,11 @@ fun SettingScreen(
             sheetState = musicMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBackgroundMusicMenu(false)) },
             contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-            containerColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer,
-            scrimColor = stylingState?.containerColor ?: MaterialTheme.colorScheme.surfaceContainer.copy(0.32f),
+            containerColor = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.surface,
             dragHandle = {
                 Surface(
                     modifier = Modifier.padding(vertical = 22.dp),
-                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                    color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface,
                     shape = MaterialTheme.shapes.extraLarge,
                 ) {
                     Box(Modifier.size(width = 32.dp, height = 4.dp))
@@ -363,7 +367,7 @@ fun SettingScreen(
             }
         ) {
             val view = LocalView.current
-            val isLightTheme = !(stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer).isDark()
+            val isLightTheme = !(stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer).isDark()
 
             DisposableEffect(view, isLightTheme) {
                 val window = (view.parent as? DialogWindowProvider)?.window
@@ -393,12 +397,11 @@ fun SettingScreen(
             sheetState = bookmarkMenuSheetState,
             onDismissRequest = { onAction(SettingAction.OpenBookmarkThemeMenu(false)) },
             contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-            containerColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer,
-            scrimColor = stylingState?.containerColor ?: MaterialTheme.colorScheme.surfaceContainer.copy(0.32f),
+            containerColor = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.surface,
             dragHandle = {
                 Surface(
                     modifier = Modifier.padding(vertical = 22.dp),
-                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                    color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface,
                     shape = MaterialTheme.shapes.extraLarge,
                 ) {
                     Box(Modifier.size(width = 32.dp, height = 4.dp))
@@ -406,7 +409,7 @@ fun SettingScreen(
             }
         ) {
             val view = LocalView.current
-            val isLightTheme = !(stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer).isDark()
+            val isLightTheme = !(stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer).isDark()
 
             DisposableEffect(view, isLightTheme) {
                 val window = (view.parent as? DialogWindowProvider)?.window

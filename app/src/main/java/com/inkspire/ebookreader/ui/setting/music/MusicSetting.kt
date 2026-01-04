@@ -72,9 +72,9 @@ fun MusicSetting(
             viewModel.onAction(MusicSettingAction.OnAddPerform(it, context))
         }
     }
-    var volumeSliderValue by remember { mutableFloatStateOf(state.playerVolume) }
+    var volumeSliderValue by remember { mutableFloatStateOf(state.musicPreferences.volume) }
     Surface(
-        color = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surface
+        color = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -97,8 +97,8 @@ fun MusicSetting(
                     text = "MUSIC MENU",
                     style = TextStyle(
                         fontSize = 20.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
                     )
                 )
                 IconButton(
@@ -110,7 +110,7 @@ fun MusicSetting(
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_add_music),
                         contentDescription = null,
-                        tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -121,23 +121,23 @@ fun MusicSetting(
                     text = "Enable background music",
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
                     )
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Switch(
-                    checked = state.enableBackgroundMusic,
+                    checked = state.musicPreferences.enable,
                     onCheckedChange = {
                         viewModel.onAction(MusicSettingAction.OnEnableBackgroundMusicChange(it))
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                        checkedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                        checkedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                        uncheckedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                        uncheckedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                        uncheckedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        checkedThumbColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = stylingState?.stylePreferences?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.primary,
+                        checkedBorderColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outline,
+                        uncheckedTrackColor = stylingState?.stylePreferences?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.surfaceContainerHighest,
+                        uncheckedBorderColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outline,
                     )
                 )
             }
@@ -152,16 +152,16 @@ fun MusicSetting(
                     text = "Volume",
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
                     )
                 )
                 Text(
                     text = "%.2fx".format(volumeSliderValue),
                     style = TextStyle(
                         fontSize = 16.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
                     )
                 )
             }
@@ -182,14 +182,14 @@ fun MusicSetting(
                         modifier = Modifier
                             .size(24.dp)
                             .background(
-                                color = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
+                                color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
                                 shape = CircleShape
                             )
                     )
                 },
                 colors = SliderDefaults.colors(
-                    activeTrackColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
-                    inactiveTrackColor = stylingState?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                    activeTrackColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = stylingState?.stylePreferences?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
                 )
             )
             LazyColumn(

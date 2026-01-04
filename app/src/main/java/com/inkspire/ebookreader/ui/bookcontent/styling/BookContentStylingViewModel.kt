@@ -29,115 +29,36 @@ class BookContentStylingViewModel(
 
     init {
         viewModelScope.launch {
-            datastoreUseCase.getTextColor().collectLatest { color->
-                _state.update {
-                    it.copy(
-                        textColor = Color(color),
-                        tocTextColor = generateTOCTextColor(_state.value.backgroundColor),
-                        textBackgroundColor = generateTextSelectionColor(
-                            _state.value.backgroundColor,
-                            Color(color)
-                        ),
+            datastoreUseCase.stylePreferences.collectLatest { prefs ->
+
+                val bgColor = prefs.backgroundColor
+                val txtColor = prefs.textColor
+
+                _state.update { currentState ->
+                    currentState.copy(
+                        stylePreferences = prefs,
+                        tocTextColor = generateTOCTextColor(bgColor),
+                        textBackgroundColor = generateTextSelectionColor(bgColor, txtColor),
+                        containerColor = generateContainerColor(bgColor),
+                        drawerContainerColor = generateDrawerContainerColor(bgColor)
                     )
                 }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getBackgroundColor().collectLatest { color ->
-                _state.update {
-                    it.copy(
-                        backgroundColor = Color(color),
-                        tocTextColor = generateTOCTextColor(Color(color)),
-                        textBackgroundColor = generateTextSelectionColor(Color(color), _state.value.textColor),
-                        containerColor = generateContainerColor(Color(color)),
-                        drawerContainerColor = generateDrawerContainerColor(Color(color)),
-                    )
-                }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getSelectedColorSet().collectLatest { colorSetIndex ->
-                _state.update { it.copy(selectedColorSet = colorSetIndex) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getFontSize().collectLatest { fontSize ->
-                _state.update { it.copy(fontSize = fontSize) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getFontFamily().collectLatest { fontFamily ->
-                _state.update { it.copy(selectedFontFamilyIndex = fontFamily) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getLineSpacing().collectLatest { lineSpacing ->
-                _state.update { it.copy(lineSpacing = lineSpacing) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getTextAlign().collectLatest { textAlign ->
-                _state.update { it.copy(textAlign = textAlign) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getTextIndent().collectLatest { textIndent ->
-                _state.update { it.copy(textIndent = textIndent) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getImagePaddingState().collectLatest { imagePaddingState ->
-                _state.update { it.copy(imagePaddingState = imagePaddingState) }
             }
         }
     }
 
     fun onAction(action: BookContentStylingAction) {
-        when (action) {
-            is BookContentStylingAction.UpdateBackgroundColor -> {
-                viewModelScope.launch {
-                    datastoreUseCase.setBackgroundColor(action.color)
-                }
-            }
-            is BookContentStylingAction.UpdateFontSize -> {
-                viewModelScope.launch {
-                    datastoreUseCase.setFontSize(action.fontSize)
-                }
-            }
-            is BookContentStylingAction.UpdateImagePaddingState -> {
-                viewModelScope.launch {
-                    datastoreUseCase.setImagePaddingState(!_state.value.imagePaddingState)
-                }
-            }
-            is BookContentStylingAction.UpdateLineSpacing -> {
-                viewModelScope.launch {
-                    datastoreUseCase.setLineSpacing(action.lineSpacing)
-                }
-            }
-            is BookContentStylingAction.UpdateSelectedColorSet -> {
-                viewModelScope.launch {
-                    datastoreUseCase.setSelectedColorSet(action.index)
-                }
-            }
-            is BookContentStylingAction.UpdateSelectedFontFamilyIndex -> {
-                viewModelScope.launch {
-                    datastoreUseCase.setFontFamily(action.index)
-                }
-            }
-            is BookContentStylingAction.UpdateTextAlign -> {
-                viewModelScope.launch {
-                    datastoreUseCase.setTextAlign(!_state.value.textAlign)
-                }
-            }
-            is BookContentStylingAction.UpdateTextColor -> {
-                viewModelScope.launch {
-                    datastoreUseCase.setTextColor(action.color)
-                }
-            }
-            is BookContentStylingAction.UpdateTextIndent -> {
-                viewModelScope.launch {
-                    datastoreUseCase.setTextIndent(!_state.value.textIndent)
-                }
+        viewModelScope.launch {
+            when (action) {
+                is BookContentStylingAction.UpdateBackgroundColor -> datastoreUseCase.setBackgroundColor(action.color)
+                is BookContentStylingAction.UpdateFontSize -> datastoreUseCase.setFontSize(action.fontSize)
+                is BookContentStylingAction.UpdateImagePaddingState -> datastoreUseCase.setImagePaddingState(!_state.value.stylePreferences.imagePaddingState)
+                is BookContentStylingAction.UpdateLineSpacing -> datastoreUseCase.setLineSpacing(action.lineSpacing)
+                is BookContentStylingAction.UpdateSelectedColorSet -> datastoreUseCase.setSelectedColorSet(action.index)
+                is BookContentStylingAction.UpdateSelectedFontFamilyIndex -> datastoreUseCase.setFontFamily(action.index)
+                is BookContentStylingAction.UpdateTextAlign -> datastoreUseCase.setTextAlign(!_state.value.stylePreferences.textAlign)
+                is BookContentStylingAction.UpdateTextColor -> datastoreUseCase.setTextColor(action.color)
+                is BookContentStylingAction.UpdateTextIndent -> datastoreUseCase.setTextIndent(!_state.value.stylePreferences.textIndent)
             }
         }
     }

@@ -23,28 +23,8 @@ class AutoScrollViewModel(
 
     init {
         viewModelScope.launch {
-            datastoreUseCase.getAutoScrollSpeed().collectLatest { data ->
-                _state.update { it.copy(autoScrollSpeed = data) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getDelayTimeAtStart().collectLatest { data ->
-                _state.update { it.copy(delayTimeAtStart = data) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getDelayTimeAtEnd().collectLatest { data ->
-                _state.update { it.copy(delayTimeAtEnd = data) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getAutoScrollResumeDelayTime().collectLatest { data ->
-                _state.update { it.copy(autoScrollResumeDelayTime = data) }
-            }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getAutoScrollResumeMode().collectLatest { data ->
-                _state.update { it.copy(autoScrollResumeMode = data) }
+            datastoreUseCase.autoScrollPreferences.collectLatest { prefs ->
+                _state.update { it.copy(autoScrollPreferences = prefs) }
             }
         }
     }

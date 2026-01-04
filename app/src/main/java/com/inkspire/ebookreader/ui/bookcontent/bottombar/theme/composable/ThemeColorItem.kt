@@ -52,7 +52,7 @@ fun ThemeColorItem(
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
                 color = colorSample.colorTxt,
-                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
             )
         )
     }

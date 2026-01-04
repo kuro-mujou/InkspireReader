@@ -3,6 +3,7 @@ package com.inkspire.ebookreader.domain.repository
 import com.inkspire.ebookreader.data.database.model.BookEntity
 import com.inkspire.ebookreader.data.database.model.BookWithCategories
 import com.inkspire.ebookreader.domain.model.Book
+import com.inkspire.ebookreader.domain.model.BookWithCategoriesModel
 import com.inkspire.ebookreader.domain.model.Category
 import kotlinx.coroutines.flow.Flow
 
@@ -13,6 +14,7 @@ interface BookRepository {
     fun getBookAsFlow(bookId: String): Flow<Book?>
     fun getBookCategory(): Flow<List<Category>>
     fun getFlowBookWithCategories(bookId: String): Flow<BookWithCategories>
+    fun getAllBooksWithCategories(): Flow<List<BookWithCategoriesModel>>
     fun getBooksMatchingAnySelectedCategory(selectedCategoryIds: List<Int>): Flow<List<Book>>
     suspend fun getBook(bookId: String): Book?
     suspend fun insertBook(book: BookEntity): Long

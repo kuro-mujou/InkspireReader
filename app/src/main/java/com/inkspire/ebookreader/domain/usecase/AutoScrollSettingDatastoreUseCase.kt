@@ -1,9 +1,9 @@
 package com.inkspire.ebookreader.domain.usecase
 
-import com.inkspire.ebookreader.domain.repository.DatastoreRepository
+import com.inkspire.ebookreader.domain.repository.DatastoreRepo
 
 class AutoScrollSettingDatastoreUseCase(
-    private val datastoreRepository: DatastoreRepository
+    private val datastoreRepository: DatastoreRepo
 ) {
     suspend fun setAutoScrollSpeed(value: Int) = datastoreRepository.setAutoScrollSpeed(value)
     suspend fun setAutoScrollResumeDelayTime(value: Int) = datastoreRepository.setAutoScrollResumeDelayTime(value)

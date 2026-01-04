@@ -24,7 +24,7 @@ fun CustomFab(
             .padding(bottom = 12.dp)
             .size(48.dp),
         colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = stylingState.textColor
+            containerColor = stylingState.stylePreferences.textColor
         ),
         shape = RoundedCornerShape(10.dp),
         onClick = {
@@ -34,7 +34,7 @@ fun CustomFab(
         Icon(
             imageVector = ImageVector.vectorResource(id = R.drawable.ic_undo),
             contentDescription = null,
-            tint = stylingState.backgroundColor
+            tint = stylingState.stylePreferences.backgroundColor
         )
     }
 }

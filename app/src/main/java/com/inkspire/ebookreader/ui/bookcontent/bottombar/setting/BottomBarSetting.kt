@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.ui.bookcontent.bottombar.setting
 
-import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -14,15 +13,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.LayoutDirection
-import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
-import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
-import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
-import com.inkspire.ebookreader.ui.setting.SettingAction
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalAutoScrollViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalSettingViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
 import com.inkspire.ebookreader.ui.setting.SettingScreen
-import com.inkspire.ebookreader.ui.setting.SettingState
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
@@ -32,20 +31,24 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 @Composable
 fun BottomBarSetting(
     hazeState: HazeState,
-    stylingState: StylingState,
-    settingState: SettingState,
-    ttsState: TTSPlaybackState,
-    autoScrollState: AutoScrollState,
-    drawerState: DrawerState,
-    onSettingAction: (SettingAction) -> Unit,
+    hazeEnableProvider: () -> Boolean,
 ) {
-    val useHaze = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !drawerState.visibility && !drawerState.isAnimating
+    val autoScrollVM = LocalAutoScrollViewModel.current
+    val ttsVM = LocalTTSViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+    val settingVM = LocalSettingViewModel.current
+
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+    val settingState by settingVM.state.collectAsStateWithLifecycle()
+    val ttsPlaybackState by ttsVM.state.collectAsStateWithLifecycle()
+    val autoScrollState by autoScrollVM.state.collectAsStateWithLifecycle()
+
     val style = HazeMaterials.thin(stylingState.containerColor)
     SettingScreen(
         modifier = Modifier
             .wrapContentHeight()
             .then(
-                if (useHaze) {
+                if (hazeEnableProvider()) {
                     Modifier.hazeEffect(
                         state = hazeState,
                         style = style
@@ -72,8 +75,8 @@ fun BottomBarSetting(
             ),
         stylingState = stylingState,
         settingState = settingState,
-        ttsState = ttsState,
+        ttsState = ttsPlaybackState,
         autoScrollState = autoScrollState,
-        onAction = onSettingAction
+        onAction = settingVM::onAction
     )
 }

@@ -93,7 +93,6 @@ class AsyncImportBookViewModel: ViewModel() {
                 .putString(TruyenFullImportWorker.INPUT_BOOK_DESCRIPTION_KEY, book.descriptionHtml)
                 .putString(TruyenFullImportWorker.INPUT_BOOK_CATEGORY_KEY, book.categories.joinToString(","))
                 .putString(TruyenFullImportWorker.INPUT_BOOK_COVER_URL_KEY, book.coverUrl)
-                .putString(TruyenFullImportWorker.INPUT_BOOK_INTERNAL_ID_KEY, book.internalId)
                 .build()
             val workRequest = OneTimeWorkRequest.Builder(TruyenFullImportWorker::class.java)
                 .setInputData(inputData)

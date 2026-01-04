@@ -102,7 +102,7 @@ class SearchViewModel(
                 } else {
                     _state.update {
                         it.copy(
-                            searchResult = UiState.Success(result.data),
+                            searchResult = UiState.Success { result.data },
                             currentPage = page,
                             maxPage = result.totalPages,
                             currentQuery = query,
@@ -128,7 +128,7 @@ class SearchViewModel(
                 } else {
                     _state.update {
                         it.copy(
-                            searchResult = UiState.Success(result.data),
+                            searchResult = UiState.Success { result.data },
                             currentPage = page,
                             maxPage = result.totalPages,
                             currentCategory = categorySlug,

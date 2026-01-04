@@ -21,6 +21,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,7 +51,6 @@ import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.navigation.Route
-import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import com.inkspire.ebookreader.ui.home.recentbook.composable.MyPagerIndicator
 import com.inkspire.ebookreader.ui.home.recentbook.composable.MyRecentBookCard
 import kotlinx.coroutines.launch
@@ -78,10 +78,20 @@ fun RecentBookRootScreen(
 
             }
             is UiState.Loading -> {
-                MyLoadingAnimation()
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
             is UiState.Error -> {
-                Text(text = "Error loading book content")
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Error loading book content")
+                }
             }
             is UiState.Empty -> {
                 Column(
@@ -124,7 +134,7 @@ fun RecentBookRootScreen(
                 }
             }
             is UiState.Success -> {
-                val realItemCount = state.data.size
+                val realItemCount = state.data().size
                 val pagerStateHorizontal = rememberPagerState(
                     initialPage = 1,
                     pageCount = { if (realItemCount > 0) realItemCount + 2 else 0 }
@@ -186,7 +196,7 @@ fun RecentBookRootScreen(
                             snapPosition = SnapPosition.Center,
                             contentPadding = PaddingValues(horizontal = horizontalPadding),
                         ) { pageIndex ->
-                            val book = state.data[pageIndex]
+                            val book = state.data()[pageIndex]
                             MyRecentBookCard(
                                 book = book,
                                 deviceConfiguration = deviceConfiguration,
@@ -198,8 +208,10 @@ fun RecentBookRootScreen(
                                         if (pageIndex == pagerStateVertical.currentPage)
                                             if (book.isEditable)
                                                 parentNavigatorAction(Route.BookWriter(book.id))
-                                            else
+                                            else {
                                                 parentNavigatorAction(Route.BookContent(book.id))
+                                                viewModel.updateRecentRead(book.id)
+                                            }
                                         else
                                             pagerStateVertical.animateScrollToPage(pageIndex)
                                     }
@@ -236,10 +248,12 @@ fun RecentBookRootScreen(
                             userScrollEnabled = realItemCount > 1,
                         ) { pageIndex ->
                             if (pageIndex == 0 || pageIndex == realItemCount + 1) {
-                                Box(modifier = Modifier.fillMaxWidth().aspectRatio(0.65f))
+                                Box(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(0.65f))
                             } else {
                                 val realIndex = pageIndex - 1
-                                val book = state.data[realIndex]
+                                val book = state.data()[realIndex]
 
                                 MyRecentBookCard(
                                     book = book,
@@ -251,8 +265,10 @@ fun RecentBookRootScreen(
                                             if (pageIndex == pagerStateHorizontal.currentPage)
                                                 if (book.isEditable)
                                                     parentNavigatorAction(Route.BookWriter(book.id))
-                                                else
+                                                else {
                                                     parentNavigatorAction(Route.BookContent(book.id))
+                                                    viewModel.updateRecentRead(book.id)
+                                                }
                                             else
                                                 pagerStateHorizontal.animateScrollToPage(pageIndex)
                                         }

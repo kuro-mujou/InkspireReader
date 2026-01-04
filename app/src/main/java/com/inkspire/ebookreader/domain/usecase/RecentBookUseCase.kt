@@ -6,4 +6,5 @@ class RecentBookUseCase (
     private val bookRepository: BookRepository
 ) {
     fun getRecentBookList() = bookRepository.getBookListForMainScreen()
+    suspend fun updateRecentRead(bookId: String) = bookRepository.updateRecentRead(bookId)
 }

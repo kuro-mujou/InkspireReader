@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,47 +32,74 @@ import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCoerceIn
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.customPopupPositionProvider
 import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParagraphComponent(
     index: Int,
-    isHighlighted: Boolean,
     text: AnnotatedString,
-    highlightRange: () -> TextRange,
-    wordOffset: () -> Int,
-    stylingState: StylingState,
-    chapterContentState: BookChapterContentState,
+    isHighlighted: () -> Boolean,
+    currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
-    onNoteAction: (NoteAction) -> Unit
 ) {
+    val styleVM = LocalStylingViewModel.current
+    val noteVM = LocalNoteViewModel.current
+    val ttsVM = LocalTTSViewModel.current
+
+    val stylingState by styleVM.state.collectAsStateWithLifecycle()
+    val highlightRange by ttsVM.currentHighlightRange.collectAsStateWithLifecycle()
+    val readingOffset by ttsVM.currentReadingWordOffset.collectAsStateWithLifecycle()
+
+    val currentHighlightRange by rememberUpdatedState(
+        if (isHighlighted()) {
+            highlightRange
+        } else {
+            TextRange.Zero
+        }
+    )
+
+    val currentReadingOffset by rememberUpdatedState(
+        if (isHighlighted()) {
+            readingOffset
+        } else {
+            0
+        }
+    )
+
     var isOpenDialog by remember { mutableStateOf(false) }
-    val paragraphBgColor = if (isHighlighted) stylingState.drawerContainerColor else Color.Transparent
+    val paragraphBgColor = if (isHighlighted()) stylingState.drawerContainerColor else Color.Transparent
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    val displayedText = remember(text, isHighlighted, highlightRange()) {
-        if (!isHighlighted || highlightRange().start == highlightRange().end) {
+    val displayedText = remember(text, isHighlighted(), currentHighlightRange) {
+        if (!isHighlighted() || currentHighlightRange.start == currentHighlightRange.end) {
             text
         } else {
             val builder = AnnotatedString.Builder(text)
-            val start = highlightRange().start.fastCoerceIn(0, text.length)
-            val end = highlightRange().end.fastCoerceIn(0, text.length)
+            val start = currentHighlightRange.start.fastCoerceIn(0, text.length)
+            val end = currentHighlightRange.end.fastCoerceIn(0, text.length)
             if (start < end) {
-                builder.addStyle(style = SpanStyle(background = stylingState.textBackgroundColor), start = start, end = end)
+                builder.addStyle(
+                    style = SpanStyle(background = stylingState.textBackgroundColor),
+                    start = start,
+                    end = end
+                )
             }
             builder.toAnnotatedString()
         }
     }
 
-    LaunchedEffect(wordOffset(), isHighlighted, textLayoutResult) {
-        if (isHighlighted && textLayoutResult != null) {
+    LaunchedEffect(currentReadingOffset, isHighlighted(), textLayoutResult) {
+        if (isHighlighted() && textLayoutResult != null) {
             val layout = textLayoutResult!!
-            val coercedWordOffset = { wordOffset().fastCoerceIn(0, layout.layoutInput.text.length) }
+            val coercedWordOffset =
+                { currentReadingOffset.fastCoerceIn(0, layout.layoutInput.text.length) }
             val cursorRect = layout.getCursorRect(coercedWordOffset())
             onRequestScrollToOffset(cursorRect.bottom)
         }
@@ -82,16 +110,22 @@ fun ParagraphComponent(
         positionProvider = customPopupPositionProvider(),
         tooltip = {
             IconButton(
-                modifier = Modifier.background(color = stylingState.textBackgroundColor, shape = CircleShape),
+                modifier = Modifier.background(
+                    color = stylingState.textBackgroundColor,
+                    shape = CircleShape
+                ),
                 onClick = {
                     isOpenDialog = true
                 }
             ) {
-                Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_comment), contentDescription = null)
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_comment),
+                    contentDescription = null
+                )
             }
         },
         state = tooltipState,
-        enableUserInput = !isHighlighted
+        enableUserInput = !isHighlighted()
     ) {
         Text(
             modifier = Modifier
@@ -100,14 +134,14 @@ fun ParagraphComponent(
             text = displayedText,
             onTextLayout = { textLayoutResult = it },
             style = TextStyle(
-                textIndent = if (stylingState.textIndent) TextIndent(firstLine = (stylingState.fontSize * 2).sp) else TextIndent.None,
-                fontSize = stylingState.fontSize.sp,
-                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
-                textAlign = if (stylingState.textAlign) TextAlign.Justify else TextAlign.Left,
-                color = stylingState.textColor,
+                textIndent = if (stylingState.stylePreferences.textIndent) TextIndent(firstLine = (stylingState.stylePreferences.fontSize * 2).sp) else TextIndent.None,
+                fontSize = stylingState.stylePreferences.fontSize.sp,
+                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
+                textAlign = if (stylingState.stylePreferences.textAlign) TextAlign.Justify else TextAlign.Left,
+                color = stylingState.stylePreferences.textColor,
                 background = paragraphBgColor,
                 lineBreak = LineBreak.Paragraph,
-                lineHeight = (stylingState.fontSize + stylingState.lineSpacing).sp
+                lineHeight = (stylingState.stylePreferences.fontSize + stylingState.stylePreferences.lineSpacing).sp
             )
         )
     }
@@ -120,11 +154,11 @@ fun ParagraphComponent(
                 isOpenDialog = false
             },
             onNoteChanged = { noteInput ->
-                onNoteAction(
+                noteVM.onAction(
                     NoteAction.AddNote(
                         noteBody = text.text,
                         noteInput = noteInput,
-                        tocId = chapterContentState.currentChapterIndex,
+                        tocId = currentChapterIndex(),
                         contentId = index
                     )
                 )

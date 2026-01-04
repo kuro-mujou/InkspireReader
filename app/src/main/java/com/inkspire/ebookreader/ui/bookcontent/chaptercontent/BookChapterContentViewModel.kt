@@ -61,7 +61,12 @@ class BookChapterContentViewModel: ViewModel() {
                     _event.send(BookChapterContentEvent.ScrollToParagraph(action.chapterIndex, action.paragraphIndex))
                 }
             }
-            else -> {}
+            is BookChapterContentAction.RequestAnimatedScrollToChapter -> {
+                viewModelScope.launch {
+                    _event.send(BookChapterContentEvent.AnimatedScrollToChapter(action.index))
+                    _state.update { it.copy(firstVisibleItemIndex = 0) }
+                }
+            }
         }
     }
 }

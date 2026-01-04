@@ -39,10 +39,10 @@ fun ThemeFontItem(
             .height(40.dp)
             .wrapContentWidth()
             .clip(CircleShape)
-            .background(color = stylingState.backgroundColor)
+            .background(color = stylingState.stylePreferences.backgroundColor)
             .border(
                 width = 2.dp,
-                color = if (selected) stylingState.textColor else stylingState.backgroundColor,
+                color = if (selected) stylingState.stylePreferences.textColor else stylingState.stylePreferences.backgroundColor,
                 shape = CircleShape
             )
             .clickable {
@@ -56,7 +56,7 @@ fun ThemeFontItem(
             style = TextStyle(
                 fontFamily = fontSample,
                 fontWeight = FontWeight.Bold,
-                color = stylingState.textColor,
+                color = stylingState.stylePreferences.textColor,
             )
         )
     }

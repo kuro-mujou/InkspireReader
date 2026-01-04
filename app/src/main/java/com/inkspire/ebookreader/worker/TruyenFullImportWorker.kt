@@ -6,8 +6,10 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
+import android.util.Base64
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -89,8 +91,6 @@ class TruyenFullImportWorker(
         val categoryString = inputData.getString(INPUT_BOOK_CATEGORY_KEY) ?: ""
         val coverUrl = inputData.getString(INPUT_BOOK_COVER_URL_KEY) ?: ""
 
-        var internalId = inputData.getString(INPUT_BOOK_INTERNAL_ID_KEY) ?: ""
-
         finalBookId = BigInteger(1, md.digest(finalBookTitle.toByteArray())).toString(16).padStart(32, '0')
 
         val initialNotification = createProgressNotificationBuilder(
@@ -100,19 +100,8 @@ class TruyenFullImportWorker(
         setForeground(getForegroundInfoCompat(initialNotification))
 
         try {
-            if (internalId.isBlank()) {
-                updateProgressNotification(finalBookTitle, "Fetching book details...", 0)
-                try {
-                    val bookDetails = TruyenFullScraper.fetchBookDetails(bookUrl)
-                    internalId = bookDetails.internalId
-                } catch (_: Exception) {
-                    sendCompletionNotification(false, finalBookTitle, "Failed to connect to server.")
-                    return@withContext Result.failure()
-                }
-            }
-
             updateProgressNotification(finalBookTitle, "Fetching Table of Contents...", 0)
-            val remoteTOC = TruyenFullScraper.fetchTOC(internalId, bookUrl)
+            val remoteTOC = TruyenFullScraper.fetchTOC(bookUrl)
 
             if (remoteTOC.isEmpty()) {
                 sendCompletionNotification(false, finalBookTitle, "No chapters found on server")
@@ -231,13 +220,17 @@ class TruyenFullImportWorker(
                 val rawHtml = TruyenFullScraper.fetchChapterContent(chapterRef.url)
                 val document = Jsoup.parse(rawHtml)
 
-                val (contentList, imagePaths) = parseChapterHtmlSegment(
+                val (parsedContentList, imagePaths) = parseChapterHtmlSegment(
                     document = document,
                     chapterIndex = chapterRef.index
                 )
 
-                val contentToSave = contentList.ifEmpty {
-                    listOf("Content is empty or failed to parse.")
+                val contentToSave = mutableListOf<String>()
+                contentToSave.add("<h2>${chapterRef.title}</h2>")
+                if (parsedContentList.isNotEmpty()) {
+                    contentToSave.addAll(parsedContentList)
+                } else {
+                    contentToSave.add("Content is empty or failed to parse.")
                 }
 
                 chapterRepository.saveChapterContent(
@@ -253,7 +246,7 @@ class TruyenFullImportWorker(
                     imagePathRepository.saveImagePath(finalBookId, imagePaths)
                 }
 
-                delay(Random.nextLong(300, 700))
+                delay(Random.nextLong(100, 500))
 
             } catch (e: Exception) {
                 chapterRepository.saveChapterContent(
@@ -261,7 +254,7 @@ class TruyenFullImportWorker(
                         tocId = chapterRef.index,
                         bookId = finalBookId,
                         chapterTitle = chapterRef.title,
-                        content = listOf("Error loading chapter content: ${e.message}")
+                        content = listOf("<h2>${chapterRef.title}</h2>", "Error loading chapter content: ${e.message}")
                     )
                 )
                 e.printStackTrace()
@@ -270,33 +263,47 @@ class TruyenFullImportWorker(
     }
 
     private suspend fun downloadAndSaveImage(
-        url: String,
+        urlOrBase64: String,
         filenameWithoutExtension: String
     ): String = withContext(Dispatchers.IO) {
-        if (url.isEmpty()) return@withContext "error_empty_url"
+        if (urlOrBase64.isEmpty()) return@withContext "error_empty_url"
 
         try {
-            val finalUrl = if (url.startsWith("//")) "https:$url" else url
-            val inputStream = URL(finalUrl).openStream()
+            var bitmap: Bitmap? = null
 
-            inputStream.use { stream ->
-                val bitmap = BitmapUtil.decodeSampledBitmapFromStream(
-                    stream,
-                    MAX_BITMAP_DIMENSION,
-                    MAX_BITMAP_DIMENSION
-                )
-
-                if (bitmap != null) {
-                    val path = BitmapUtil.saveBitmapToPrivateStorage(
-                        context = context,
-                        bitmap = bitmap,
-                        compressType = Bitmap.CompressFormat.JPEG,
-                        quality = 80,
-                        filenameWithoutExtension = filenameWithoutExtension
-                    )
-                    bitmap.recycle()
-                    return@withContext path
+            if (urlOrBase64.startsWith("data:image/")) {
+                try {
+                    val commaIndex = urlOrBase64.indexOf(',')
+                    if (commaIndex != -1) {
+                        val base64Data = urlOrBase64.substring(commaIndex + 1)
+                        val imageBytes = Base64.decode(base64Data, Base64.DEFAULT)
+                        bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    }
+                } catch (e: Exception) {
+                    return@withContext "error_base64_decode"
                 }
+            }
+            else {
+                val finalUrl = if (urlOrBase64.startsWith("//")) "https:$urlOrBase64" else urlOrBase64
+                URL(finalUrl).openStream().use { stream ->
+                    bitmap = BitmapUtil.decodeSampledBitmapFromStream(
+                        stream,
+                        MAX_BITMAP_DIMENSION,
+                        MAX_BITMAP_DIMENSION
+                    )
+                }
+            }
+
+            bitmap?.let {
+                val path = BitmapUtil.saveBitmapToPrivateStorage(
+                    context = context,
+                    bitmap = it,
+                    compressType = Bitmap.CompressFormat.JPEG,
+                    quality = 80,
+                    filenameWithoutExtension = filenameWithoutExtension
+                )
+                it.recycle()
+                return@withContext path
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -364,11 +371,17 @@ class TruyenFullImportWorker(
                                 if (!insideHeading) {
                                     flushParagraphWithFormatting(currentParagraph, contentList)
                                 }
+
                                 val srcAttr = when (tagName) {
-                                    "img" -> node.attr("src").ifEmpty { node.attr("data-src") }
+                                    "img" -> {
+                                        val dataSrc = node.attr("data-src")
+                                        val src = node.attr("src")
+                                        dataSrc.ifBlank { src }
+                                    }
                                     "image" -> node.attr("xlink:href").ifEmpty { node.attr("href") }
                                     else -> ""
                                 }
+
                                 if (srcAttr.isNotBlank()) {
                                     contentList.add(srcAttr)
                                 }
@@ -422,8 +435,12 @@ class TruyenFullImportWorker(
         }
 
         val imageRegex = Regex("""(?i)\b[\w./:?-]+?\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?\b""", RegexOption.IGNORE_CASE)
+
         val fixedContentList = contentList.mapNotNull {
-            if (imageRegex.containsMatchIn(it) || it.startsWith("http")) {
+            val isUrlImage = imageRegex.containsMatchIn(it) || it.startsWith("http")
+            val isBase64Image = it.startsWith("data:image/")
+
+            if (isUrlImage || isBase64Image) {
                 val filename = "image_${finalBookId}_${chapterIndex}_${contentList.indexOf(it)}"
                 val imagePath = downloadAndSaveImage(it, filename)
 

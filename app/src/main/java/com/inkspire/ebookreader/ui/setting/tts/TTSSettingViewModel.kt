@@ -35,9 +35,9 @@ class TTSSettingViewModel(
     }
 
     fun onAction(action: TTSSettingAction) {
-        when (action) {
-            is TTSSettingAction.UpdateLanguage -> {
-                viewModelScope.launch {
+        viewModelScope.launch {
+            when (action) {
+                is TTSSettingAction.UpdateLanguage -> {
                     datastoreUseCase.setTTSLocale(action.language?.displayName.toString())
                     val selectedVoice = action.tts.voices?.find {
                         it.locale == action.language
@@ -45,31 +45,26 @@ class TTSSettingViewModel(
                     datastoreUseCase.setTTSVoice(selectedVoice.name)
                     ttsManager.updateLanguage(action.language ?: Locale.getDefault())
                 }
-            }
-            is TTSSettingAction.UpdatePitch -> {
-                viewModelScope.launch {
+
+                is TTSSettingAction.UpdatePitch -> {
                     datastoreUseCase.setTTSPitch(action.pitch)
                     ttsManager.updatePitch(action.pitch)
                 }
-            }
-            is TTSSettingAction.UpdateSpeed -> {
-                viewModelScope.launch {
+
+                is TTSSettingAction.UpdateSpeed -> {
                     datastoreUseCase.setTTSSpeed(action.speed)
                     ttsManager.updateSpeed(action.speed)
                 }
-            }
-            is TTSSettingAction.UpdateVoice -> {
-                viewModelScope.launch {
+
+                is TTSSettingAction.UpdateVoice -> {
                     if (action.voice != null) {
                         datastoreUseCase.setTTSVoice(action.voice.name)
                         ttsManager.updateVoice(action.voice)
                     }
                 }
-            }
 
-            is TTSSettingAction.UpdateScreenType -> {
-                _state.update {
-                    it.copy(selectedScreenType = action.screenType)
+                is TTSSettingAction.UpdateScreenType -> {
+                    _state.update { it.copy(selectedScreenType = action.screenType) }
                 }
             }
         }

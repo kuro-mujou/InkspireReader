@@ -1,20 +1,11 @@
 package com.inkspire.ebookreader.domain.usecase
 
-import com.inkspire.ebookreader.domain.repository.DatastoreRepository
+import com.inkspire.ebookreader.domain.repository.DatastoreRepo
 
 class BookContentStylingDatastoreUseCase(
-    private val datastoreRepository: DatastoreRepository
+    private val datastoreRepository: DatastoreRepo
 ) {
-    fun getTextColor() = datastoreRepository.getTextColor()
-    fun getBackgroundColor() = datastoreRepository.getBackgroundColor()
-    fun getSelectedColorSet() = datastoreRepository.getSelectedColorSet()
-    fun getFontSize() = datastoreRepository.getFontSize()
-    fun getFontFamily() = datastoreRepository.getFontFamily()
-    fun getLineSpacing() = datastoreRepository.getLineSpacing()
-    fun getTextAlign() = datastoreRepository.getTextAlign()
-    fun getTextIndent() = datastoreRepository.getTextIndent()
-    fun getImagePaddingState() = datastoreRepository.getImagePaddingState()
-
+    val stylePreferences = datastoreRepository.stylePreferences
     suspend fun setTextColor(color: Int) = datastoreRepository.setTextColor(color)
     suspend fun setBackgroundColor(color: Int) = datastoreRepository.setBackgroundColor(color)
     suspend fun setSelectedColorSet(colorSetIndex: Int) = datastoreRepository.setSelectedColorSet(colorSetIndex)

@@ -26,6 +26,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,46 +40,43 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.domain.model.Book
-import com.inkspire.ebookreader.domain.model.TableOfContent
-import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDrawerViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark.BookmarkList
-import com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark.BookmarkListAction
-import com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark.BookmarkListState
-import com.inkspire.ebookreader.ui.bookcontent.drawer.model.TabItem
-import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteList
-import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteState
-import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentAction
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentScreen
-import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentState
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 
 @Composable
 fun DrawerRoot(
-    bookInfo: Book,
-    tableOfContents: List<TableOfContent>,
-    drawerState: DrawerState,
-    stylingState: StylingState,
-    bookChapterContentState: BookChapterContentState,
-    tableOfContentState: TableOfContentState,
-    noteState: NoteState,
-    bookmarkListState: BookmarkListState,
-    onDrawerAction: (DrawerAction) -> Unit,
-    onTableOfContentAction: (TableOfContentAction) -> Unit,
-    onBookmarkListAction: (BookmarkListAction) -> Unit,
-    onNoteAction: (NoteAction) -> Unit,
+    bookInfoProvider: () -> Book,
 ) {
-    val tabItems = listOf(
-        TabItem(title = "Table of Contents"),
-        TabItem(title = "Note"),
-        TabItem(title = "Book Mark"),
-    )
-    LaunchedEffect(drawerState.visibility) {
-        onDrawerAction(DrawerAction.ChangeTabIndex(0))
+    val drawerVM = LocalDrawerViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+
+    val drawerState by drawerVM.state.collectAsStateWithLifecycle()
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+
+    val coverImagePath by remember {
+        derivedStateOf {
+            if (bookInfoProvider().coverImagePath == "error") {
+                R.drawable.book_cover_not_available
+            } else {
+                bookInfoProvider().coverImagePath
+            }
+        }
+    }
+    val title by remember { derivedStateOf { bookInfoProvider().title } }
+    val author by remember { derivedStateOf { bookInfoProvider().authors.joinToString(",") } }
+    val selectedTabIndex by remember { derivedStateOf { drawerState.selectedTabIndex } }
+    val drawerVisibility by remember { derivedStateOf { drawerState.visibility } }
+
+    LaunchedEffect(drawerVisibility) {
+        drawerVM.onAction(DrawerAction.ChangeTabIndex(0))
     }
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
@@ -108,11 +108,7 @@ fun DrawerRoot(
                 .wrapContentHeight(),
         ) {
             AsyncImage(
-                model = if (bookInfo.coverImagePath == "error") {
-                    R.drawable.book_cover_not_available
-                } else {
-                    bookInfo.coverImagePath
-                },
+                model = coverImagePath,
                 contentDescription = null,
                 contentScale = ContentScale.FillHeight,
                 modifier = Modifier
@@ -133,12 +129,12 @@ fun DrawerRoot(
                 ) {
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = bookInfo.title,
+                        text = title,
                         style = TextStyle(
                             fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                            color = stylingState.textColor,
+                            color = stylingState.stylePreferences.textColor,
                             fontWeight = FontWeight.Medium,
-                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                         )
                     )
                 }
@@ -149,12 +145,12 @@ fun DrawerRoot(
                 ) {
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = bookInfo.authors.joinToString(","),
+                        text = author,
                         style = TextStyle(
-                            color = stylingState.textColor,
+                            color = stylingState.stylePreferences.textColor,
                             fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                             fontWeight = FontWeight.Normal,
-                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                         ),
                     )
                 }
@@ -164,27 +160,26 @@ fun DrawerRoot(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            selectedTabIndex = drawerState.selectedTabIndex,
+            selectedTabIndex = selectedTabIndex,
             indicator = {
                 TabRowDefaults.PrimaryIndicator(
                     modifier = Modifier.tabIndicatorOffset(
-                        drawerState.selectedTabIndex,
+                        selectedTabIndex,
                         matchContentSize = true
                     ),
                     width = Dp.Unspecified,
-                    color = stylingState.textColor
+                    color = stylingState.stylePreferences.textColor
                 )
             },
             containerColor = Color.Transparent,
-            contentColor = stylingState.textColor,
-            divider = { HorizontalDivider(color = stylingState.backgroundColor) }
+            contentColor = stylingState.stylePreferences.textColor,
+            divider = { HorizontalDivider(color = stylingState.stylePreferences.backgroundColor) }
         ) {
             tabItems.forEachIndexed { index, item ->
                 Tab(
-                    selected = index == drawerState.selectedTabIndex,
+                    selected = index == selectedTabIndex,
                     onClick = {
-                        onDrawerAction(DrawerAction.ChangeTabIndex(index))
-//                        onTabItemClick()
+                        drawerVM.onAction(DrawerAction.ChangeTabIndex(index))
                     },
                     modifier = Modifier.weight(1f),
                     text = {
@@ -192,45 +187,24 @@ fun DrawerRoot(
                             text = item.title,
                             style = TextStyle(
                                 textAlign = TextAlign.Center,
-                                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                             )
                         )
                     },
                 )
             }
         }
-        Crossfade(targetState = drawerState.selectedTabIndex) { option ->
+        Crossfade(targetState = selectedTabIndex) { option ->
             when (option) {
                 0 -> {
-                    TableOfContentScreen(
-                        bookChapterContentState = bookChapterContentState,
-                        stylingState = stylingState,
-                        tableOfContentState = tableOfContentState,
-                        drawerState = drawerState,
-                        tableOfContents = tableOfContents,
-                        onAction = onTableOfContentAction
-                    )
+                    TableOfContentScreen()
                 }
-
                 1 -> {
-                    NoteList(
-                        drawerState = drawerState,
-                        noteState = noteState,
-                        stylingState = stylingState,
-                        onNoteAction = onNoteAction,
-                        onTableOfContentAction = onTableOfContentAction
-                    )
+                    NoteList()
                 }
-
                 2 -> {
                     BookmarkList(
-                        bookId = bookInfo.id,
-                        tableOfContents = tableOfContents,
-                        drawerState = drawerState,
-                        stylingState = stylingState,
-                        bookmarkListState = bookmarkListState,
-                        onBookmarkListAction = onBookmarkListAction,
-                        onTableOfContentAction = onTableOfContentAction
+                        bookInfoProvider = bookInfoProvider,
                     )
                 }
             }

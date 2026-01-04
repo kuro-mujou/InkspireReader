@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,33 +25,52 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.util.UnstableApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.domain.model.TableOfContent
-import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
-import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentAction
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.common.UiState
+import com.inkspire.ebookreader.common.isSuccess
+import com.inkspire.ebookreader.domain.model.Book
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalBookmarkViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalCombineActions
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDrawerViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.setting.bookmark.BookmarkSetting
 import com.inkspire.ebookreader.ui.setting.bookmark.composable.MyBookmarkCard
 
 @OptIn(ExperimentalMaterial3Api::class)
-@UnstableApi
 @Composable
 fun BookmarkList(
-    bookId: String,
-    tableOfContents: List<TableOfContent>,
-    drawerState: DrawerState,
-    stylingState: StylingState,
-    bookmarkListState: BookmarkListState,
-    onBookmarkListAction: (BookmarkListAction) -> Unit,
-    onTableOfContentAction: (TableOfContentAction) -> Unit
+    bookInfoProvider: () -> Book,
 ) {
+    val combineActions = LocalCombineActions.current
+    val drawerVM = LocalDrawerViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+    val bookmarkVM = LocalBookmarkViewModel.current
+    val dataVM = LocalDataViewModel.current
+
+    val dataState by dataVM.state.collectAsStateWithLifecycle()
+    val drawerState by drawerVM.state.collectAsStateWithLifecycle()
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+    val bookmarkState by bookmarkVM.state.collectAsStateWithLifecycle()
+
     val bookmarkMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val listState = rememberLazyListState()
+    val bookId by remember { derivedStateOf { bookInfoProvider().id } }
+    val tableOfContents = remember(dataState.tableOfContentState) {
+        if (dataState.tableOfContentState.isSuccess) {
+            (dataState.tableOfContentState as UiState.Success).data().filter { it.isFavorite }
+        } else {
+            emptyList()
+        }
+    }
 
     LaunchedEffect(drawerState.visibility) {
         if (!drawerState.visibility) {
@@ -71,27 +89,27 @@ fun BookmarkList(
         ) {
             IconButton(
                 onClick = {
-                    onBookmarkListAction(BookmarkListAction.UpdateBookmarkThemeSettingVisibility)
+                    bookmarkVM.onAction(BookmarkListAction.UpdateBookmarkThemeSettingVisibility)
                 }
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_setting),
                     contentDescription = null,
-                    tint = stylingState.textColor
+                    tint = stylingState.stylePreferences.textColor
                 )
             }
             AnimatedVisibility(
-                visible = bookmarkListState.enableUndoDeleteBookmark
+                visible = bookmarkState.enableUndoDeleteBookmark
             ) {
                 IconButton(
                     onClick = {
-                        onBookmarkListAction(BookmarkListAction.UndoDeleteBookmark(bookId))
+                        bookmarkVM.onAction(BookmarkListAction.UndoDeleteBookmark(bookId))
                     }
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_undo),
                         contentDescription = null,
-                        tint = stylingState.textColor
+                        tint = stylingState.stylePreferences.textColor
                     )
                 }
             }
@@ -107,34 +125,33 @@ fun BookmarkList(
             )
         ) {
             items(
-                items = tableOfContents.filter { it.isFavorite },
+                items = tableOfContents,
                 key = { it.index }
             ) { bookMark ->
                 MyBookmarkCard(
                     bookmarkContent = bookMark.title,
                     bookmarkIndex = bookMark.index,
-                    bookmarkStyle = bookmarkListState.selectedBookmarkStyle,
+                    bookmarkStyle = bookmarkState.readerSettings.bookmarkStyle,
                     deletable = true,
                     stylingState = stylingState,
                     onCardClicked = {
-                        Log.d("BookmarkList", "onCardClicked: ${bookMark.index}")
-                        onTableOfContentAction(TableOfContentAction.NavigateToChapter(bookMark.index))
+                        combineActions.navigateToChapter(bookMark.index)
                     },
                     onDeleted = {
-                        onBookmarkListAction(BookmarkListAction.DeleteBookmark(bookId, bookMark.index))
+                        bookmarkVM.onAction(BookmarkListAction.DeleteBookmark(bookId, bookMark.index))
                     }
                 )
             }
         }
     }
-    if (bookmarkListState.bookmarkThemeSettingVisibility) {
+    if (bookmarkState.bookmarkThemeSettingVisibility) {
         ModalBottomSheet(
             modifier = Modifier.fillMaxSize(),
             dragHandle = {
                 Surface(
                     modifier = Modifier
                         .padding(vertical = 22.dp),
-                    color = stylingState.textColor,
+                    color = stylingState.stylePreferences.textColor,
                     shape = MaterialTheme.shapes.extraLarge
                 ) {
                     Box(Modifier.size(width = 32.dp, height = 4.dp))
@@ -142,9 +159,9 @@ fun BookmarkList(
             },
             sheetState = bookmarkMenuSheetState,
             onDismissRequest = {
-                onBookmarkListAction(BookmarkListAction.UpdateBookmarkThemeSettingVisibility)
+                bookmarkVM.onAction(BookmarkListAction.UpdateBookmarkThemeSettingVisibility)
             },
-            containerColor = stylingState.backgroundColor
+            containerColor = stylingState.stylePreferences.backgroundColor
         ) {
             BookmarkSetting(
                 stylingState

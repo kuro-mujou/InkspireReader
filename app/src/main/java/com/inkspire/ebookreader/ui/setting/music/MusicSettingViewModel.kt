@@ -33,23 +33,13 @@ class MusicSettingViewModel(
 
     init {
         viewModelScope.launch {
-            musicSettingUseCase.getMusicPaths()
-                .collectLatest { sortedMusicItems ->
-                    _state.update {
-                        it.copy(
-                            musicList = sortedMusicItems
-                        )
-                    }
-                }
-        }
-        viewModelScope.launch {
-            datastoreUseCase.getEnableBackgroundMusic().collectLatest { enableBackgroundMusic ->
-                _state.update { it.copy(enableBackgroundMusic = enableBackgroundMusic) }
+            musicSettingUseCase.getMusicPaths().collectLatest { sortedMusicItems ->
+                _state.update { it.copy(musicList = sortedMusicItems) }
             }
         }
         viewModelScope.launch {
-            datastoreUseCase.getPlayerVolume().collectLatest { playerVolume ->
-                _state.update { it.copy(playerVolume = playerVolume) }
+            datastoreUseCase.musicPreferences.collectLatest { prefs ->
+                _state.update { it.copy(musicPreferences = prefs) }
             }
         }
     }

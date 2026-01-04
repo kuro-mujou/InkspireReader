@@ -22,21 +22,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.DeviceConfiguration
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDrawerViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.rememberInsetsController
 import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerAction
-import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.util.ColorUtil.isDark
 
 @Composable
 fun PushDrawer(
-    drawerState: DrawerState,
-    stylingState: StylingState,
-    onDrawerAction: (DrawerAction) -> Unit,
     drawerContent: @Composable BoxScope.() -> Unit,
     mainContent: @Composable BoxScope.() -> Unit
 ) {
+    val drawerVM = LocalDrawerViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+
+    val drawerState by drawerVM.state.collectAsStateWithLifecycle()
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
     val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
     val drawerWidth = when (deviceConfiguration) {
@@ -57,7 +61,7 @@ fun PushDrawer(
         animationSpec = tween(durationMillis = 300),
         label = "MainContentOffset",
         finishedListener = {
-            onDrawerAction(DrawerAction.UpdateDrawerAnimateState(false))
+            drawerVM.onAction(DrawerAction.UpdateDrawerAnimateState(false))
         }
     )
     val animatedElevation by animateDpAsState(
@@ -89,7 +93,7 @@ fun PushDrawer(
     }
     LaunchedEffect(drawerState.visibility) {
         if (drawerState.fromUser) {
-            onDrawerAction(DrawerAction.UpdateDrawerAnimateState(true))
+            drawerVM.onAction(DrawerAction.UpdateDrawerAnimateState(true))
         }
     }
     Box(
@@ -106,7 +110,7 @@ fun PushDrawer(
                     interactionSource = remember { MutableInteractionSource() },
                     enabled = drawerState.visibility,
                     onClick = {
-                        onDrawerAction(DrawerAction.CloseDrawer)
+                        drawerVM.onAction(DrawerAction.CloseDrawer)
                     }
                 )
         ) {
@@ -136,7 +140,7 @@ fun PushDrawer(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() },
                             onClick = {
-                                onDrawerAction(DrawerAction.CloseDrawer)
+                                drawerVM.onAction(DrawerAction.CloseDrawer)
                             }
                         )
                 )

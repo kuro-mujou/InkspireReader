@@ -6,6 +6,7 @@ import com.inkspire.ebookreader.data.database.model.BookWithCategories
 import com.inkspire.ebookreader.data.mapper.toDataClass
 import com.inkspire.ebookreader.data.mapper.toEntity
 import com.inkspire.ebookreader.domain.model.Book
+import com.inkspire.ebookreader.domain.model.BookWithCategoriesModel
 import com.inkspire.ebookreader.domain.model.Category
 import com.inkspire.ebookreader.domain.repository.BookRepository
 import kotlinx.coroutines.flow.Flow
@@ -133,6 +134,15 @@ class BookRepositoryImpl(
 
     override fun getFlowBookWithCategories(bookId: String): Flow<BookWithCategories> {
         return bookDao.getFlowBookWithCategories(bookId)
+    }
+
+    override fun getAllBooksWithCategories(): Flow<List<BookWithCategoriesModel>> {
+        return bookDao.getAllBooksWithCategories()
+            .map { bookWithCategories ->
+                bookWithCategories.map {
+                    it.toDataClass()
+                }
+            }
     }
 
     override suspend fun updateBookCategory(bookId: String, categories: List<Category>) {

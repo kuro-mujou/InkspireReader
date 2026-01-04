@@ -18,8 +18,11 @@ interface TableOfContentDao {
     @Query("SELECT * FROM table_of_contents WHERE bookId = :bookId ORDER BY `index` ASC")
     suspend fun getTableOfContents(bookId: String): List<TableOfContentEntity>
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTableOfContent(tableOfContent: TableOfContentEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTableOfContents(tocList: List<TableOfContentEntity>)
 
     @Transaction
     @Query("SELECT * FROM table_of_contents WHERE bookId = :bookId AND `index` = :tocId")

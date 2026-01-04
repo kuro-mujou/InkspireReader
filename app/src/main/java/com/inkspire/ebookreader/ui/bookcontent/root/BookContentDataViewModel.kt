@@ -35,7 +35,7 @@ class BookContentDataViewModel(
                 if (book == null) {
                     _state.update { it.copy(bookState = UiState.Empty) }
                 } else {
-                    _state.update { it.copy(bookState = UiState.Success(book)) }
+                    _state.update { it.copy(bookState = UiState.Success { book }) }
                 }
             }
             .onStart {
@@ -52,7 +52,7 @@ class BookContentDataViewModel(
                 if (tableOfContents.isEmpty()) {
                     _state.update { it.copy(tableOfContentState = UiState.Empty) }
                 } else {
-                    _state.update { it.copy(tableOfContentState = UiState.Success(tableOfContents)) }
+                    _state.update { it.copy(tableOfContentState = UiState.Success { tableOfContents }) }
                 }
             }
             .onStart {
@@ -71,7 +71,7 @@ class BookContentDataViewModel(
                 if (_state.value.chapterStates[action.index] is UiState.Success) return
                 bookContentUseCase.getChapterContentFlow(bookId, action.index)
                     .map { chapter ->
-                        if (chapter == null) UiState.Empty else UiState.Success(chapter)
+                        if (chapter == null) UiState.Empty else UiState.Success { chapter }
                     }
                     .onStart { updateChapterState(action.index, UiState.Loading) }
                     .catch { updateChapterState(action.index, UiState.Error(it)) }
@@ -88,7 +88,6 @@ class BookContentDataViewModel(
                     bookContentUseCase.saveBookInfoParagraphIndex(bookId, action.paragraphIndex)
                 }
             }
-            else -> {}
         }
     }
 

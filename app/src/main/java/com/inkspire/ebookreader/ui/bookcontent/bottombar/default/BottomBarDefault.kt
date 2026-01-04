@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.ui.bookcontent.bottombar.default
 
-import android.os.Build
 import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -26,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -35,11 +35,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.ui.bookcontent.bottombar.BookContentBottomBarAction
-import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalBottomBarViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalCombineActions
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
@@ -48,21 +50,25 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun BottomBarDefault(
-    stylingState: StylingState,
     hazeState: HazeState,
-    drawerState: DrawerState,
-    currentChapterTitle: String,
-    bookInfo: Book,
-    onAction: (BookContentBottomBarAction) -> Unit
+    hazeEnableProvider: () -> Boolean,
+    chapterTitleProvider: () -> String,
+    bookInfoProvider: () -> Book,
+    firstVisibleIndexProvider: () -> Int
 ) {
-    val useHaze = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !drawerState.visibility && !drawerState.isAnimating
+    val combineActions = LocalCombineActions.current
+    val bottomBarVM = LocalBottomBarViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+
     val style = HazeMaterials.thin(stylingState.containerColor)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .then(
-                if (useHaze) {
+                if (hazeEnableProvider()) {
                     Modifier.hazeEffect(
                         state = hazeState,
                         style = style
@@ -98,12 +104,12 @@ fun BottomBarDefault(
                     initialDelayMillis = 0,
                     repeatDelayMillis = 0
                 ),
-            text = currentChapterTitle,
+            text = chapterTitleProvider(),
             overflow = TextOverflow.Ellipsis,
             style = TextStyle(
-                color = stylingState.textColor,
+                color = stylingState.stylePreferences.textColor,
                 textAlign = TextAlign.Center,
-                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
             ),
             maxLines = 1,
         )
@@ -117,27 +123,27 @@ fun BottomBarDefault(
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BookContentBottomBarAction.ThemeIconClicked)
+                    bottomBarVM.onAction(BookContentBottomBarAction.ThemeIconClicked)
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     imageVector = ImageVector.vectorResource(R.drawable.ic_theme),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "theme"
                 )
             }
-            if (bookInfo.fileType != "cbz" && bookInfo.fileType != "pdf/images") {
+            if (bookInfoProvider().fileType != "cbz" && bookInfoProvider().fileType != "pdf/images") {
                 IconButton(
                     modifier = Modifier.size(50.dp),
                     onClick = {
-                        onAction(BookContentBottomBarAction.TtsIconClicked)
+                        combineActions.onTTSActivated(firstVisibleIndexProvider())
                     }
                 ) {
                     Icon(
                         modifier = Modifier.size(30.dp),
                         imageVector = ImageVector.vectorResource(R.drawable.ic_headphones),
-                        tint = stylingState.textColor,
+                        tint = stylingState.stylePreferences.textColor,
                         contentDescription = "start tts"
                     )
                 }
@@ -145,13 +151,13 @@ fun BottomBarDefault(
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BookContentBottomBarAction.AutoScrollIconClicked)
+                    combineActions.onAutoScrollActivated()
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     imageVector = ImageVector.vectorResource(R.drawable.ic_scroll),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "auto scroll"
                 )
             }
@@ -159,13 +165,13 @@ fun BottomBarDefault(
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BookContentBottomBarAction.SettingIconClicked)
+                    bottomBarVM.onAction(BookContentBottomBarAction.SettingIconClicked)
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     imageVector = ImageVector.vectorResource(R.drawable.ic_setting),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "setting"
                 )
             }

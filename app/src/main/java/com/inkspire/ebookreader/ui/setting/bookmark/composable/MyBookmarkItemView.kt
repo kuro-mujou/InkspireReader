@@ -21,7 +21,7 @@ fun MyBookmarkItemView(
     stylingState: StylingState?,
     onSelected: () -> Unit,
 ) {
-    val checked = state.selectedBookmarkStyle == listItem.bookmarkStyle
+    val checked = state.readerSettings.bookmarkStyle == listItem.bookmarkStyle
     Row(
         modifier = Modifier
             .padding(all = 8.dp)
@@ -34,9 +34,9 @@ fun MyBookmarkItemView(
                 onSelected()
             },
             colors = CheckboxDefaults.colors(
-                checkedColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
-                uncheckedColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
-                checkmarkColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.background
+                checkedColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                uncheckedColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                checkmarkColor = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.background
             )
         )
         MyBookmarkCard(

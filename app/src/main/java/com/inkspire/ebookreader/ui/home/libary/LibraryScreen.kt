@@ -39,6 +39,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -61,6 +62,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -81,15 +83,16 @@ import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.BookImporter
 import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.common.UiState
+import com.inkspire.ebookreader.data.mapper.toNormalBook
 import com.inkspire.ebookreader.domain.model.MiniFabItem
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.ui.composable.MyBookChip
-import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import com.inkspire.ebookreader.ui.composable.MySearchBox
 import com.inkspire.ebookreader.ui.home.libary.composable.MyBookMenuBottomSheet
 import com.inkspire.ebookreader.ui.home.libary.composable.MyExpandableFab
 import com.inkspire.ebookreader.ui.home.libary.composable.MyGridBookView
 import com.inkspire.ebookreader.ui.home.libary.composable.MyListBookView
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -107,7 +110,7 @@ fun LibraryScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val gridState = rememberLazyStaggeredGridState()
     val listState = rememberLazyListState()
-    val searchState = rememberTextFieldState()
+    val searchState = rememberTextFieldState(initialText = state.searchQuery)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     var specialIntent by remember { mutableStateOf("null") }
@@ -214,6 +217,14 @@ fun LibraryScreen(
     LaunchedEffect(drawerState.currentValue) {
         onAction(LibraryAction.ChangeFabVisibility(drawerState.isClosed))
     }
+    LaunchedEffect(searchState) {
+        snapshotFlow { searchState.text }
+            .collectLatest {
+                if (it.toString() != state.searchQuery) {
+                    onAction(LibraryAction.OnSearchQueryChange(it.toString()))
+                }
+            }
+    }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl ) {
         ModalNavigationDrawer(
@@ -317,7 +328,7 @@ fun LibraryScreen(
                                                 onAction(LibraryAction.UpdateBookListType)
                                             }
                                         ) {
-                                            if (state.listViewType == 1) {
+                                            if (state.librarySettings.bookListViewType == 1) {
                                                 Icon(
                                                     imageVector = ImageVector.vectorResource(R.drawable.ic_grid_view),
                                                     contentDescription = "Grid",
@@ -326,7 +337,7 @@ fun LibraryScreen(
                                                     else
                                                         Color(45, 98, 139)
                                                 )
-                                            } else if (state.listViewType == 0) {
+                                            } else if (state.librarySettings.bookListViewType == 0) {
                                                 Icon(
                                                     imageVector = ImageVector.vectorResource(R.drawable.ic_list_view),
                                                     contentDescription = "List",
@@ -385,7 +396,7 @@ fun LibraryScreen(
                                                         Icon(
                                                             imageVector = ImageVector.vectorResource(R.drawable.ic_bookmark_star),
                                                             contentDescription = "Sorting Icon",
-                                                            tint = if (state.isSortedByFavorite)
+                                                            tint = if (state.librarySettings.isSortedByFavorite)
                                                                 if (isSystemInDarkTheme())
                                                                     Color(155, 212, 161)
                                                                 else
@@ -457,7 +468,12 @@ fun LibraryScreen(
 
                             }
                             is UiState.Loading -> {
-                                MyLoadingAnimation()
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
                             }
                             is UiState.Empty -> {
                                 Box(
@@ -506,21 +522,16 @@ fun LibraryScreen(
 
                             }
                             is UiState.Error -> {
-                                Text(text = "Error loading books")
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "Error loading books")
+                                }
                             }
                             is UiState.Success -> {
-                                Crossfade(targetState = state.listViewType) { option ->
-                                    val sortedBooks = bookListState.data
-                                        .filter {
-                                            it.title.contains(searchState.text, ignoreCase = true) ||
-                                                    it.authors.joinToString(",").contains(searchState.text, ignoreCase = true)
-                                        }
-                                        .let { list ->
-                                            if (state.isSortedByFavorite)
-                                                list.sortedByDescending { it.isFavorite }
-                                            else
-                                                list
-                                        }
+                                Crossfade(targetState = state.librarySettings.bookListViewType) { option ->
+                                    val books = bookListState.data().map { it.toNormalBook() }
                                     when (option) {
                                         -1 -> {
                                             Box(modifier = Modifier.fillMaxSize())
@@ -532,7 +543,7 @@ fun LibraryScreen(
                                                     .fillMaxSize(),
                                             ) {
                                                 items(
-                                                    items = sortedBooks,
+                                                    items = books,
                                                     key = { it.id }
                                                 ) {
                                                     MyListBookView(
@@ -541,6 +552,7 @@ fun LibraryScreen(
                                                         onItemClick = {
                                                             if (!state.isOnDeletingBooks) {
                                                                 parentNavigatorAction(Route.BookContent(it.id))
+                                                                onAction(LibraryAction.OnOpenBook(it.id))
                                                             }
                                                         },
                                                         onItemLongClick = {
@@ -581,7 +593,7 @@ fun LibraryScreen(
                                                 state = gridState,
                                                 content = {
                                                     items(
-                                                        items = sortedBooks,
+                                                        items = books,
                                                         key = { it.id }
                                                     ) {
                                                         MyGridBookView(
@@ -590,6 +602,7 @@ fun LibraryScreen(
                                                             onItemClick = {
                                                                 if (!state.isOnDeletingBooks) {
                                                                     parentNavigatorAction(Route.BookContent(it.id))
+                                                                    onAction(LibraryAction.OnOpenBook(it.id))
                                                                 }
                                                             },
                                                             onItemLongClick = {

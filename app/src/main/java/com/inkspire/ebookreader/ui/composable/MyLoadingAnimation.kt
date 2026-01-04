@@ -49,7 +49,7 @@ fun MyLoadingAnimation(
         rememberLottieDynamicProperty(
             property = LottieProperty.COLOR_FILTER,
             value = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                stylingState.textColor.toArgb(),
+                stylingState.stylePreferences.textColor.toArgb(),
                 BlendModeCompat.SRC_ATOP
             ),
             keyPath = arrayOf("**")
@@ -83,8 +83,8 @@ fun MyLoadingAnimation(
             Text(
                 text = "Loading...",
                 style = TextStyle(
-                    color = stylingState.textColor,
-                    fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                    color = stylingState.stylePreferences.textColor,
+                    fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                 )
             )
         }

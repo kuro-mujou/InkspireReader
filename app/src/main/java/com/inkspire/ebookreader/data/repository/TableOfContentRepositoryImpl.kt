@@ -16,6 +16,10 @@ class TableOfContentRepositoryImpl(
         return tableOfContentDao.insertTableOfContent(tocEntity)
     }
 
+    override suspend fun saveTableOfContents(tocEntities: List<TableOfContentEntity>) {
+        return tableOfContentDao.insertTableOfContents(tocEntities)
+    }
+
     override fun getTableOfContentAsFlow(bookId: String): Flow<List<TableOfContent>> {
         return tableOfContentDao
             .getFlowTableOfContents(bookId)

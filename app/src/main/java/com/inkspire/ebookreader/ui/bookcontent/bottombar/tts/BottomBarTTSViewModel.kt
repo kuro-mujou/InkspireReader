@@ -26,8 +26,6 @@ class BottomBarTTSViewModel: ViewModel() {
             is BottomBarTTSAction.UpdateVoiceMenuVisibility -> {
                 _state.update { it.copy(ttsVoiceMenuVisibility = !_state.value.ttsVoiceMenuVisibility) }
             }
-
-            else -> {}
         }
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,39 +32,63 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCoerceIn
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.customPopupPositionProvider
 import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.util.HeaderTextSizeUtil.calculateHeaderSize
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HeaderComponent(
     index: Int,
     text: String,
-    isHighlighted: Boolean,
-    textSize: Float,
-    highlightRange: () -> TextRange,
-    wordOffset: () -> Int,
-    stylingState: StylingState,
-    chapterContentState: BookChapterContentState,
+    isHighlighted: () -> Boolean,
+    headerLevel: Int,
+    currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
-    onNoteAction: (NoteAction) -> Unit
 ) {
-    var isOpenDialog by remember { mutableStateOf(false) }
-    val paragraphBgColor = if (isHighlighted) stylingState.drawerContainerColor else Color.Transparent
+    val styleVM = LocalStylingViewModel.current
+    val noteVM = LocalNoteViewModel.current
+    val ttsVM = LocalTTSViewModel.current
+
+    val stylingState by styleVM.state.collectAsStateWithLifecycle()
+    val highlightRange by ttsVM.currentHighlightRange.collectAsStateWithLifecycle()
+    val readingOffset by ttsVM.currentReadingWordOffset.collectAsStateWithLifecycle()
+
+    val currentHighlightRange by rememberUpdatedState(
+        if (isHighlighted()) {
+            highlightRange
+        } else {
+            TextRange.Zero
+        }
+    )
+
+    val currentReadingOffset by rememberUpdatedState(
+        if (isHighlighted()) {
+            readingOffset
+        } else {
+            0
+        }
+    )
+
+    val paragraphBgColor = if (isHighlighted()) stylingState.drawerContainerColor else Color.Transparent
+
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    val displayedText = remember(text, isHighlighted, highlightRange()) {
-        if (!isHighlighted || highlightRange().start == highlightRange().end) {
+
+    val displayedText = remember(text, isHighlighted(), currentHighlightRange) {
+        if (!isHighlighted() || currentHighlightRange.start == currentHighlightRange.end) {
             val builder = AnnotatedString.Builder(text)
             builder.toAnnotatedString()
         } else {
             val builder = AnnotatedString.Builder(text)
 
-            val start = highlightRange().start.fastCoerceIn(0, text.length)
-            val end = highlightRange().end.fastCoerceIn(0, text.length)
+            val start = currentHighlightRange.start.fastCoerceIn(0, text.length)
+            val end = currentHighlightRange.end.fastCoerceIn(0, text.length)
 
             if (start < end) {
                 builder.addStyle(
@@ -76,10 +101,11 @@ fun HeaderComponent(
         }
     }
 
-    LaunchedEffect(wordOffset(), isHighlighted, textLayoutResult) {
-        if (isHighlighted && textLayoutResult != null) {
+    var isOpenDialog by remember { mutableStateOf(false) }
+    LaunchedEffect(currentReadingOffset, isHighlighted, textLayoutResult) {
+        if (isHighlighted() && textLayoutResult != null) {
             val layout = textLayoutResult!!
-            val coercedWordOffset = { wordOffset().fastCoerceIn(0, layout.layoutInput.text.length) }
+            val coercedWordOffset = { currentReadingOffset.fastCoerceIn(0, layout.layoutInput.text.length) }
             val cursorRect = layout.getCursorRect(coercedWordOffset())
             onRequestScrollToOffset(cursorRect.bottom)
         }
@@ -107,14 +133,14 @@ fun HeaderComponent(
             text = displayedText,
             onTextLayout = { textLayoutResult = it },
             style = TextStyle(
-                fontSize = textSize.sp,
+                fontSize = calculateHeaderSize(headerLevel, stylingState.stylePreferences.fontSize).sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                 textAlign = TextAlign.Center,
-                color = stylingState.textColor,
+                color = stylingState.stylePreferences.textColor,
                 background = paragraphBgColor,
                 lineBreak = LineBreak.Paragraph,
-                lineHeight = (stylingState.fontSize + stylingState.lineSpacing).sp
+                lineHeight = (stylingState.stylePreferences.fontSize + stylingState.stylePreferences.lineSpacing).sp
             )
         )
     }
@@ -127,11 +153,11 @@ fun HeaderComponent(
                 isOpenDialog = false
             },
             onNoteChanged = { noteInput ->
-                onNoteAction(
+                noteVM.onAction(
                     NoteAction.AddNote(
                         noteBody = text,
                         noteInput = noteInput,
-                        tocId = chapterContentState.currentChapterIndex,
+                        tocId = currentChapterIndex(),
                         contentId = index
                     )
                 )

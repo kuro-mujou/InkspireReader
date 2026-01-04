@@ -32,7 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.linkPattern
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 
@@ -58,7 +58,7 @@ fun NoteDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = stylingState.backgroundColor
+            color = stylingState.stylePreferences.backgroundColor
         ) {
             Column(
                 modifier = Modifier
@@ -83,7 +83,7 @@ fun NoteDialog(
                         VerticalDivider(
                             modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
                             thickness = 2.dp,
-                            color = stylingState.textColor
+                            color = stylingState.stylePreferences.textColor
                         )
                         Text(
                             text = note,
@@ -92,9 +92,9 @@ fun NoteDialog(
                             overflow = TextOverflow.Ellipsis,
                             style = TextStyle(
                                 fontStyle = FontStyle.Italic,
-                                color = stylingState.textColor,
+                                color = stylingState.stylePreferences.textColor,
                                 textAlign = TextAlign.Justify,
-                                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                             )
                         )
                     }
@@ -105,26 +105,26 @@ fun NoteDialog(
                         noteContent = it
                     },
                     textStyle = TextStyle(
-                        color = stylingState.textColor,
-                        fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                        color = stylingState.stylePreferences.textColor,
+                        fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                     ),
                     maxLines = 20,
                     label = {
                         Text(
                             text = "Enter your note",
                             style = TextStyle(
-                                color = stylingState.textColor,
-                                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                                color = stylingState.stylePreferences.textColor,
+                                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                             )
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = stylingState.textColor,
-                        unfocusedLabelColor = stylingState.textColor,
-                        focusedBorderColor = stylingState.textColor,
-                        focusedLabelColor = stylingState.textColor,
-                        cursorColor = stylingState.textColor,
+                        unfocusedBorderColor = stylingState.stylePreferences.textColor,
+                        unfocusedLabelColor = stylingState.stylePreferences.textColor,
+                        focusedBorderColor = stylingState.stylePreferences.textColor,
+                        focusedLabelColor = stylingState.stylePreferences.textColor,
+                        cursorColor = stylingState.stylePreferences.textColor,
                     )
                 )
                 Row(
@@ -138,14 +138,14 @@ fun NoteDialog(
                             onDismiss()
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = stylingState.textColor,
+                            containerColor = stylingState.stylePreferences.textColor,
                         )
                     ) {
                         Text(
                             text = "Close",
                             style = TextStyle(
-                                color = stylingState.backgroundColor,
-                                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                                color = stylingState.stylePreferences.backgroundColor,
+                                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                             )
                         )
                     }
@@ -155,14 +155,14 @@ fun NoteDialog(
                             onDismiss()
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = stylingState.textColor,
+                            containerColor = stylingState.stylePreferences.textColor,
                         )
                     ) {
                         Text(
                             text = "Submit",
                             style = TextStyle(
-                                color = stylingState.backgroundColor,
-                                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                                color = stylingState.stylePreferences.backgroundColor,
+                                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                             )
                         )
                     }

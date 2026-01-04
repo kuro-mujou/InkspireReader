@@ -1,7 +1,9 @@
 package com.inkspire.ebookreader.ui.setting.bookmark
 
-import com.inkspire.ebookreader.common.BookmarkStyle
+import androidx.compose.runtime.Immutable
+import com.inkspire.ebookreader.domain.model.ReaderSettingPreferences
 
+@Immutable
 data class BookmarkSettingState(
-    val selectedBookmarkStyle: BookmarkStyle = BookmarkStyle.WAVE_WITH_BIRDS
+    val readerSettings: ReaderSettingPreferences = ReaderSettingPreferences()
 )

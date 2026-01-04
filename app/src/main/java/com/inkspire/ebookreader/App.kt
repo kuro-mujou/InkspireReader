@@ -3,7 +3,6 @@ package com.inkspire.ebookreader
 import android.app.Application
 import com.inkspire.ebookreader.di.KoinModule
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
-import io.kotzilla.sdk.analytics.koin.analytics
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -12,12 +11,11 @@ class App : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@App)
-            analytics()
+//            analytics()
             modules(
                 KoinModule.ttsModule,
                 KoinModule.networkModule,
                 KoinModule.databaseModule,
-                KoinModule.datastoreModule,
                 KoinModule.repositoryModule,
                 KoinModule.useCaseModule,
                 KoinModule.viewModelModule,

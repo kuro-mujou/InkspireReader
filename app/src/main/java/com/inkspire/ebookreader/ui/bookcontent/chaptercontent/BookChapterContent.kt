@@ -62,7 +62,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,15 +70,20 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.inkspire.ebookreader.common.BookImporter
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.Chapter
 import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollAction
-import com.inkspire.ebookreader.ui.bookcontent.autoscroll.AutoScrollState
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalAutoScrollViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalChapterContentViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalCombineActions
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.content.ChapterContent
-import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -86,39 +91,42 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun BookChapterContent(
-    bookInfo: Book,
-    initialParagraphIndex: Int,
-    currentChapter: Int,
-    chapterUiState: UiState<Chapter>,
-    stylingState: StylingState,
-    bookChapterContentState: BookChapterContentState,
-    isTTSActivated: Boolean,
-    ttsCurrentParagraphIndex: Int,
-    highlightRange: () -> TextRange,
-    wordOffset: () -> Int,
-    autoScrollState: AutoScrollState,
-    isCurrentChapter: Boolean,
-    onBookContentDataAction: (BookContentDataAction) -> Unit,
-    onBookChapterContentAction: (BookChapterContentAction) -> Unit,
-    onAutoScrollAction: (AutoScrollAction) -> Unit,
-    onNoteAction: (NoteAction) -> Unit,
+    bookInfoProvider: () -> Book,
+    initialParagraphIndex: () -> Int,
+    currentChapter: () -> Int,
+    chapterUiState: () -> UiState<Chapter>,
+    isCurrentChapter: () -> Boolean,
     onListStateLoaded: (LazyListState) -> Unit,
     onDispose: () -> Unit
 ) {
+    val combineActions = LocalCombineActions.current
+    val dataVM = LocalDataViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+    val autoScrollVM = LocalAutoScrollViewModel.current
+    val ttsVM = LocalTTSViewModel.current
+    val chapterContentVM = LocalChapterContentViewModel.current
+
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+    val autoScrollState by autoScrollVM.state.collectAsStateWithLifecycle()
+    val ttsPlaybackState by ttsVM.state.collectAsStateWithLifecycle()
+    val bookChapterContentState by chapterContentVM.state.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var originalOffset by remember { mutableStateOf(Offset.Zero) }
     var size by remember { mutableStateOf(IntSize.Zero) }
     var originalZoom by remember { mutableFloatStateOf(1f) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(currentChapter) {
-        onBookContentDataAction(BookContentDataAction.LoadChapter(currentChapter))
+        dataVM.onAction(BookContentDataAction.LoadChapter(currentChapter()))
     }
 
-    when (chapterUiState) {
-        UiState.None -> {
+    when (val uiState =  chapterUiState()) {
+        is UiState.None -> {
 
         }
-        UiState.Empty -> {
+        is UiState.Empty -> {
             MyLoadingAnimation(
                 stylingState = stylingState
             )
@@ -134,29 +142,50 @@ fun BookChapterContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Error: ${chapterUiState.throwable.message}",
-                    color = stylingState.textColor,
-                    fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
-                    fontSize = stylingState.fontSize.sp
+                    text = "Error: ${uiState.throwable.message}",
+                    color = stylingState.stylePreferences.textColor,
+                    fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
+                    fontSize = stylingState.stylePreferences.fontSize.sp
                 )
             }
         }
         is UiState.Success -> {
-            val chapterData = chapterUiState.data
+            val chapterData by remember { derivedStateOf { uiState.data() } }
             val paragraphs = chapterData.content
             val listState = rememberLazyListState(
-                initialFirstVisibleItemIndex = initialParagraphIndex
+                initialFirstVisibleItemIndex = initialParagraphIndex()
             )
-            val isModeActive = isTTSActivated || autoScrollState.isActivated
+            val isModeActive = ttsPlaybackState.isActivated || autoScrollState.isActivated
 
             val currentAutoScrollState by rememberUpdatedState(autoScrollState)
             val currentContentState by rememberUpdatedState(bookChapterContentState)
-            val currentAutoScrollAction by rememberUpdatedState(onAutoScrollAction)
+            val currentTTSState by rememberUpdatedState(ttsPlaybackState)
+
             val isAtBottom by remember {
                 derivedStateOf {
                     !listState.canScrollForward && listState.layoutInfo.totalItemsCount > 0
                 }
             }
+            val text by remember {
+                derivedStateOf {
+                    if (isCurrentChapter())
+                        "${currentContentState.lastVisibleItemIndex} / ${paragraphs.size}"
+                    else
+                        ""
+                }
+            }
+            val enableUndoButton by remember { derivedStateOf { currentContentState.enableUndoButton } }
+            val currentChapterIndex by remember {
+                derivedStateOf {
+                    if (isCurrentChapter())
+                        currentContentState.currentChapterIndex
+                    else
+                        -1
+                }
+            }
+            val screenHeight by remember { derivedStateOf { currentContentState.screenHeight } }
+            val totalChapter by remember { derivedStateOf { bookInfoProvider().totalChapter } }
+            val chapterIndex by remember { derivedStateOf { "${currentChapter() + 1} / $totalChapter" } }
 
             DisposableEffect(listState) {
                 onListStateLoaded(listState)
@@ -170,35 +199,35 @@ fun BookChapterContent(
                 }
             }
 
-            LaunchedEffect(listState, isCurrentChapter) {
+            LaunchedEffect(listState, isCurrentChapter()) {
                 snapshotFlow { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index }
                     .collect { index ->
-                        if (isCurrentChapter && index != null) {
-                            onBookContentDataAction(BookContentDataAction.UpdateRecentParagraphToDB(index))
-                            onBookChapterContentAction(BookChapterContentAction.UpdateFirstVisibleItemIndex(index))
+                        if (isCurrentChapter() && index != null) {
+                            dataVM.onAction(BookContentDataAction.UpdateRecentParagraphToDB(index))
+                            chapterContentVM.onAction(BookChapterContentAction.UpdateFirstVisibleItemIndex(index))
                         }
                     }
             }
-            LaunchedEffect(listState, isCurrentChapter) {
+            LaunchedEffect(listState, isCurrentChapter()) {
                 snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
                     .collect { index ->
-                        if (isCurrentChapter && index != null) {
-                            onBookChapterContentAction(BookChapterContentAction.UpdateLastVisibleItemIndex(index))
+                        if (isCurrentChapter() && index != null) {
+                            chapterContentVM.onAction(BookChapterContentAction.UpdateLastVisibleItemIndex(index))
                         }
                     }
             }
             LaunchedEffect(originalZoom) {
                 if (originalZoom > 1f) {
-                    onBookChapterContentAction(BookChapterContentAction.UpdateEnablePagerScroll(false))
-                    onBookChapterContentAction(BookChapterContentAction.UpdateEnableUndoButton(true))
+                    chapterContentVM.onAction(BookChapterContentAction.UpdateEnablePagerScroll(false))
+                    chapterContentVM.onAction(BookChapterContentAction.UpdateEnableUndoButton(true))
                 } else {
-                    onBookChapterContentAction(BookChapterContentAction.UpdateEnablePagerScroll(true))
-                    onBookChapterContentAction(BookChapterContentAction.UpdateEnableUndoButton(false))
+                    chapterContentVM.onAction(BookChapterContentAction.UpdateEnablePagerScroll(true))
+                    chapterContentVM.onAction(BookChapterContentAction.UpdateEnableUndoButton(false))
                 }
             }
 
-            LaunchedEffect(currentContentState.enableUndoButton) {
-                if (!currentContentState.enableUndoButton) {
+            LaunchedEffect(enableUndoButton) {
+                if (!enableUndoButton) {
                     originalZoom = 1f
                     originalOffset = Offset.Zero
                 }
@@ -206,19 +235,19 @@ fun BookChapterContent(
 
             LaunchedEffect(
                 listState.interactionSource,
-                currentAutoScrollState.autoScrollResumeDelayTime
+                currentAutoScrollState.autoScrollPreferences.resumeDelay
             ) {
                 listState.interactionSource.interactions.collect { interaction ->
                     if (!currentAutoScrollState.isActivated) return@collect
 
                     when (interaction) {
                         is PressInteraction.Press, is DragInteraction.Start -> {
-                            currentAutoScrollAction(AutoScrollAction.UpdateIsPaused(true))
+                            autoScrollVM.onAction(AutoScrollAction.UpdateIsPaused(true))
                         }
                         is PressInteraction.Release, is DragInteraction.Stop, is DragInteraction.Cancel -> {
-                            if (currentAutoScrollState.autoScrollResumeMode) {
-                                delay(currentAutoScrollState.autoScrollResumeDelayTime.toLong())
-                                currentAutoScrollAction(AutoScrollAction.UpdateIsPaused(false))
+                            if (currentAutoScrollState.autoScrollPreferences.resumeMode) {
+                                delay(currentAutoScrollState.autoScrollPreferences.resumeDelay.toLong())
+                                autoScrollVM.onAction(AutoScrollAction.UpdateIsPaused(false))
                             }
                         }
                     }
@@ -226,15 +255,15 @@ fun BookChapterContent(
             }
 
             LaunchedEffect(
-                currentChapter,
-                isCurrentChapter,
-                currentAutoScrollState.delayTimeAtStart,
+                currentChapter(),
+                isCurrentChapter(),
+                currentAutoScrollState.autoScrollPreferences.delayTimeAtStart,
             ) {
-                if (isCurrentChapter && currentAutoScrollState.isActivated) {
+                if (isCurrentChapter() && currentAutoScrollState.isActivated) {
                     if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0) {
-                        onAutoScrollAction(AutoScrollAction.UpdateIsPaused(true))
-                        delay(currentAutoScrollState.delayTimeAtStart.toLong())
-                        onAutoScrollAction(AutoScrollAction.UpdateIsPaused(false))
+                        autoScrollVM.onAction(AutoScrollAction.UpdateIsPaused(true))
+                        delay(currentAutoScrollState.autoScrollPreferences.delayTimeAtStart.toLong())
+                        autoScrollVM.onAction(AutoScrollAction.UpdateIsPaused(false))
                     }
                 }
             }
@@ -242,52 +271,52 @@ fun BookChapterContent(
             LaunchedEffect(
                 currentAutoScrollState.isActivated,
                 currentAutoScrollState.isPaused,
-                currentAutoScrollState.autoScrollSpeed,
-                currentContentState.screenHeight,
+                currentAutoScrollState.autoScrollPreferences.speed,
+                screenHeight,
                 isAtBottom,
-                isCurrentChapter,
-                currentChapter
+                isCurrentChapter(),
+                currentChapter()
             ) {
-                if (isCurrentChapter && currentAutoScrollState.isActivated && !currentAutoScrollState.isPaused) {
+                if (isCurrentChapter() && currentAutoScrollState.isActivated && !currentAutoScrollState.isPaused) {
                     while (isActive) {
                         if (isAtBottom) {
-                            onAutoScrollAction(AutoScrollAction.UpdateIsAnimationRunning(false))
-                            if (currentChapter + 1 < bookInfo.totalChapter) {
-                                delay(currentAutoScrollState.delayTimeAtEnd.toLong())
-                                onBookChapterContentAction(BookChapterContentAction.RequestScrollToChapter(currentChapter + 1))
+                            autoScrollVM.onAction(AutoScrollAction.UpdateIsAnimationRunning(false))
+                            if (currentChapter() + 1 < totalChapter) {
+                                delay(currentAutoScrollState.autoScrollPreferences.delayTimeAtEnd.toLong())
+                                chapterContentVM.onAction(BookChapterContentAction.RequestAnimatedScrollToChapter(currentChapter() + 1))
                             } else {
-                                onAutoScrollAction(AutoScrollAction.UpdateIsActivated(false))
+                                combineActions.onStopAutoScroll()
                             }
                             break
                         }
 
-                        onAutoScrollAction(AutoScrollAction.UpdateIsAnimationRunning(true))
+                        autoScrollVM.onAction(AutoScrollAction.UpdateIsAnimationRunning(true))
 
                         listState.animateScrollBy(
-                            value = currentContentState.screenHeight.toFloat(),
+                            value = screenHeight.toFloat(),
                             animationSpec = tween(
-                                durationMillis = currentAutoScrollState.autoScrollSpeed,
+                                durationMillis = currentAutoScrollState.autoScrollPreferences.speed,
                                 easing = LinearEasing
                             )
                         )
 
-                        onAutoScrollAction(AutoScrollAction.UpdateIsAnimationRunning(false))
+                        autoScrollVM.onAction(AutoScrollAction.UpdateIsAnimationRunning(false))
                     }
                 }
             }
 
             LaunchedEffect(
-                isCurrentChapter,
-                isTTSActivated,
-                ttsCurrentParagraphIndex
+                isCurrentChapter(),
+                currentTTSState.isActivated,
+                currentTTSState.paragraphIndex
             ) {
-                if (!isCurrentChapter || !isTTSActivated) return@LaunchedEffect
+                if (!isCurrentChapter() || !currentTTSState.isActivated) return@LaunchedEffect
 
-                val isAtTopEdge = ttsCurrentParagraphIndex == currentContentState.firstVisibleItemIndex
-                val isAtBottomEdge = ttsCurrentParagraphIndex == currentContentState.lastVisibleItemIndex
-                val isOffScreen = ttsCurrentParagraphIndex !in currentContentState.firstVisibleItemIndex..currentContentState.lastVisibleItemIndex
+                val isAtTopEdge = currentTTSState.paragraphIndex == currentContentState.firstVisibleItemIndex
+                val isAtBottomEdge = currentTTSState.paragraphIndex == currentContentState.lastVisibleItemIndex
+                val isOffScreen = currentTTSState.paragraphIndex !in currentContentState.firstVisibleItemIndex..currentContentState.lastVisibleItemIndex
                 if (isAtTopEdge || isAtBottomEdge || isOffScreen) {
-                    listState.animateScrollToItem(ttsCurrentParagraphIndex)
+                    listState.animateScrollToItem(currentTTSState.paragraphIndex)
                 }
             }
 
@@ -300,8 +329,8 @@ fun BookChapterContent(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
                                 onClick = {
-                                    if (!currentContentState.enableUndoButton) {
-                                        onBookChapterContentAction(BookChapterContentAction.UpdateSystemBar)
+                                    if (!enableUndoButton) {
+                                        combineActions.updateSystemBarVisibility()
                                     }
                                 },
                             )
@@ -310,12 +339,12 @@ fun BookChapterContent(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
                                 onClick = {
-                                    if (!currentContentState.enableUndoButton) {
-                                        onBookChapterContentAction(BookChapterContentAction.UpdateSystemBar)
+                                    if (!enableUndoButton) {
+                                        combineActions.updateSystemBarVisibility()
                                     }
                                 },
                                 onDoubleClick = {
-                                    onAutoScrollAction(AutoScrollAction.UpdateIsPaused(false))
+                                    autoScrollVM.onAction(AutoScrollAction.UpdateIsPaused(false))
                                 }
                             )
                         }
@@ -345,8 +374,8 @@ fun BookChapterContent(
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                         style = TextStyle(
-                            color = stylingState.textColor,
-                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                            color = stylingState.stylePreferences.textColor,
+                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                         )
                     )
                     Text(
@@ -362,11 +391,11 @@ fun BookChapterContent(
                             )
                             .padding(start = 4.dp, end = 4.dp)
                             .wrapContentWidth(),
-                        text = "${currentChapter + 1} / ${bookInfo.totalChapter}",
+                        text = chapterIndex,
                         style = TextStyle(
-                            color = stylingState.textColor,
+                            color = stylingState.stylePreferences.textColor,
                             textAlign = TextAlign.Right,
-                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                         ),
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -412,7 +441,7 @@ fun BookChapterContent(
                         }
                         .onSizeChanged { size = it }
                         .onGloballyPositioned { coordinates ->
-                            onBookChapterContentAction(
+                            chapterContentVM.onAction(
                                 BookChapterContentAction.UpdateScreenHeight(
                                     coordinates.size.height
                                 )
@@ -435,20 +464,14 @@ fun BookChapterContent(
                         items = paragraphs,
                         key = { index, _ -> index }
                     ) { index, paragraph ->
-                        val isHighlighted = isCurrentChapter && isTTSActivated && ttsCurrentParagraphIndex == index
-                        val offset by rememberUpdatedState(if (isHighlighted) wordOffset() else 0)
-                        val highlightRange by rememberUpdatedState(if (isHighlighted) highlightRange() else TextRange.Zero)
                         ChapterContent(
                             index = index,
                             paragraph = paragraph,
-                            chapterContentState = bookChapterContentState,
-                            stylingState = stylingState,
-                            isHighlighted = isHighlighted,
-                            highlightRange = { highlightRange },
-                            wordOffset = { offset },
+                            currentChapterIndex = { currentChapterIndex },
+                            isHighlightedProvider = { isCurrentChapter() && currentTTSState.isActivated && currentTTSState.paragraphIndex == index },
                             onRequestScrollToOffset = { lineBottomY ->
                                 coroutineScope.launch {
-                                    if (isTTSActivated && !listState.isScrollInProgress && isCurrentChapter) {
+                                    if (currentTTSState.isActivated && !listState.isScrollInProgress && isCurrentChapter()) {
                                         val itemInfo = listState.layoutInfo.visibleItemsInfo.find { it.index == index }
                                         if (itemInfo != null) {
                                             val absoluteLineY = itemInfo.offset + lineBottomY
@@ -465,7 +488,6 @@ fun BookChapterContent(
                                     }
                                 }
                             },
-                            onNoteAction = onNoteAction
                         )
                     }
                     item {
@@ -479,30 +501,34 @@ fun BookChapterContent(
                             Text(
                                 text = "·:*¨༺ ♱✮♱ ༻¨*:·",
                                 style = TextStyle(
-                                    color = stylingState.textColor,
+                                    color = stylingState.stylePreferences.textColor,
                                     fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 )
                             )
-                            if(bookInfo.fileType == "epub-online" && currentChapter + 1 == bookInfo.totalChapter) {
+                            if(bookInfoProvider().fileType == "epub-online" && currentChapter() + 1 == bookInfoProvider().totalChapter) {
                                 OutlinedButton(
                                     onClick = {
-                                        onBookContentDataAction(BookContentDataAction.CheckForNewChapter)
+                                        BookImporter(
+                                            context = context,
+                                            scope = scope,
+                                            specialIntent = "null",
+                                        ).fetchNewChapter(bookInfoProvider())
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = stylingState.backgroundColor,
-                                        contentColor = stylingState.textColor,
+                                        containerColor = stylingState.stylePreferences.backgroundColor,
+                                        contentColor = stylingState.stylePreferences.textColor,
                                     ),
                                     border = BorderStroke(
                                         width = 2.dp,
-                                        color = stylingState.textColor
+                                        color = stylingState.stylePreferences.textColor
                                     )
                                 ) {
                                     Text(
                                         text = "Check for new chapter",
                                         style = TextStyle(
-                                            color = stylingState.textColor,
+                                            color = stylingState.stylePreferences.textColor,
                                             fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                                         )
                                     )
                                 }
@@ -530,12 +556,13 @@ fun BookChapterContent(
                                         .asPaddingValues()
                                         .calculateBottomPadding()
                                 )
-                            ),
-                        text = "${currentContentState.lastVisibleItemIndex} / ${paragraphs.size}",
+                            )
+                            .padding(start = 4.dp, end = 4.dp),
+                        text = text,
                         style = TextStyle(
-                            color = stylingState.textColor,
+                            color = stylingState.stylePreferences.textColor,
                             textAlign = TextAlign.Right,
-                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                         ),
                         overflow = TextOverflow.Ellipsis,
                     )

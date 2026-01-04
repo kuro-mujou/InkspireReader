@@ -53,7 +53,7 @@ fun BookmarkSetting(
     }
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surface
+        color = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -76,8 +76,8 @@ fun BookmarkSetting(
                     text = "BOOKMARK STYLE",
                     style = TextStyle(
                         fontSize = 20.sp,
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex)
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily)
                     )
                 )
             }

@@ -41,7 +41,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.ui.home.libary.LibraryState

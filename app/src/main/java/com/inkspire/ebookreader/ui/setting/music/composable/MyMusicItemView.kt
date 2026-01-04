@@ -78,7 +78,7 @@ fun MyMusicItemView(
                         modifier = Modifier.padding(start = 12.dp),
                         imageVector = ImageVector.vectorResource(R.drawable.ic_delete),
                         contentDescription = "delete",
-                        tint = stylingState?.textColor ?: Color.White
+                        tint = stylingState?.stylePreferences?.textColor ?: Color.White
                     )
                 }
             }
@@ -131,7 +131,7 @@ fun MyMusicItemView(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_music_disk),
                         contentDescription = null,
                         tint = if (music.isSelected)
-                            stylingState?.textColor ?: Color.Red
+                            stylingState?.stylePreferences?.textColor ?: Color.Red
                         else
                             stylingState?.textBackgroundColor ?: Color.Gray
                     )
@@ -146,8 +146,8 @@ fun MyMusicItemView(
                                     repeatDelayMillis = 0
                                 ),
                             style = TextStyle(
-                                color = stylingState?.textColor ?: Color.White,
-                                fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex)
+                                color = stylingState?.stylePreferences?.textColor ?: Color.White,
+                                fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily)
                             )
                         )
                     }
@@ -161,7 +161,7 @@ fun MyMusicItemView(
                             imageVector = ImageVector.vectorResource(R.drawable.ic_favourite_music),
                             contentDescription = null,
                             tint = if (music.isFavorite)
-                                stylingState?.textColor ?: Color.Red
+                                stylingState?.stylePreferences?.textColor ?: Color.Red
                             else
                                 stylingState?.textBackgroundColor ?: Color.Gray
                         )

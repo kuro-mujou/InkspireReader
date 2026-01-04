@@ -23,7 +23,6 @@ class BottomBarAutoScrollViewModel: ViewModel() {
             BottomBarAutoScrollAction.ChangeSettingVisibility -> {
                 _state.update { it.copy(settingVisibility = !it.settingVisibility) }
             }
-            else -> {}
         }
     }
 }

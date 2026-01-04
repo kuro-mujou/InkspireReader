@@ -31,8 +31,10 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,31 +49,55 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.domain.model.TableOfContent
-import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
-import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
+import com.inkspire.ebookreader.common.UiState
+import com.inkspire.ebookreader.common.isSuccess
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalChapterContentViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalCombineActions
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDrawerViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalTableOfContentViewModel
 import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.composable.CustomNavigationDrawerItem
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 import com.inkspire.ebookreader.ui.composable.MySearchBox
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TableOfContentScreen(
-    bookChapterContentState: BookChapterContentState,
-    stylingState: StylingState,
-    tableOfContentState: TableOfContentState,
-    drawerState: DrawerState,
-    tableOfContents: List<TableOfContent>,
-    onAction: (TableOfContentAction) -> Unit
-) {
+fun TableOfContentScreen() {
+    val combineActions = LocalCombineActions.current
+    val chapterContentVM = LocalChapterContentViewModel.current
+    val drawerVM = LocalDrawerViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+    val tocVM = LocalTableOfContentViewModel.current
+    val dataVM = LocalDataViewModel.current
+
+    val drawerState by drawerVM.state.collectAsStateWithLifecycle()
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+    val tableOfContentState by tocVM.state.collectAsStateWithLifecycle()
+    val bookChapterContentState by chapterContentVM.state.collectAsStateWithLifecycle()
+    val tocState by remember(dataVM) {
+        dataVM.state.map { it.tableOfContentState }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = UiState.None)
+
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val isImeVisible = WindowInsets.isImeVisible
     val lazyColumnState = rememberLazyListState()
     val searchState = rememberTextFieldState()
     val scope = rememberCoroutineScope()
+
+    val tableOfContents = remember(tocState) {
+        if (tocState.isSuccess) {
+            (tocState as UiState.Success).data()
+        } else {
+            emptyList()
+        }
+    }
+    val tableOfContentSize by rememberUpdatedState(tableOfContents.size)
 
     LaunchedEffect(isImeVisible) {
         if (!isImeVisible) {
@@ -81,7 +107,7 @@ fun TableOfContentScreen(
     LaunchedEffect(tableOfContentState.searchState) {
         if (tableOfContentState.searchState) {
             lazyColumnState.scrollToItem(tableOfContentState.targetSearchIndex)
-            onAction(TableOfContentAction.UpdateSearchState(false))
+            tocVM.onAction(TableOfContentAction.UpdateSearchState(false))
         }
     }
     LaunchedEffect(drawerState.visibility) {
@@ -89,7 +115,7 @@ fun TableOfContentScreen(
             lazyColumnState.scrollToItem(bookChapterContentState.currentChapterIndex)
         } else {
             searchState.clearText()
-            onAction(TableOfContentAction.UpdateTargetSearchIndex(-1))
+            tocVM.onAction(TableOfContentAction.UpdateTargetSearchIndex(-1))
             keyboardController?.hide()
             focusManager.clearFocus()
         }
@@ -105,19 +131,19 @@ fun TableOfContentScreen(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
                 textFieldState = searchState,
-                textColor = stylingState.textColor,
+                textColor = stylingState.stylePreferences.textColor,
                 backgroundColor = stylingState.containerColor,
-                cursorColor = stylingState.textColor,
+                cursorColor = stylingState.stylePreferences.textColor,
                 textStyle = TextStyle(
-                    color = stylingState.textColor,
-                    fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                    color = stylingState.stylePreferences.textColor,
+                    fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                 ),
                 hint = {
                     Text(
                         text = "Enter a chapter number",
                         style = TextStyle(
-                            color = stylingState.textColor,
-                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                            color = stylingState.stylePreferences.textColor,
+                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                         )
                     )
                 },
@@ -128,15 +154,15 @@ fun TableOfContentScreen(
                 keyboardActions = {
                     val chapterIndex = searchState.text.toString().toIntOrNull()
                     if (chapterIndex != null) {
-                        onAction(
+                        tocVM.onAction(
                             TableOfContentAction.UpdateTargetSearchIndex(
-                                if (chapterIndex < tableOfContents.size)
+                                if (chapterIndex < tableOfContentSize)
                                     chapterIndex
                                 else
-                                    tableOfContents.size - 1
+                                    tableOfContentSize - 1
                             )
                         )
-                        onAction(
+                        tocVM.onAction(
                             TableOfContentAction.UpdateSearchState(true)
                         )
                         focusManager.clearFocus()
@@ -163,10 +189,10 @@ fun TableOfContentScreen(
                                 style = when (index) {
                                     tableOfContentState.targetSearchIndex -> {
                                         TextStyle(
-                                            color = stylingState.textColor,
+                                            color = stylingState.stylePreferences.textColor,
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
-                                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                                         )
                                     }
                                     bookChapterContentState.currentChapterIndex -> {
@@ -175,13 +201,13 @@ fun TableOfContentScreen(
                                             fontStyle = FontStyle.Italic,
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
-                                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                                         )
                                     }
                                     else -> {
                                         TextStyle(
                                             fontSize = 14.sp,
-                                            fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                                            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                                         )
                                     }
                                 },
@@ -192,13 +218,13 @@ fun TableOfContentScreen(
                             .padding(4.dp, 2.dp, 4.dp, 2.dp)
                             .wrapContentHeight()
                             .clickable {
-                                onAction(TableOfContentAction.NavigateToChapter(index))
+                                combineActions.navigateToChapter(index)
                             }
                             .then(
                                 if (index == tableOfContentState.targetSearchIndex)
                                     Modifier.border(
                                         width = 1.dp,
-                                        color = stylingState.textColor,
+                                        color = stylingState.stylePreferences.textColor,
                                         shape = RoundedCornerShape(25.dp)
                                     )
                                 else {
@@ -210,7 +236,7 @@ fun TableOfContentScreen(
                                 if (index == tableOfContentState.targetSearchIndex) {
                                     stylingState.textBackgroundColor
                                 } else {
-                                    stylingState.textColor
+                                    stylingState.stylePreferences.textColor
                                 },
                             unselectedContainerColor =
                                 if (index == tableOfContentState.targetSearchIndex) {
@@ -224,29 +250,29 @@ fun TableOfContentScreen(
                     )
                 }
             }
-            LaunchedEffect(lazyColumnState) {
-                snapshotFlow { lazyColumnState.layoutInfo.visibleItemsInfo.firstOrNull()?.index }
-                    .collect { index ->
-                        onAction(TableOfContentAction.UpdateFirstVisibleTocIndex(index ?: 0))
-                    }
-            }
-            LaunchedEffect(lazyColumnState) {
-                snapshotFlow { lazyColumnState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-                    .collect { index ->
-                        onAction(TableOfContentAction.UpdateLastVisibleTocIndex(index ?: 0))
-                    }
-            }
-            LaunchedEffect(
-                tableOfContentState.firstVisibleTocIndex,
-                tableOfContentState.lastVisibleTocIndex
-            ) {
-                onAction(
-                    TableOfContentAction.ChangeFabVisibility(
-                        bookChapterContentState.currentChapterIndex !in
-                            tableOfContentState.firstVisibleTocIndex..tableOfContentState.lastVisibleTocIndex
-                    )
-                )
-            }
+//            LaunchedEffect(lazyColumnState) {
+//                snapshotFlow { lazyColumnState.layoutInfo.visibleItemsInfo.firstOrNull()?.index }
+//                    .collect { index ->
+//                        tocVM.onAction(TableOfContentAction.UpdateFirstVisibleTocIndex(index ?: 0))
+//                    }
+//            }
+//            LaunchedEffect(lazyColumnState) {
+//                snapshotFlow { lazyColumnState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+//                    .collect { index ->
+//                        tocVM.onAction(TableOfContentAction.UpdateLastVisibleTocIndex(index ?: 0))
+//                    }
+//            }
+//            LaunchedEffect(
+//                tableOfContentState.firstVisibleTocIndex,
+//                tableOfContentState.lastVisibleTocIndex
+//            ) {
+//                tocVM.onAction(
+//                    TableOfContentAction.ChangeFabVisibility(
+//                        bookChapterContentState.currentChapterIndex !in
+//                            tableOfContentState.firstVisibleTocIndex..tableOfContentState.lastVisibleTocIndex
+//                    )
+//                )
+//            }
         }
         if (tableOfContentState.fabVisibility) {
             IconButton(
@@ -264,7 +290,7 @@ fun TableOfContentScreen(
                     }
                 },
                 colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = stylingState.textColor,
+                    containerColor = stylingState.stylePreferences.textColor,
                 )
             ) {
                 if (bookChapterContentState.currentChapterIndex < tableOfContentState.firstVisibleTocIndex)
@@ -272,14 +298,14 @@ fun TableOfContentScreen(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_up),
                         modifier = Modifier.size(16.dp),
                         contentDescription = null,
-                        tint = stylingState.backgroundColor,
+                        tint = stylingState.stylePreferences.backgroundColor,
                     )
                 else
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_down),
                         modifier = Modifier.size(16.dp),
                         contentDescription = null,
-                        tint = stylingState.backgroundColor,
+                        tint = stylingState.stylePreferences.backgroundColor,
                     )
             }
         }

@@ -1,10 +1,10 @@
 package com.inkspire.ebookreader.domain.usecase
 
-import com.inkspire.ebookreader.domain.repository.DatastoreRepository
+import com.inkspire.ebookreader.domain.repository.DatastoreRepo
 
 class SettingDatastoreUseCase(
-    private val datastoreRepository: DatastoreRepository
+    private val datastoreRepository: DatastoreRepo
 ) {
-    fun getKeepScreenOn() = datastoreRepository.getKeepScreenOn()
+    val readerSettings = datastoreRepository.readerSettingPreferences
     suspend fun setKeepScreenOn(value: Boolean) = datastoreRepository.setKeepScreenOn(value)
 }

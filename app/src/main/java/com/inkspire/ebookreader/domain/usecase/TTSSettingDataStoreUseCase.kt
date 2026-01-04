@@ -1,9 +1,9 @@
 package com.inkspire.ebookreader.domain.usecase
 
-import com.inkspire.ebookreader.domain.repository.DatastoreRepository
+import com.inkspire.ebookreader.domain.repository.DatastoreRepo
 
 class TTSSettingDataStoreUseCase(
-    private val datastoreRepository: DatastoreRepository
+    private val datastoreRepository: DatastoreRepo
 ) {
     suspend fun setTTSLocale(value: String) = datastoreRepository.setTTSLocale(value)
     suspend fun setTTSVoice(value: String) = datastoreRepository.setTTSVoice(value)

@@ -1,25 +1,21 @@
 package com.inkspire.ebookreader.ui.bookcontent.styling
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.ContentThemeColor
+import com.inkspire.ebookreader.domain.model.StylePreferences
 
+@Immutable
 data class StylingState(
-    val backgroundColor: Color = Color(0xFFFFFFFF),
-    val containerColor: Color = Color(0xFFFFFFFF),
-    val drawerContainerColor: Color = Color(0xFFFFFFFF),
-    val textColor: Color = Color(0xFFFFFFFF),
+    val stylePreferences: StylePreferences = StylePreferences(),
+
     val tocTextColor: Color = Color(0xFFFFFFFF),
     val textBackgroundColor: Color = Color(0xFFFFFFFF),
-    val selectedColorSet: Int = 0,
-    val fontSize: Int = 20,
-    val lineSpacing: Int = 15,
-    val textAlign: Boolean = true,
-    val textIndent: Boolean = true,
-    val selectedFontFamilyIndex: Int = 0,
-    val imagePaddingState: Boolean = false,
+    val containerColor: Color = Color(0xFFFFFFFF),
+    val drawerContainerColor: Color = Color(0xFFFFFFFF),
 
     val fontFamilies: List<FontFamily> = listOf(
         FontFamily(Font(R.font.cormorant)),//serif

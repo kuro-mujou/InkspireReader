@@ -1,7 +1,11 @@
 package com.inkspire.ebookreader.ui.setting
 
+import androidx.compose.runtime.Immutable
+import com.inkspire.ebookreader.domain.model.ReaderSettingPreferences
+
+@Immutable
 data class SettingState(
-    val keepScreenOn: Boolean = false,
+    val readerSettings: ReaderSettingPreferences = ReaderSettingPreferences(),
 
     val openCategoryMenu: Boolean = false,
     val openBackgroundMusicMenu: Boolean = false,

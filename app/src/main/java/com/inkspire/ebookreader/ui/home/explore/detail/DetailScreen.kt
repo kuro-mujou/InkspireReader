@@ -82,7 +82,7 @@ fun DetailScreen(
         }
 
         is UiState.Success -> {
-            val searchedBooks = result.data
+            val searchedBooks = result.data()
             val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
             val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
             Column (

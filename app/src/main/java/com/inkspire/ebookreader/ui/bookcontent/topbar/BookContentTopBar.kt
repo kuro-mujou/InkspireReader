@@ -1,6 +1,5 @@
 package com.inkspire.ebookreader.ui.bookcontent.topbar
 
-import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -22,15 +21,24 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.domain.model.TableOfContent
-import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
-import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.common.UiState
+import com.inkspire.ebookreader.common.isSuccess
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalCombineActions
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDrawerViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalTableOfContentViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalTopBarViewModel
+import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerAction
+import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentAction
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
@@ -39,28 +47,41 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun BookContentTopBar(
-    tableOfContents: List<TableOfContent>,
+    currentChapterIndexProvider: () -> Int,
+    hazeEnableProvider: () -> Boolean,
     hazeState: HazeState,
-    stylingState: StylingState,
-    drawerState: DrawerState,
-    bookChapterContentState: BookChapterContentState,
-    bookContentTopBarState: BookContentTopBarState,
-    onAction: (BookContentTopBarAction) -> Unit
 ) {
+    val combineActions = LocalCombineActions.current
+    val drawerVM = LocalDrawerViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+    val tocVM = LocalTableOfContentViewModel.current
+    val topBarVM = LocalTopBarViewModel.current
+    val dataVM = LocalDataViewModel.current
+
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+    val topBarState by topBarVM.state.collectAsStateWithLifecycle()
+    val dataState by dataVM.state.collectAsStateWithLifecycle()
+
+    val tableOfContents = remember(dataState.tableOfContentState) {
+        if (dataState.tableOfContentState.isSuccess) {
+            (dataState.tableOfContentState as UiState.Success).data()
+        } else {
+            emptyList()
+        }
+    }
+
     AnimatedVisibility(
-        visible = bookContentTopBarState.topBarVisibility,
+        visible = topBarState.topBarVisibility,
         enter = slideInVertically(initialOffsetY = { -it }),
         exit = slideOutVertically(targetOffsetY = { -it }),
     ) {
         val style = HazeMaterials.thin(stylingState.containerColor)
-        val useHaze = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                && !drawerState.visibility && !drawerState.isAnimating
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .then(
-                    if (useHaze) {
+                    if (hazeEnableProvider()) {
                         Modifier.hazeEffect(
                             state = hazeState,
                             style = style
@@ -88,41 +109,46 @@ fun BookContentTopBar(
         ) {
             IconButton(
                 onClick = {
-                    onAction(BookContentTopBarAction.BackIconClicked)
+                    combineActions.onBackClicked()
                 }
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_arrow),
                     contentDescription = "Back",
-                    tint = stylingState.textColor
+                    tint = stylingState.stylePreferences.textColor
                 )
             }
             IconButton(
                 onClick = {
-                    onAction(BookContentTopBarAction.DrawerIconClicked)
+                    drawerVM.onAction(DrawerAction.OpenDrawer)
                 }
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_menu),
                     contentDescription = "Menu",
-                    tint = stylingState.textColor
+                    tint = stylingState.stylePreferences.textColor
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
             IconButton(
                 onClick = {
-                    onAction(BookContentTopBarAction.BookmarkIconClicked)
+                    tocVM.onAction(
+                        TableOfContentAction.UpdateCurrentChapterFavoriteState(
+                            chapterIndex = currentChapterIndexProvider(),
+                            isFavorite = tableOfContents.getOrNull(currentChapterIndexProvider())?.isFavorite == true
+                        )
+                    )
                 }
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(
-                        if (tableOfContents[bookChapterContentState.currentChapterIndex].isFavorite)
+                        if (tableOfContents.getOrNull(currentChapterIndexProvider())?.isFavorite == true)
                             R.drawable.ic_bookmark_filled
                         else
                             R.drawable.ic_bookmark
                     ),
                     contentDescription = "Bookmark",
-                    tint = stylingState.textColor
+                    tint = stylingState.stylePreferences.textColor
                 )
             }
         }

@@ -1,5 +1,8 @@
 package com.inkspire.ebookreader.domain.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class Book(
     val id: String,
     val title: String,
@@ -16,6 +19,7 @@ data class Book(
     val fileType: String
 )
 
+@Immutable
 data class EmptyBook(
     val id: String? = "",
     val title: String? = "",

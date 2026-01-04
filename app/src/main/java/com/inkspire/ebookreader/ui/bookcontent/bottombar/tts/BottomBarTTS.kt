@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
@@ -46,10 +47,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
-import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalBottomBarTTSViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalCombineActions
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
 import com.inkspire.ebookreader.ui.setting.music.MusicSetting
 import com.inkspire.ebookreader.ui.setting.tts.TTSSetting
 import com.inkspire.ebookreader.util.ColorUtil.isDark
@@ -61,15 +64,19 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BottomBarTTS(
-    currentChapterTitle: String,
     hazeState: HazeState,
-    bottomBarTTSState: BottomBarTTSState,
-    ttsPlaybackState: TTSPlaybackState,
-    stylingState: StylingState,
-    drawerState: DrawerState,
-    onAction: (BottomBarTTSAction) -> Unit
+    hazeEnableProvider: () -> Boolean,
+    chapterTitleProvider: () -> String,
 ) {
-    val useHaze = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !drawerState.visibility && !drawerState.isAnimating
+    val combineActions = LocalCombineActions.current
+    val bottomBarTTS = LocalBottomBarTTSViewModel.current
+    val ttsVM = LocalTTSViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+
+    val ttsPlaybackState by ttsVM.state.collectAsStateWithLifecycle()
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+    val bottomBarTTSState by bottomBarTTS.state.collectAsStateWithLifecycle()
+
     val style = HazeMaterials.thin(stylingState.containerColor)
     val musicMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     Column(
@@ -77,7 +84,7 @@ fun BottomBarTTS(
             .fillMaxWidth()
             .wrapContentHeight()
             .then(
-                if (useHaze) {
+                if (hazeEnableProvider()) {
                     Modifier.hazeEffect(
                         state = hazeState,
                         style = style
@@ -113,12 +120,12 @@ fun BottomBarTTS(
                     initialDelayMillis = 0,
                     repeatDelayMillis = 0
                 ),
-            text = currentChapterTitle,
+            text = chapterTitleProvider(),
             overflow = TextOverflow.Ellipsis,
             style = TextStyle(
-                color = stylingState.textColor,
+                color = stylingState.stylePreferences.textColor,
                 textAlign = TextAlign.Center,
-                fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
             ),
             maxLines = 1,
         )
@@ -130,33 +137,33 @@ fun BottomBarTTS(
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BottomBarTTSAction.OnPreviousChapterClicked)
+                    combineActions.onPreviousChapterClicked()
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     painter = painterResource(id = R.drawable.ic_skip_to_back),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "previous chapter"
                 )
             }
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BottomBarTTSAction.OnPreviousParagraphClicked)
+                    combineActions.onPreviousParagraphClicked()
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     painter = painterResource(id = R.drawable.ic_backward),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "previous paragraph"
                 )
             }
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BottomBarTTSAction.OnPlayPauseClicked)
+                    combineActions.onToggleTTS()
                 }
             ) {
                 if (ttsPlaybackState.isActivated && !ttsPlaybackState.isPaused) {
@@ -164,13 +171,13 @@ fun BottomBarTTS(
                         modifier = Modifier.size(30.dp),
                         painter = painterResource(id = R.drawable.ic_pause),
                         contentDescription = "play/pause",
-                        tint = stylingState.textColor
+                        tint = stylingState.stylePreferences.textColor
                     )
                 } else {
                     Icon(
                         modifier = Modifier.size(30.dp),
                         painter = painterResource(id = R.drawable.ic_play),
-                        tint = stylingState.textColor,
+                        tint = stylingState.stylePreferences.textColor,
                         contentDescription = "play/pause"
                     )
                 }
@@ -178,26 +185,26 @@ fun BottomBarTTS(
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BottomBarTTSAction.OnNextParagraphClicked)
+                    combineActions.onNextParagraphClicked()
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     painter = painterResource(id = R.drawable.ic_forward),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "next paragraph"
                 )
             }
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BottomBarTTSAction.OnNextChapterClicked)
+                    combineActions.onNextChapterClicked()
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     painter = painterResource(id = R.drawable.ic_skip_to_next),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "next chapter"
                 )
             }
@@ -211,39 +218,39 @@ fun BottomBarTTS(
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BottomBarTTSAction.UpdateMusicMenuVisibility)
+                    bottomBarTTS.onAction(BottomBarTTSAction.UpdateMusicMenuVisibility)
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     painter = painterResource(id = R.drawable.ic_music_background),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "background music"
                 )
             }
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BottomBarTTSAction.OnStopClicked)
+                    combineActions.onStopTTS()
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     painter = painterResource(id = R.drawable.ic_stop),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "stop tts"
                 )
             }
             IconButton(
                 modifier = Modifier.size(50.dp),
                 onClick = {
-                    onAction(BottomBarTTSAction.UpdateVoiceMenuVisibility)
+                    bottomBarTTS.onAction(BottomBarTTSAction.UpdateVoiceMenuVisibility)
                 }
             ) {
                 Icon(
                     modifier = Modifier.size(30.dp),
                     painter = painterResource(id = R.drawable.ic_setting),
-                    tint = stylingState.textColor,
+                    tint = stylingState.stylePreferences.textColor,
                     contentDescription = "tts setting"
                 )
             }
@@ -256,7 +263,7 @@ fun BottomBarTTS(
             ttsState = ttsPlaybackState,
             stylingState = stylingState,
             onDismiss = {
-                onAction(BottomBarTTSAction.UpdateVoiceMenuVisibility)
+                bottomBarTTS.onAction(BottomBarTTSAction.UpdateVoiceMenuVisibility)
             }
         )
     }
@@ -265,14 +272,14 @@ fun BottomBarTTS(
         ModalBottomSheet(
             modifier = Modifier.fillMaxSize(),
             sheetState = musicMenuSheetState,
-            onDismissRequest = { onAction(BottomBarTTSAction.UpdateMusicMenuVisibility) },
+            onDismissRequest = { bottomBarTTS.onAction(BottomBarTTSAction.UpdateMusicMenuVisibility) },
             contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-            containerColor = stylingState.backgroundColor,
+            containerColor = stylingState.stylePreferences.backgroundColor,
             scrimColor = stylingState.containerColor,
             dragHandle = {
                 Surface(
                     modifier = Modifier.padding(vertical = 22.dp),
-                    color = stylingState.textColor,
+                    color = stylingState.stylePreferences.textColor,
                     shape = MaterialTheme.shapes.extraLarge,
                 ) {
                     Box(Modifier.size(width = 32.dp, height = 4.dp))
@@ -280,7 +287,7 @@ fun BottomBarTTS(
             }
         ) {
             val view = LocalView.current
-            val isLightTheme = !stylingState.backgroundColor.isDark()
+            val isLightTheme = !stylingState.stylePreferences.backgroundColor.isDark()
 
             DisposableEffect(view, isLightTheme) {
                 val window = (view.parent as? DialogWindowProvider)?.window

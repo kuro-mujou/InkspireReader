@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotzilla)
+//    alias(libs.plugins.kotzilla)
 }
 
 android {
@@ -19,24 +19,17 @@ android {
         applicationId = "com.inkspire.ebookreader"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 5
+        versionName = "1.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-//    signingConfigs {
-//        create("release") {
-//            storeFile = file("keystore.jks")
-//            storePassword = "yourStorePassword"
-//            keyAlias = "yourKeyAlias"
-//            keyPassword = "yourKeyPassword"
-//        }
-//    }
-
     buildTypes {
         debug {
             isDebuggable = true
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
         }
         release {
             isMinifyEnabled = false
@@ -45,7 +38,6 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-//            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -72,6 +64,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.kotlinx.collections.immutable)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -105,17 +98,14 @@ dependencies {
     implementation(libs.moko.permissions.compose)
     implementation(libs.moko.permissions.notification)
 
-    implementation(libs.kotzilla.sdk)
+//    implementation(libs.kotzilla.sdk)
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.compose)
     implementation(libs.koin.compose.viewmodel)
 
     implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.android)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.okhttp)
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.readium.streamer)
@@ -134,8 +124,10 @@ dependencies {
     implementation(libs.slf4j.android)
     implementation(libs.jsoup)
 
-    implementation(libs.haze.materials)
     implementation(libs.coil.compose)
+    implementation(libs.coil.compose.network)
+
+    implementation(libs.haze.materials)
     implementation(libs.richeditor.compose) {
         exclude(group = "org.jetbrains.compose.material", module = "material")
         exclude(group = "org.jetbrains.compose.material3", module = "material3")

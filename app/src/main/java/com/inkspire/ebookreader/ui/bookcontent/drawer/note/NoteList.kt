@@ -14,27 +14,33 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.ui.bookcontent.drawer.DrawerState
-import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentAction
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalCombineActions
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDrawerViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 
 @Composable
-fun NoteList(
-    drawerState: DrawerState,
-    noteState: NoteState,
-    stylingState: StylingState,
-    onNoteAction: (NoteAction) -> Unit,
-    onTableOfContentAction: (TableOfContentAction) -> Unit
-) {
+fun NoteList() {
+    val combineActions = LocalCombineActions.current
+    val drawerVM = LocalDrawerViewModel.current
+    val stylingVM = LocalStylingViewModel.current
+    val noteVM = LocalNoteViewModel.current
+
+    val drawerState by drawerVM.state.collectAsStateWithLifecycle()
+    val stylingState by stylingVM.state.collectAsStateWithLifecycle()
+    val noteState by noteVM.state.collectAsStateWithLifecycle()
+
     LaunchedEffect(drawerState.visibility) {
         if (!drawerState.visibility) {
-            onNoteAction(NoteAction.UnselectNote)
-            onNoteAction(NoteAction.ClearUndoList)
+            noteVM.onAction(NoteAction.UnselectNote)
+            noteVM.onAction(NoteAction.ClearUndoList)
         }
     }
     Column(
@@ -46,13 +52,13 @@ fun NoteList(
         ) {
             IconButton(
                 onClick = {
-                    onNoteAction(NoteAction.UndoDeleteNote)
+                    noteVM.onAction(NoteAction.UndoDeleteNote)
                 }
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_undo),
                     contentDescription = null,
-                    tint = stylingState.textColor
+                    tint = stylingState.stylePreferences.textColor
                 )
             }
         }
@@ -74,8 +80,10 @@ fun NoteList(
                     note = note,
                     noteState = noteState,
                     stylingState = stylingState,
-                    onNoteAction = onNoteAction,
-                    onTableOfContentAction = onTableOfContentAction
+                    onNoteAction = noteVM::onAction,
+                    onCardClicked = { tocId, contentId ->
+                        combineActions.navigateToParagraph(tocId, contentId)
+                    }
                 )
             }
         }

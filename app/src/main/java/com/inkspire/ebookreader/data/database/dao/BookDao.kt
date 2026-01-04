@@ -22,6 +22,10 @@ interface BookDao {
     fun getAllBooks(): Flow<List<BookEntity>>
 
     @Transaction
+    @Query("SELECT * FROM books")
+    fun getAllBooksWithCategories(): Flow<List<BookWithCategories>>
+
+    @Transaction
     @Query("SELECT * FROM books WHERE bookId = :bookId LIMIT 1")
     fun getBookAsFlow(bookId: String): Flow<BookEntity?>
 

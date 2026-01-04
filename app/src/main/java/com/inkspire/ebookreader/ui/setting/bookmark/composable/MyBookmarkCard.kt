@@ -40,7 +40,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.util.UnstableApi
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.BookmarkShape
 import com.inkspire.ebookreader.common.BookmarkStyle
@@ -51,7 +50,6 @@ import com.inkspire.ebookreader.util.ColorUtil.lighten
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
-@UnstableApi
 @Composable
 fun MyBookmarkCard(
     bookmarkContent: String,
@@ -85,15 +83,15 @@ fun MyBookmarkCard(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    color = stylingState?.textColor?.copy(0.3f) ?: MaterialTheme.colorScheme.primary.copy(0.3f),
+                    color = stylingState?.stylePreferences?.textColor?.copy(0.3f) ?: MaterialTheme.colorScheme.primary.copy(0.3f),
                     shape = BookmarkShape()
                 )
                 .clickable {
                     onCardClicked()
                 },
             colors = CardDefaults.elevatedCardColors(
-                containerColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.background,
-                contentColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
+                containerColor = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.background,
+                contentColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
             ),
             elevation = CardDefaults.elevatedCardElevation(
                 defaultElevation = 4.dp,
@@ -186,7 +184,7 @@ fun MyBookmarkCard(
                     modifier = Modifier
                         .padding(24.dp)
                         .background(
-                            color = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.background,
+                            color = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.background,
                             shape = RoundedCornerShape(8.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -201,8 +199,8 @@ fun MyBookmarkCard(
                         text = bookmarkContent,
                         style = TextStyle(
                             textAlign = TextAlign.Center,
-                            color = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
-                            fontFamily = stylingState?.fontFamilies[stylingState.selectedFontFamilyIndex],
+                            color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                            fontFamily = stylingState?.fontFamilies[stylingState.stylePreferences.fontFamily],
                         )
                     )
                 }
@@ -225,7 +223,7 @@ fun MyBookmarkCard(
                 Icon(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_delete),
                     contentDescription = null,
-                    tint = stylingState?.textColor ?: MaterialTheme.colorScheme.onSecondaryContainer
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         },

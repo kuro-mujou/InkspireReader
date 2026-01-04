@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class TableOfContentViewModel(
+    private val bookId: String,
     private val tableOfContentUseCase: TableOfContentUseCase
 ) : ViewModel() {
     private val _state = MutableStateFlow(TableOfContentState())
@@ -40,13 +41,12 @@ class TableOfContentViewModel(
             is TableOfContentAction.UpdateCurrentChapterFavoriteState -> {
                 viewModelScope.launch {
                     tableOfContentUseCase.updateChapterFavoriteState(
-                        bookId = action.bookId,
+                        bookId = bookId,
                         chapterIndex = action.chapterIndex,
-                        isFavorite = action.isFavorite
+                        isFavorite = !action.isFavorite
                     )
                 }
             }
-            else -> {}
         }
     }
 }

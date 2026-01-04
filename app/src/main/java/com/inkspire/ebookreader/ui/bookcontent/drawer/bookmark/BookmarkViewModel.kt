@@ -26,8 +26,8 @@ class BookmarkViewModel(
 
     init {
         viewModelScope.launch {
-            datastoreUseCase.getBookmarkStyle().collectLatest { bookmarkStyle ->
-                _state.update { it.copy(selectedBookmarkStyle = bookmarkStyle) }
+            datastoreUseCase.readerSettings.collectLatest { settings ->
+                _state.update { it.copy(readerSettings = settings) }
             }
         }
     }

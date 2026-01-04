@@ -144,7 +144,6 @@ class EPUBImportWorker(
         onProgress(null, "Processing Book info...")
 
         val actualTocToProcess = mergeLinks(publication.readingOrder, publication.tableOfContents)
-
         if (actualTocToProcess.isEmpty()) {
             return ImportResult.failure(Exception("Table of Content is empty"))
         }
@@ -158,10 +157,14 @@ class EPUBImportWorker(
             return processBookResult
         }
 
+        onProgress(null, "Saving Chapter List...")
+        val initialTocEntities = saveAllTableOfContents(finalBookId, actualTocToProcess)
+
         onProgress(null, "Processing Book content...")
         val processContentResult = processAndSaveBookContent(
             publication = publication,
             actualTocToProcess = actualTocToProcess,
+            initialTocEntities = initialTocEntities,
             onProgress = onProgress
         )
         if (processContentResult.isFailure) {
@@ -171,23 +174,65 @@ class EPUBImportWorker(
         return ImportResult.success(finalBookTitle)
     }
 
+    private suspend fun saveAllTableOfContents(
+        bookId: String,
+        actualTocToProcess: List<Link>
+    ): List<TableOfContentEntity> {
+        val tocEntities = mutableListOf<TableOfContentEntity>()
+        val tocGroupedByResource = actualTocToProcess.groupBy { it.href.toString().substringBefore('#') }
+
+        var overallChapterIndex = 0
+
+        for ((resourceBaseHref, tocLinksInResource) in tocGroupedByResource) {
+            if (resourceBaseHref.isBlank()) continue
+
+            val isSplitChapter = tocLinksInResource.any { it.href.toString().contains('#') } && tocLinksInResource.size > 1
+
+            if (!isSplitChapter) {
+                val link = tocLinksInResource.first()
+                val title = link.title ?: "Chapter ${overallChapterIndex + 1}"
+
+                tocEntities.add(
+                    TableOfContentEntity(bookId = bookId, title = title, index = overallChapterIndex)
+                )
+                overallChapterIndex++
+            } else {
+                for (link in tocLinksInResource) {
+                    val title = link.title ?: "Chapter ${overallChapterIndex + 1}"
+
+                    tocEntities.add(
+                        TableOfContentEntity(bookId = bookId, title = title, index = overallChapterIndex)
+                    )
+                    overallChapterIndex++
+                }
+            }
+        }
+
+        if (tocEntities.isNotEmpty()) {
+            tableOfContentsRepository.saveTableOfContents(tocEntities)
+        }
+
+        return tocEntities
+    }
+
+
     private suspend fun processAndSaveBookContent(
         publication: Publication,
         actualTocToProcess: List<Link>,
+        initialTocEntities: List<TableOfContentEntity>, // Received from Step 1
         onProgress: suspend (progress: Int?, chapterName: String) -> Unit
     ): ImportResult<String> {
-        val tocGroupedByResource =
-            actualTocToProcess.groupBy { it.href.toString().substringBefore('#') }
+        val tocGroupedByResource = actualTocToProcess.groupBy { it.href.toString().substringBefore('#') }
 
         var overallChapterIndex = 0
         val totalTocEntriesForProgress = actualTocToProcess.size
+
         for ((resourceBaseHref, tocLinksInResource) in tocGroupedByResource) {
-            if (resourceBaseHref.isBlank()) {
-                continue
-            }
-            val mainResourceLink = Url(resourceBaseHref)
+            if (resourceBaseHref.isBlank()) continue
+
             var rawHtml = ""
             try {
+                val mainResourceLink = Url(resourceBaseHref)
                 publication.get(mainResourceLink!!)?.buffered().use {
                     it?.read()?.onSuccess { byteArray ->
                         rawHtml = HtmlUtil.cleanHtmlForJsoup(byteArray.decodeToString())
@@ -195,65 +240,40 @@ class EPUBImportWorker(
                 }
             } catch (_: Exception) {}
 
-            val needsSplitting = tocLinksInResource.any {
-                it.href.toString().contains('#')
-            } && tocLinksInResource.size > 1
-
             val realDoc = Jsoup.parse(rawHtml)
+
+            val needsSplitting = tocLinksInResource.any { it.href.toString().contains('#') } && tocLinksInResource.size > 1
+
             if (!needsSplitting) {
                 val representativeTocLink = tocLinksInResource.first()
-                val chapterTitle = representativeTocLink.title
-                    ?: realDoc
-                        .selectFirst("h1, h2, h3, h4, h5, h6")
-                        ?.text()
-                    ?: realDoc.head()
-                        .selectFirst("title")
-                        ?.text()?.let { "$it - Chapter ${overallChapterIndex + 1}" }
+                val extractedTitle = realDoc.selectFirst("h1, h2, h3, h4, h5, h6")?.text()
+                    ?: representativeTocLink.title
+                    ?: realDoc.head().selectFirst("title")?.text()?.let { "$it - Chapter ${overallChapterIndex + 1}" }
                     ?: "Chapter ${overallChapterIndex + 1}"
-                val progress =
-                    ((overallChapterIndex + 1).toFloat() / totalTocEntriesForProgress * 100).toInt()
-                onProgress(progress, chapterTitle)
 
-                saveTableOfContentEntry(finalBookId, chapterTitle, overallChapterIndex)
-                var parsedContent: Pair<List<String>, List<String>>? = null
-                var segmentError: String? = null
-                try {
-                    parsedContent = parseChapterHtmlSegment(
-                        document = realDoc,
-                        startAnchorId = null,
-                        endAnchorId = null,
-                        publication = publication,
-                        chapterIndex = overallChapterIndex
+                val initialEntity = initialTocEntities.getOrNull(overallChapterIndex)
+                if (initialEntity != null && initialEntity.title != extractedTitle) {
+                    tableOfContentsRepository.updateTableOfContentTitle(
+                        bookId = finalBookId,
+                        index = overallChapterIndex,
+                        chapterTitle = extractedTitle
                     )
-                } catch (_: Exception) {
-                    segmentError = "[ERR: Parse Full Segment]"
                 }
 
-                val contentToSave = parsedContent?.first ?: (if (segmentError != null) listOf(
-                    segmentError
-                ) else emptyList())
-                val imagePathsFound = parsedContent?.second ?: emptyList()
+                val progress = ((overallChapterIndex + 1).toFloat() / totalTocEntriesForProgress * 100).toInt()
+                onProgress(progress, extractedTitle)
 
-                if (contentToSave.isNotEmpty()) {
-                    saveChapterContent(
-                        finalBookId,
-                        chapterTitle,
-                        overallChapterIndex,
-                        contentToSave
-                    )
-                } else {
-                    saveEmptyChapterContent(finalBookId, chapterTitle, overallChapterIndex)
-                }
-                val validImagePaths = imagePathsFound.filter { !it.startsWith("error_") }
-                if (validImagePaths.isNotEmpty()) {
-                    imagePathRepository.saveImagePath(finalBookId, validImagePaths)
-                }
+                val (contentToSave, imagePaths) = parseAndGetContent(
+                    realDoc, null, null, publication, overallChapterIndex
+                )
+
+                saveOrUpdateChapterContent(extractedTitle, overallChapterIndex, contentToSave, imagePaths)
+
                 overallChapterIndex++
 
                 for (extraIdx in 1 until tocLinksInResource.size) {
                     val extraLink = tocLinksInResource[extraIdx]
                     val extraTitle = extraLink.title ?: "Chapter ${overallChapterIndex + 1}"
-                    saveTableOfContentEntry(finalBookId, extraTitle, overallChapterIndex)
                     saveEmptyChapterContent(finalBookId, extraTitle, overallChapterIndex)
                     overallChapterIndex++
                 }
@@ -261,83 +281,76 @@ class EPUBImportWorker(
             } else {
                 for (idxInResource in tocLinksInResource.indices) {
                     val currentLink = tocLinksInResource[idxInResource]
-                    val chapterTitle = currentLink.title
-                        ?: realDoc
-                            .selectFirst("h1, h2, h3, h4, h5, h6")
-                            ?.text()
-                        ?: realDoc.head()
-                            .selectFirst("title")
-                            ?.text()?.let { "$it - Chapter ${overallChapterIndex + 1}" }
+                    val extractedTitle = currentLink.title
+                        ?: realDoc.selectFirst("h1, h2, h3, h4, h5, h6")?.text()
                         ?: "Chapter ${overallChapterIndex + 1}"
-                    val progress =
-                        ((overallChapterIndex + 1).toFloat() / totalTocEntriesForProgress * 100).toInt()
-                    onProgress(progress, chapterTitle)
 
-                    saveTableOfContentEntry(finalBookId, chapterTitle, overallChapterIndex)
-
-                    val actualStartAnchorForParsing: String?
-                    val actualEndAnchorForParsing: String?
-
-                    if (idxInResource == 0) {
-                        actualStartAnchorForParsing = null
-                        actualEndAnchorForParsing =
-                            tocLinksInResource.getOrNull(1)?.href?.toString()
-                                ?.substringAfterLast('#', "")?.takeIf {
-                                it.isNotBlank() && tocLinksInResource[1].href.toString()
-                                    .contains('#')
-                            }
-                    } else {
-                        actualStartAnchorForParsing =
-                            currentLink.href.toString().substringAfterLast('#', "").takeIf {
-                                it.isNotBlank() && currentLink.href.toString().contains('#')
-                            }
-                        actualEndAnchorForParsing =
-                            tocLinksInResource.getOrNull(idxInResource + 1)?.href?.toString()
-                                ?.substringAfterLast('#', "")?.takeIf {
-                                it.isNotBlank() && tocLinksInResource[idxInResource + 1].href.toString()
-                                    .contains('#')
-                            }
-                    }
-                    var parsedContent: Pair<List<String>, List<String>>? = null
-                    var segmentError: String? = null
-                    try {
-                        parsedContent = parseChapterHtmlSegment(
-                            document = realDoc,
-                            startAnchorId = actualStartAnchorForParsing,
-                            endAnchorId = actualEndAnchorForParsing,
-                            publication = publication,
-                            chapterIndex = overallChapterIndex
+                    val initialEntity = initialTocEntities.getOrNull(overallChapterIndex)
+                    if (initialEntity != null && initialEntity.title != extractedTitle) {
+                        tableOfContentsRepository.updateTableOfContentTitle(
+                            bookId = finalBookId,
+                            index = overallChapterIndex,
+                            chapterTitle = extractedTitle
                         )
-                    } catch (_: Exception) {
-                        segmentError = "[ERR: Parse Segment]"
                     }
 
-                    val contentToSave = parsedContent?.first ?: (
-                        if (segmentError != null)
-                            listOf(segmentError)
-                        else emptyList()
+                    val progress = ((overallChapterIndex + 1).toFloat() / totalTocEntriesForProgress * 100).toInt()
+                    onProgress(progress, extractedTitle)
+
+                    val (startAnchor, endAnchor) = calculateAnchors(tocLinksInResource, idxInResource)
+
+                    val (contentToSave, imagePaths) = parseAndGetContent(
+                        realDoc, startAnchor, endAnchor, publication, overallChapterIndex
                     )
-                    val imagePathsFound = parsedContent?.second ?: emptyList()
 
-                    if (contentToSave.isNotEmpty()) {
-                        saveChapterContent(
-                            finalBookId,
-                            chapterTitle,
-                            overallChapterIndex,
-                            contentToSave
-                        )
-                    } else {
-                        saveEmptyChapterContent(finalBookId, chapterTitle, overallChapterIndex)
-                    }
-                    val validImagePaths = imagePathsFound.filter { !it.startsWith("error_") }
-                    if (validImagePaths.isNotEmpty()) {
-                        imagePathRepository.saveImagePath(finalBookId, validImagePaths)
-                    }
+                    saveOrUpdateChapterContent(extractedTitle, overallChapterIndex, contentToSave, imagePaths)
                     overallChapterIndex++
                 }
             }
         }
         return ImportResult.success(finalBookTitle)
+    }
+
+    private fun calculateAnchors(links: List<Link>, index: Int): Pair<String?, String?> {
+        val currentLink = links[index]
+        val startAnchor = if (index == 0) null else
+            currentLink.href.toString().substringAfterLast('#', "").takeIf { it.isNotBlank() && currentLink.href.toString().contains('#') }
+
+        val nextLink = links.getOrNull(index + 1)
+        val endAnchor = nextLink?.href?.toString()?.substringAfterLast('#', "")?.takeIf { it.isNotBlank() && nextLink.href.toString().contains('#') }
+
+        return startAnchor to endAnchor
+    }
+
+    private suspend fun parseAndGetContent(
+        doc: Document, start: String?, end: String?, pub: Publication, idx: Int
+    ): Pair<List<String>, List<String>> {
+        var parsedContent: Pair<List<String>, List<String>>? = null
+        try {
+            parsedContent = parseChapterHtmlSegment(doc, start, end, pub, idx)
+        } catch (_: Exception) { }
+
+        val content = parsedContent?.first ?: emptyList()
+        val images = parsedContent?.second ?: emptyList()
+        return content to images
+    }
+
+    private suspend fun saveOrUpdateChapterContent(
+        title: String,
+        index: Int,
+        content: List<String>,
+        images: List<String>
+    ) {
+        if (content.isNotEmpty()) {
+            saveChapterContent(finalBookId, title, index, content)
+        } else {
+            saveEmptyChapterContent(finalBookId, title, index)
+        }
+
+        val validImages = images.filter { !it.startsWith("error_") }
+        if (validImages.isNotEmpty()) {
+            imagePathRepository.saveImagePath(finalBookId, validImages)
+        }
     }
 
     @OptIn(ExperimentalReadiumApi::class)
@@ -406,7 +419,7 @@ class EPUBImportWorker(
 
                             "p", "div", "ul", "ol", "li", "table", "blockquote", "hr",
                             "figure", "figcaption", "details", "summary", "main", "header",
-                            "footer", "nav", "aside", "article", "section" -> {
+                            "footer", "nav", "aside", "article", "section", "a" -> {
                                 if (!insideHeading) {
                                     flushParagraphWithFormatting(currentParagraph, contentList)
                                 }
@@ -482,7 +495,7 @@ class EPUBImportWorker(
 
                         "p", "div", "ul", "ol", "li", "table", "blockquote", "hr", "tr",
                         "figure", "figcaption", "details", "summary", "main", "header",
-                        "footer", "nav", "aside", "article", "section" -> {
+                        "footer", "nav", "aside", "article", "section", "a" -> {
                             if (!insideHeading) {
                                 flushParagraphWithFormatting(currentParagraph, contentList)
                             }
@@ -531,7 +544,6 @@ class EPUBImportWorker(
         return Pair(fixedContentList, imagePaths)
     }
 
-    /** Helper to add buffered paragraph text (with formatting) to the list */
     private fun flushParagraphWithFormatting(buffer: StringBuilder, list: MutableList<String>) {
         val paragraphText = buffer.toString()
         if (paragraphText.isNotBlank()) {
@@ -656,19 +668,6 @@ class EPUBImportWorker(
         }
         imagePathRepository.saveImagePath(finalBookId, listOf(coverImagePath))
         return ImportResult.success(finalBookTitle)
-    }
-
-    private suspend fun saveTableOfContentEntry(
-        bookId: String,
-        title: String,
-        index: Int
-    ): Long {
-        val tocEntity = TableOfContentEntity(
-            bookId = bookId,
-            title = title,
-            index = index
-        )
-        return tableOfContentsRepository.saveTableOfContent(tocEntity)
     }
 
     private suspend fun saveChapterContent(

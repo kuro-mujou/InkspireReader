@@ -239,7 +239,7 @@ fun ExploreSearchScreen(
                 }
 
                 is UiState.Success -> {
-                    val searchedBooks = result.data
+                    val searchedBooks = result.data()
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()

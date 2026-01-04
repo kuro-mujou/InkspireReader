@@ -53,18 +53,18 @@ fun AutoScrollSetting(
     Dialog(
         onDismissRequest = onDismissRequest
     ) {
-        var speedSliderValue by remember(autoScrollState.autoScrollSpeed) {
-            mutableFloatStateOf(sumRange - (autoScrollState.autoScrollSpeed / 20000f))
+        var speedSliderValue by remember(autoScrollState.autoScrollPreferences.speed) {
+            mutableFloatStateOf(sumRange - (autoScrollState.autoScrollPreferences.speed / 20000f))
         }
-        var delayAtStart by remember { mutableIntStateOf(autoScrollState.delayTimeAtStart) }
-        var delayAtEnd by remember { mutableIntStateOf(autoScrollState.delayTimeAtEnd) }
-        var delayResumeMode by remember { mutableIntStateOf(autoScrollState.autoScrollResumeDelayTime) }
+        var delayAtStart by remember { mutableIntStateOf(autoScrollState.autoScrollPreferences.delayTimeAtStart) }
+        var delayAtEnd by remember { mutableIntStateOf(autoScrollState.autoScrollPreferences.delayTimeAtEnd) }
+        var delayResumeMode by remember { mutableIntStateOf(autoScrollState.autoScrollPreferences.resumeDelay) }
         Surface(
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            color = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.surface
+            color = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.surface
         ) {
             Column(
                 modifier = Modifier.padding(8.dp),
@@ -78,13 +78,13 @@ fun AutoScrollSetting(
                     style = TextStyle(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                 )
                 HorizontalDivider(
                     thickness = 2.dp,
-                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.outlineVariant
+                    color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outlineVariant
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -93,19 +93,19 @@ fun AutoScrollSetting(
                 ) {
                     Text(
                         text = "Slower",
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "Speed",
                         fontWeight = FontWeight.Medium,
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "Faster",
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Slider(
@@ -126,16 +126,16 @@ fun AutoScrollSetting(
                             modifier = Modifier
                                 .size(24.dp)
                                 .background(
-                                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
+                                    color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
                                     shape = CircleShape
                                 )
                         )
                     },
                     colors = SliderDefaults.colors(
-                        activeTrackColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
-                        activeTickColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = stylingState?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
-                        inactiveTickColor = stylingState?.backgroundColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                        activeTrackColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                        activeTickColor = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = stylingState?.stylePreferences?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                        inactiveTickColor = stylingState?.stylePreferences?.backgroundColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
                     )
                 )
                 Row(
@@ -145,13 +145,13 @@ fun AutoScrollSetting(
                 ) {
                     Text(
                         text = "Delay at start",
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "%.2fs".format(delayAtStart / 1000f),
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Slider(
@@ -170,16 +170,16 @@ fun AutoScrollSetting(
                             modifier = Modifier
                                 .size(24.dp)
                                 .background(
-                                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
+                                    color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
                                     shape = CircleShape
                                 )
                         )
                     },
                     colors = SliderDefaults.colors(
-                        activeTrackColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
-                        activeTickColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = stylingState?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
-                        inactiveTickColor = stylingState?.backgroundColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                        activeTrackColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                        activeTickColor = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = stylingState?.stylePreferences?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                        inactiveTickColor = stylingState?.stylePreferences?.backgroundColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
                     )
                 )
                 Row(
@@ -189,13 +189,13 @@ fun AutoScrollSetting(
                 ) {
                     Text(
                         text = "Delay at end",
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "%.2fs".format(delayAtEnd / 1000f),
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Slider(
@@ -214,21 +214,21 @@ fun AutoScrollSetting(
                             modifier = Modifier
                                 .size(24.dp)
                                 .background(
-                                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
+                                    color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
                                     shape = CircleShape
                                 )
                         )
                     },
                     colors = SliderDefaults.colors(
-                        activeTrackColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
-                        activeTickColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = stylingState?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
-                        inactiveTickColor = stylingState?.backgroundColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                        activeTrackColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                        activeTickColor = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = stylingState?.stylePreferences?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                        inactiveTickColor = stylingState?.stylePreferences?.backgroundColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
                     )
                 )
                 HorizontalDivider(
                     thickness = 1.dp,
-                    color = stylingState?.textColor ?: MaterialTheme.colorScheme.outlineVariant
+                    color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outlineVariant
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -237,25 +237,25 @@ fun AutoScrollSetting(
                 ) {
                     Text(
                         text = "Auto Scroll after pause",
-                        fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                     )
                     Switch(
-                        checked = autoScrollState.autoScrollResumeMode,
+                        checked = autoScrollState.autoScrollPreferences.resumeMode,
                         onCheckedChange = {
                             viewModel.onAction(AutoScrollSettingAction.UpdateAutoResumeScrollMode(it))
                         },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                            checkedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                            checkedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                            uncheckedThumbColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
-                            uncheckedTrackColor = stylingState?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                            uncheckedBorderColor = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                            checkedThumbColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onPrimary,
+                            checkedTrackColor = stylingState?.stylePreferences?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.primary,
+                            checkedBorderColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                            uncheckedThumbColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outline,
+                            uncheckedTrackColor = stylingState?.stylePreferences?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.surfaceContainerHighest,
+                            uncheckedBorderColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outline,
                         )
                     )
                 }
-                if (autoScrollState.autoScrollResumeMode) {
+                if (autoScrollState.autoScrollPreferences.resumeMode) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -263,13 +263,13 @@ fun AutoScrollSetting(
                     ) {
                         Text(
                             text = "Delay time",
-                            fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                            color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                            fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                            color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "%.2fs".format(delayResumeMode / 1000f),
-                            fontFamily = stylingState?.fontFamilies?.get(stylingState.selectedFontFamilyIndex),
-                            color = stylingState?.textColor ?: MaterialTheme.colorScheme.onSurface
+                            fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                            color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Slider(
@@ -288,16 +288,16 @@ fun AutoScrollSetting(
                                 modifier = Modifier
                                     .size(24.dp)
                                     .background(
-                                        color = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
+                                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
                                         shape = CircleShape
                                     )
                             )
                         },
                         colors = SliderDefaults.colors(
-                            activeTrackColor = stylingState?.textColor ?: MaterialTheme.colorScheme.primary,
-                            activeTickColor = stylingState?.backgroundColor ?: MaterialTheme.colorScheme.primary,
-                            inactiveTrackColor = stylingState?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
-                            inactiveTickColor = stylingState?.backgroundColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                            activeTrackColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                            activeTickColor = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = stylingState?.stylePreferences?.textColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
+                            inactiveTickColor = stylingState?.stylePreferences?.backgroundColor?.copy(alpha = 0.5f) ?: MaterialTheme.colorScheme.secondaryContainer,
                         )
                     )
                 }

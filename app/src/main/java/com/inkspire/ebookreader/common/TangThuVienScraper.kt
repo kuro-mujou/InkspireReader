@@ -31,10 +31,7 @@ object TangThuVienScraper {
             coverUrl = "https:$coverUrl"
         }
 
-        val internalId = doc.select("#story_id_hidden").attr("value")
-        if (internalId.isEmpty()) throw Exception("TangThuVien: Could not find story_id")
-
-        return@withContext ScrapedBookInfo(title, author, descHtml, coverUrl, internalId)
+        return@withContext ScrapedBookInfo(title, author, descHtml, coverUrl)
     }
 
     /**

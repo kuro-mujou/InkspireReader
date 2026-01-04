@@ -23,23 +23,27 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentState
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.customPopupPositionProvider
 import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
-import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageComponent(
     index: Int,
     uriString: String,
-    stylingState: StylingState,
-    chapterContentState: BookChapterContentState,
-    onNoteAction: (NoteAction) -> Unit
+    currentChapterIndex: () -> Int
 ) {
+    val styleVm = LocalStylingViewModel.current
+    val noteVM = LocalNoteViewModel.current
+
+    val stylingState by styleVm.state.collectAsStateWithLifecycle()
+
     var isOpenDialog by remember { mutableStateOf(false) }
     val tooltipState = rememberTooltipState()
     TooltipBox(
@@ -59,7 +63,7 @@ fun ImageComponent(
         Card(
             modifier = Modifier
                 .then(
-                    if (stylingState.imagePaddingState)
+                    if (stylingState.stylePreferences.imagePaddingState)
                         Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
                     else
                         Modifier
@@ -88,11 +92,11 @@ fun ImageComponent(
                 isOpenDialog = false
             },
             onNoteChanged = { noteInput ->
-                onNoteAction(
+                noteVM.onAction(
                     NoteAction.AddNote(
                         noteBody = uriString,
                         noteInput = noteInput,
-                        tocId = chapterContentState.currentChapterIndex,
+                        tocId = currentChapterIndex(),
                         contentId = index
                     )
                 )

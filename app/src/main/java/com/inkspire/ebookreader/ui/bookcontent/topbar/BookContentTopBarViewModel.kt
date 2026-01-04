@@ -21,7 +21,6 @@ class BookContentTopBarViewModel() : ViewModel() {
             is BookContentTopBarAction.ChangeTopBarVisibility -> {
                 _state.update { it.copy(topBarVisibility = !it.topBarVisibility) }
             }
-            else -> {}
         }
     }
 }

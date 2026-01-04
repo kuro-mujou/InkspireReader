@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.Note
 import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
-import com.inkspire.ebookreader.ui.bookcontent.drawer.tableofcontent.TableOfContentAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
 
 @Composable
@@ -42,7 +41,7 @@ fun NoteCard(
     noteState: NoteState,
     stylingState: StylingState,
     onNoteAction: (NoteAction) -> Unit,
-    onTableOfContentAction: (TableOfContentAction) -> Unit
+    onCardClicked: (Int, Int) -> Unit,
 ) {
     var isOpenDialog by remember { mutableStateOf(false) }
     if (isOpenDialog) {
@@ -64,7 +63,7 @@ fun NoteCard(
             .fillMaxWidth()
             .combinedClickable(
                 onClick = {
-                    onTableOfContentAction(TableOfContentAction.NavigateToParagraph(note.tocId, note.contentId))
+                    onCardClicked(note.tocId, note.contentId)
                 },
                 onLongClick = {
                     onNoteAction(NoteAction.SelectNote(note))
@@ -74,7 +73,7 @@ fun NoteCard(
                 if (noteState.selectedNoteIndex == note.noteId) {
                     Modifier.border(
                         width = 2.dp,
-                        color = stylingState.textColor,
+                        color = stylingState.stylePreferences.textColor,
                         shape = CardDefaults.elevatedShape
                     )
                 } else {
@@ -82,8 +81,8 @@ fun NoteCard(
                 }
             ),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = stylingState.backgroundColor,
-            contentColor = stylingState.textColor,
+            containerColor = stylingState.stylePreferences.backgroundColor,
+            contentColor = stylingState.stylePreferences.textColor,
         ),
         elevation = CardDefaults.elevatedCardElevation(
             defaultElevation = 4.dp,
@@ -102,7 +101,7 @@ fun NoteCard(
                 VerticalDivider(
                     modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
                     thickness = 2.dp,
-                    color = stylingState.textColor
+                    color = stylingState.stylePreferences.textColor
                 )
                 Text(
                     text = note.noteBody,
@@ -111,19 +110,19 @@ fun NoteCard(
                     overflow = TextOverflow.Ellipsis,
                     style = TextStyle(
                         fontStyle = FontStyle.Italic,
-                        color = stylingState.textColor,
+                        color = stylingState.stylePreferences.textColor,
                         textAlign = TextAlign.Justify,
-                        fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex]
+                        fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                     )
                 )
             }
             Text(
                 text = note.noteInput,
                 style = TextStyle(
-                    color = stylingState.textColor,
+                    color = stylingState.stylePreferences.textColor,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Justify,
-                    fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                    fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                 )
             )
             Text(
@@ -131,10 +130,10 @@ fun NoteCard(
                 modifier = Modifier.align(Alignment.End),
                 style = TextStyle(
                     fontStyle = FontStyle.Italic,
-                    color = stylingState.textColor,
+                    color = stylingState.stylePreferences.textColor,
                     fontSize = 12.sp,
                     textAlign = TextAlign.Justify,
-                    fontFamily = stylingState.fontFamilies[stylingState.selectedFontFamilyIndex],
+                    fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
                 )
             )
             AnimatedVisibility(
@@ -149,7 +148,7 @@ fun NoteCard(
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.ic_delete),
                             contentDescription = "Delete",
-                            tint = stylingState.textColor
+                            tint = stylingState.stylePreferences.textColor
                         )
                     }
                     IconButton(
@@ -160,7 +159,7 @@ fun NoteCard(
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.ic_edit),
                             contentDescription = "Edit",
-                            tint = stylingState.textColor
+                            tint = stylingState.stylePreferences.textColor
                         )
                     }
                 }
