@@ -1,4 +1,7 @@
+
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -7,9 +10,26 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotzilla)
+    alias(libs.plugins.google.services)
+}
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
+    signingConfigs {
+        create("release") {
+            val path = keystoreProperties["storeFile"] as String
+            storeFile = rootProject.file(path)
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+        }
+    }
+
     namespace = "com.inkspire.ebookreader"
     compileSdk {
         version = release(36)
@@ -19,25 +39,26 @@ android {
         applicationId = "com.inkspire.ebookreader"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.0.6"
+        versionCode = 7
+        versionName = "1.0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
-        debug {
+        getByName("debug") {
             isDebuggable = true
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
-        release {
+        getByName("release") {
             isMinifyEnabled = false
             isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -52,6 +73,9 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    kotzilla {
+        composeInstrumentation = true
     }
 }
 
@@ -74,6 +98,9 @@ dependencies {
     implementation(libs.androidx.compose.adaptive)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.foundation)
+
+    implementation(libs.firebase.config.ktx)
+    implementation(libs.firebase.analytics.ktx)
 
     implementation(libs.androidx.palette.ktx)
     implementation(libs.lottie.compose)

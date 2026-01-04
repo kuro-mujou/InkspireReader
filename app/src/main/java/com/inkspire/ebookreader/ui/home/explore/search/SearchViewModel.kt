@@ -2,6 +2,9 @@ package com.inkspire.ebookreader.ui.home.explore.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.remoteConfig
 import com.inkspire.ebookreader.common.ConnectivityObserver
 import com.inkspire.ebookreader.common.TruyenFullScraper
 import com.inkspire.ebookreader.common.UiState
@@ -31,7 +34,21 @@ class SearchViewModel(
             false
         )
 
-    private val baseUrl = "https://truyenfull.vision"
+    private val remoteConfig: FirebaseRemoteConfig = Firebase.remoteConfig
+    private lateinit var baseUrl: String
+
+    init {
+        fetchAndActivateConfig()
+    }
+
+    private fun fetchAndActivateConfig() {
+        remoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                baseUrl = remoteConfig.getString("truyen_full_base_url")
+            }
+        }
+    }
+
 
     fun onAction(action: SearchAction) {
         when (action) {

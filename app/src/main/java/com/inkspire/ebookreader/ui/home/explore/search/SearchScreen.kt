@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -172,6 +173,16 @@ fun ExploreSearchScreen(
                                 focusManager.clearFocus()
                             }
                     )
+                },
+                warningText = {
+                    if (searchBoxState.text.length < 3) {
+                        Text(
+                            text = "Search input must be at least 3 characters",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 8.sp,
+                            fontStyle = FontStyle.Italic
+                        )
+                    }
                 }
             )
 

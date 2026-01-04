@@ -217,7 +217,7 @@ fun LibraryScreen(
     LaunchedEffect(drawerState.currentValue) {
         onAction(LibraryAction.ChangeFabVisibility(drawerState.isClosed))
     }
-    LaunchedEffect(searchState) {
+    LaunchedEffect(searchState.text) {
         snapshotFlow { searchState.text }
             .collectLatest {
                 if (it.toString() != state.searchQuery) {

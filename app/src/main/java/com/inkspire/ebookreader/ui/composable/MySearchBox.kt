@@ -47,6 +47,7 @@ fun MySearchBox(
     ),
     leadingIcon: @Composable () -> Unit = {},
     trailingIcon: @Composable () -> Unit = {},
+    warningText: @Composable () -> Unit = {},
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActionHandler? = null
 ) {
@@ -113,6 +114,9 @@ fun MySearchBox(
                                 .fillMaxWidth()
                                 .background(underlineColor.copy(alpha = underlineAlpha))
                         )
+                        if (textFieldState.text.isNotEmpty()) {
+                            warningText()
+                        }
                     }
                     trailingIcon()
                 }
