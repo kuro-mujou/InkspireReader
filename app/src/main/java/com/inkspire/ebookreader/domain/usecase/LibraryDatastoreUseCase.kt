@@ -1,9 +1,9 @@
 package com.inkspire.ebookreader.domain.usecase
 
-import com.inkspire.ebookreader.domain.repository.DatastoreRepo
+import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 
 class LibraryDatastoreUseCase(
-    private val datastoreRepository: DatastoreRepo
+    private val datastoreRepository: DatastoreRepository
 ) {
     val librarySettings = datastoreRepository.librarySettingPreferences
     suspend fun setBookListViewType(value: Int) = datastoreRepository.setBookListView(value)

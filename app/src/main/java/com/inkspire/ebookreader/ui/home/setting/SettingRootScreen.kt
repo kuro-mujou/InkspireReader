@@ -20,12 +20,13 @@ import com.inkspire.ebookreader.ui.bookcontent.tts.TTSViewModel
 import com.inkspire.ebookreader.ui.setting.SettingScreen
 import com.inkspire.ebookreader.ui.setting.SettingViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun SettingRootScreen() {
     val settingViewModel = koinViewModel<SettingViewModel>()
     val autoScrollViewModel = koinViewModel<AutoScrollViewModel>()
-    val ttsViewModel = koinViewModel<TTSViewModel>()
+    val ttsViewModel = koinViewModel<TTSViewModel>(parameters = { parametersOf(false) })
     val settingState by settingViewModel.state.collectAsStateWithLifecycle()
     val autoScrollState by autoScrollViewModel.state.collectAsStateWithLifecycle()
     val ttsState by ttsViewModel.state.collectAsStateWithLifecycle()

@@ -6,14 +6,14 @@ import com.inkspire.ebookreader.common.ConnectivityObserver
 import com.inkspire.ebookreader.data.database.LocalBookDatabase
 import com.inkspire.ebookreader.data.repository.BookRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ChapterRepositoryImpl
-import com.inkspire.ebookreader.data.repository.DatastoreRepoImpl
+import com.inkspire.ebookreader.data.repository.DatastoreRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ImagePathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.MusicPathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.NoteRepositoryImpl
 import com.inkspire.ebookreader.data.repository.TableOfContentRepositoryImpl
 import com.inkspire.ebookreader.domain.repository.BookRepository
 import com.inkspire.ebookreader.domain.repository.ChapterRepository
-import com.inkspire.ebookreader.domain.repository.DatastoreRepo
+import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 import com.inkspire.ebookreader.domain.repository.ImagePathRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import com.inkspire.ebookreader.domain.repository.NoteRepository
@@ -102,7 +102,7 @@ object KoinModule {
         singleOf(::ImagePathRepositoryImpl).bind<ImagePathRepository>()
         singleOf(::MusicPathRepositoryImpl).bind<MusicPathRepository>()
         singleOf(::NoteRepositoryImpl).bind<NoteRepository>()
-        singleOf(::DatastoreRepoImpl).bind<DatastoreRepo>()
+        singleOf(::DatastoreRepositoryImpl).bind<DatastoreRepository>()
     }
 
     val useCaseModule = module {
@@ -175,12 +175,17 @@ object KoinModule {
         viewModelOf(::BottomBarTTSViewModel)
         viewModelOf(::BottomBarAutoScrollViewModel)
         viewModelOf(::AutoScrollViewModel)
-        viewModelOf(::TTSViewModel)
+        viewModel{
+            TTSViewModel(
+                isReaderMode = it.get(),
+                application = get(),
+                ttsManager = get(),
+                datastoreUseCase = get(),
+                contentUseCase = get(),
+                musicUseCase = get()
+            )
+        }
     }
-
-//    val datastoreModule = module {
-//        single(createdAtStart = true) { DatastoreManager(androidContext()) }
-//    }
 
     val ttsModule = module {
         single<TTSManager>(createdAtStart = true) { TTSManager(context = androidContext()) }

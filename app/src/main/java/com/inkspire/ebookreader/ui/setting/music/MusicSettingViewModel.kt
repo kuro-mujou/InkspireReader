@@ -101,6 +101,12 @@ class MusicSettingViewModel(
                     datastoreUseCase.setEnableBackgroundMusic(action.enable)
                 }
             }
+
+            is MusicSettingAction.OnEnableOnlyRunWithTTSChange -> {
+                viewModelScope.launch {
+                    datastoreUseCase.setEnableOnlyRunWithTTS(action.enable)
+                }
+            }
         }
     }
 

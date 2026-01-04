@@ -28,6 +28,7 @@ class TTSManager(
 
     private var paragraphOffset: Int = 0
     private var lastWordStartInSegment: Int = 0
+    private var isActivated: Boolean = false
 
     private data class ChunkMetadata(
         val textToSpeak: String,
@@ -219,6 +220,7 @@ class TTSManager(
         languages to voices
     }
 
+    fun updateTTSActivated(isActivated: Boolean) { this.isActivated = isActivated }
     fun updateLanguage(locale: Locale) { tts.language = locale }
     fun updateSpeed(rate: Float) { tts.setSpeechRate(rate) }
     fun updatePitch(pitch: Float) { tts.setPitch(pitch) }
@@ -226,4 +228,5 @@ class TTSManager(
     fun updateChapter(chapter: List<String>) { chapterContent = chapter }
     fun updateBookInfo(bookInfo: Book) { this.bookInfo = bookInfo }
     fun getTTS(): TextToSpeech { return tts }
+    fun getIsTTSActivated(): Boolean = this.isActivated
 }

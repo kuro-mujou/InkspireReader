@@ -9,7 +9,7 @@ import com.inkspire.ebookreader.domain.model.StylePreferences
 import com.inkspire.ebookreader.domain.model.TTSPreferences
 import kotlinx.coroutines.flow.Flow
 
-interface DatastoreRepo {
+interface DatastoreRepository {
     val ttsPreferences: Flow<TTSPreferences>
     val autoScrollPreferences: Flow<AutoScrollPreferences>
     val musicPreferences: Flow<MusicPreferences>
@@ -37,6 +37,7 @@ interface DatastoreRepo {
     suspend fun setFontFamily(value: Int)
     suspend fun setSortByFavorite(value: Boolean)
     suspend fun setEnableBackgroundMusic(value: Boolean)
+    suspend fun setEnableOnlyRunWithTTS(value: Boolean)
     suspend fun setPlayerVolume(value: Float)
     suspend fun setBookListView(value: Int)
     suspend fun setImagePaddingState(value: Boolean)

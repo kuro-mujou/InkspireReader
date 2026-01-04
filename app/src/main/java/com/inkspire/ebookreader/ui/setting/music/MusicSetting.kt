@@ -115,7 +115,8 @@ fun MusicSetting(
                 }
             }
             Row(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "Enable background music",
@@ -130,6 +131,34 @@ fun MusicSetting(
                     checked = state.musicPreferences.enable,
                     onCheckedChange = {
                         viewModel.onAction(MusicSettingAction.OnEnableBackgroundMusicChange(it))
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = stylingState?.stylePreferences?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.primary,
+                        checkedBorderColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outline,
+                        uncheckedTrackColor = stylingState?.stylePreferences?.textColor?.copy(0.5f) ?: MaterialTheme.colorScheme.surfaceContainerHighest,
+                        uncheckedBorderColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outline,
+                    )
+                )
+            }
+            Row(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Only activate with Text To Speech",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                    )
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Switch(
+                    checked = state.musicPreferences.onlyRunWithTTS,
+                    onCheckedChange = {
+                        viewModel.onAction(MusicSettingAction.OnEnableOnlyRunWithTTSChange(it))
                     },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onPrimary,

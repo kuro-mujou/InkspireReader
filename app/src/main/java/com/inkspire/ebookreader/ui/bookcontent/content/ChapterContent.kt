@@ -5,6 +5,7 @@ import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.headerLevel
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.headerPatten
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.htmlTagPattern
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.linkPattern
+import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.linkPatternDebug
 import com.inkspire.ebookreader.ui.bookcontent.common.convertToAnnotatedStrings
 
 @Composable
@@ -15,7 +16,7 @@ fun ChapterContent(
     currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
 ) {
-    if (linkPattern.containsMatchIn(paragraph)) {
+    if (linkPattern.containsMatchIn(paragraph) || linkPatternDebug.containsMatchIn(paragraph)) {
         ImageComponent(
             index = index,
             uriString = paragraph,

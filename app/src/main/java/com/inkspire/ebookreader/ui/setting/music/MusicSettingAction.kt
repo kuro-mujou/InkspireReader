@@ -11,4 +11,5 @@ sealed interface MusicSettingAction {
     data class OnDelete(val musicItem: MusicItem) : MusicSettingAction
     data class OnVolumeChange(val volume: Float) : MusicSettingAction
     data class OnEnableBackgroundMusicChange(val enable: Boolean) : MusicSettingAction
+    data class OnEnableOnlyRunWithTTSChange(val enable: Boolean) : MusicSettingAction
 }

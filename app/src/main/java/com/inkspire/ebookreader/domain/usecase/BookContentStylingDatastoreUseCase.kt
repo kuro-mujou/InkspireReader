@@ -1,9 +1,9 @@
 package com.inkspire.ebookreader.domain.usecase
 
-import com.inkspire.ebookreader.domain.repository.DatastoreRepo
+import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 
 class BookContentStylingDatastoreUseCase(
-    private val datastoreRepository: DatastoreRepo
+    private val datastoreRepository: DatastoreRepository
 ) {
     val stylePreferences = datastoreRepository.stylePreferences
     suspend fun setTextColor(color: Int) = datastoreRepository.setTextColor(color)

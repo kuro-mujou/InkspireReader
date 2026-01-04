@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.ksp)
-//    alias(libs.plugins.kotzilla)
+    alias(libs.plugins.kotzilla)
 }
 
 android {
@@ -19,8 +19,8 @@ android {
         applicationId = "com.inkspire.ebookreader"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.0.5"
+        versionCode = 6
+        versionName = "1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -98,7 +98,7 @@ dependencies {
     implementation(libs.moko.permissions.compose)
     implementation(libs.moko.permissions.notification)
 
-//    implementation(libs.kotzilla.sdk)
+    implementation(libs.kotzilla.sdk)
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.compose)

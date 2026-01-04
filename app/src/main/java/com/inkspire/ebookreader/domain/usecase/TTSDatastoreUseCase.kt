@@ -1,9 +1,9 @@
 package com.inkspire.ebookreader.domain.usecase
 
-import com.inkspire.ebookreader.domain.repository.DatastoreRepo
+import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 
 class TTSDatastoreUseCase(
-    private val datastoreRepository: DatastoreRepo
+    private val datastoreRepository: DatastoreRepository
 ) {
     val ttsPreferences = datastoreRepository.ttsPreferences
     val musicPreferences = datastoreRepository.musicPreferences

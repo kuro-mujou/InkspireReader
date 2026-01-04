@@ -16,7 +16,7 @@ import com.inkspire.ebookreader.domain.model.MusicPreferences
 import com.inkspire.ebookreader.domain.model.ReaderSettingPreferences
 import com.inkspire.ebookreader.domain.model.StylePreferences
 import com.inkspire.ebookreader.domain.model.TTSPreferences
-import com.inkspire.ebookreader.domain.repository.DatastoreRepo
+import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -24,7 +24,7 @@ import java.util.Locale
 
 
 private val Context.datastore by preferencesDataStore("user_preferences")
-class DatastoreRepoImpl(private val context: Context) : DatastoreRepo {
+class DatastoreRepositoryImpl(private val context: Context) : DatastoreRepository {
     companion object Keys {
         private val KEEP_SCREEN_ON = booleanPreferencesKey("KEEP_SCREEN_ON")
         private val BOOKMARK_STYLE = stringPreferencesKey("BOOKMARK_STYLE")
@@ -240,6 +240,12 @@ class DatastoreRepoImpl(private val context: Context) : DatastoreRepo {
     override suspend fun setEnableBackgroundMusic(value: Boolean) {
         context.datastore.edit { preferences ->
             preferences[ENABLE_BACKGROUND_MUSIC] = value
+        }
+    }
+
+    override suspend fun setEnableOnlyRunWithTTS(value: Boolean) {
+        context.datastore.edit { preferences ->
+            preferences[ONLY_RUN_WITH_TTS] = value
         }
     }
 

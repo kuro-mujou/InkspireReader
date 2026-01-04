@@ -56,6 +56,7 @@ class TTSService : MediaSessionService() {
         .setOnAudioFocusChangeListener(audioFocusChangeListener)
         .build()
 
+    private lateinit var exoPlayer: ExoPlayer
     private lateinit var audioManager: AudioManager
     private var mediaSession: MediaSession? = null
 
@@ -87,7 +88,7 @@ class TTSService : MediaSessionService() {
             .setUsage(C.USAGE_MEDIA)
             .build()
 
-        val player = ExoPlayer.Builder(this)
+        exoPlayer = ExoPlayer.Builder(this)
             .setAudioAttributes(audioAttributes, false)
             .setHandleAudioBecomingNoisy(true)
             .setPauseAtEndOfMediaItems(false)
@@ -97,7 +98,7 @@ class TTSService : MediaSessionService() {
                 shuffleModeEnabled = true
             }
 
-        val forwardingPlayer = object : ForwardingPlayer(player) {
+        val forwardingPlayer = object : ForwardingPlayer(exoPlayer) {
             override fun getAvailableCommands(): Player.Commands {
                 return super.getAvailableCommands()
                     .buildUpon()
@@ -175,12 +176,24 @@ class TTSService : MediaSessionService() {
                 }
 
                 ACTION_NEXT -> {
-                    ttsManager.checkPlayNextChapter()
+                    if (ttsManager.getIsTTSActivated()) {
+                        ttsManager.checkPlayNextChapter()
+                    } else {
+                        if (exoPlayer.hasNextMediaItem()) {
+                            exoPlayer.seekToNext()
+                        } else {
+                            exoPlayer.seekToNextMediaItem()
+                        }
+                    }
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 
                 ACTION_PREVIOUS -> {
-                    ttsManager.checkPlayPreviousChapter()
+                    if (ttsManager.getIsTTSActivated()) {
+                        ttsManager.checkPlayPreviousChapter()
+                    } else {
+                        exoPlayer.seekToPreviousMediaItem()
+                    }
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
 
