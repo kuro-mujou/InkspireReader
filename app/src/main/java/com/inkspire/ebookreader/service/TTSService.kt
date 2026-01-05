@@ -56,7 +56,6 @@ class TTSService : MediaSessionService() {
         .setOnAudioFocusChangeListener(audioFocusChangeListener)
         .build()
 
-    private lateinit var exoPlayer: ExoPlayer
     private lateinit var audioManager: AudioManager
     private var mediaSession: MediaSession? = null
 
@@ -83,13 +82,12 @@ class TTSService : MediaSessionService() {
             .setSessionCommand(customCommandPrevious)
             .build()
 
-        val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
+        val myAudioAttributes = androidx.media3.common.AudioAttributes.Builder()
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
             .setUsage(C.USAGE_MEDIA)
             .build()
-
-        exoPlayer = ExoPlayer.Builder(this)
-            .setAudioAttributes(audioAttributes, false)
+        val player = ExoPlayer.Builder(this)
+            .setAudioAttributes(myAudioAttributes, false)
             .setHandleAudioBecomingNoisy(true)
             .setPauseAtEndOfMediaItems(false)
             .build()
@@ -98,7 +96,7 @@ class TTSService : MediaSessionService() {
                 shuffleModeEnabled = true
             }
 
-        val forwardingPlayer = object : ForwardingPlayer(exoPlayer) {
+        val forwardingPlayer = object : ForwardingPlayer(player) {
             override fun getAvailableCommands(): Player.Commands {
                 return super.getAvailableCommands()
                     .buildUpon()
@@ -179,10 +177,8 @@ class TTSService : MediaSessionService() {
                     if (ttsManager.getIsTTSActivated()) {
                         ttsManager.checkPlayNextChapter()
                     } else {
-                        if (exoPlayer.hasNextMediaItem()) {
-                            exoPlayer.seekToNext()
-                        } else {
-                            exoPlayer.seekToNextMediaItem()
+                        mediaSession?.run {
+                            player.seekToNextMediaItem()
                         }
                     }
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
@@ -192,7 +188,9 @@ class TTSService : MediaSessionService() {
                     if (ttsManager.getIsTTSActivated()) {
                         ttsManager.checkPlayPreviousChapter()
                     } else {
-                        exoPlayer.seekToPreviousMediaItem()
+                        mediaSession?.run {
+                            player.seekToPreviousMediaItem()
+                        }
                     }
                     return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }

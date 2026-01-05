@@ -97,8 +97,8 @@ class DatastoreRepositoryImpl(private val context: Context) : DatastoreRepositor
                 textColor = Color(prefs[TEXT_COLOR] ?: Color(0xFF1B310E).toArgb()),
                 selectedColorSet = prefs[SELECTED_COLOR_SET] ?: 0,
                 fontSize = prefs[FONT_SIZE] ?: 20,
-                textAlign = prefs[TEXT_ALIGN] ?: false,
-                textIndent = prefs[TEXT_INDENT] ?: false,
+                textAlign = prefs[TEXT_ALIGN] ?: true,
+                textIndent = prefs[TEXT_INDENT] ?: true,
                 lineSpacing = prefs[LINE_SPACING] ?: 14,
                 fontFamily = prefs[FONT_FAMILY] ?: 0,
                 imagePaddingState = prefs[IMAGE_PADDING_STATE] ?: false
