@@ -72,26 +72,24 @@ class CBZImportWorker(
         const val INPUT_URI_KEY = "input_uri"
         private const val PROGRESS_CHANNEL_ID = "book_import_progress_channel"
         private const val COMPLETION_CHANNEL_ID = "book_import_completion_channel"
-        private const val TAG = "CBZImportWorker"
         private const val MAX_BITMAP_DIMENSION = 2048
-        private const val COMIC_INFO_FILE_NAME = "ComicInfo.xml"
     }
 
     init {
         createNotificationChannel(
             PROGRESS_CHANNEL_ID,
-            "Book Import Progress"
+            context.getString(R.string.channel_import_progress_name)
         )
         createNotificationChannel(
             COMPLETION_CHANNEL_ID,
-            "Book Import Completion"
+            context.getString(R.string.channel_import_completion_name)
         )
     }
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val initialNotification = createProgressNotificationBuilder(
             fileName = finalBookTitle,
-            message = "Starting import..."
+            message = context.getString(R.string.status_starting)
         ).build()
         setForeground(getForegroundInfoCompat(initialNotification))
 
@@ -99,7 +97,7 @@ class CBZImportWorker(
             onProgress = { progress, chapterName ->
                 updateProgressNotification(
                     fileName = finalBookTitle,
-                    message = "Processing: $chapterName",
+                    message = context.getString(R.string.status_processing_item_fmt, chapterName),
                     progress = progress
                 )
             }
@@ -144,10 +142,10 @@ class CBZImportWorker(
         val url = uri.toAbsoluteUrl()
         val asset = assetRetriever.retrieve(url!!).getOrNull() ?: return ImportResult.failure(IOException("Fail to load ebook"))
         val publication = publicationOpener.open(asset, allowUserInteraction = true).getOrNull() ?: return ImportResult.failure(IOException("Fail to open ebook"))
-        onProgress(null, "Processing Book info...")
+        onProgress(null, context.getString(R.string.status_analyzing))
 
         val (title,authors) = readComicInfoXml(publication)
-        finalBookTitle = title ?: publication.metadata.title ?: getDisplayNameFromUri(context, uri) ?: "Untitled"
+        finalBookTitle = title ?: publication.metadata.title ?: getDisplayNameFromUri(context, uri) ?: context.getString(R.string.placeholder_untitled)
 
         var currentChapter = ""
         val chapterMap = mutableMapOf<String, MutableList<String>>()
@@ -183,7 +181,7 @@ class CBZImportWorker(
             return processBookResult
         }
 
-        onProgress(null, "Processing Book content...")
+        onProgress(null, context.getString(R.string.status_saving_content))
         val processContentResult = processAndSaveBookContent(
             publication = publication,
             chapterMap = sortedChapterMap,
@@ -269,7 +267,7 @@ class CBZImportWorker(
         if (bookRepository.isBookExist(finalBookTitle)) {
             return ImportResult.failure(IOException("Book already imported"))
         }
-        var coverImagePath = ""
+        var coverImagePath: String
         val coverImageBitmap = publication.cover()
         coverImagePath = coverImageBitmap?.let { bitmap ->
             BitmapUtil.saveBitmapToPrivateStorage(
@@ -280,7 +278,7 @@ class CBZImportWorker(
                 filenameWithoutExtension = "cover_$finalBookId"
             )
         } ?: "error"
-        val authors = author?.split(",") ?: publication.metadata.authors.map { it.name.toString() }
+        val authors = author?.split(",") ?: publication.metadata.authors.map { it.name }
         bookRepository.insertBook(
             BookEntity(
                 bookId = finalBookId,
@@ -301,30 +299,6 @@ class CBZImportWorker(
         }
         imagePathRepository.saveImagePath(finalBookId, listOf(coverImagePath))
         return ImportResult.success(finalBookTitle)
-    }
-
-    private suspend fun saveBookInfo(
-        bookID: String,
-        title: String,
-        authors: List<String>,
-        coverImagePath: String,
-        totalChapters: Int,
-        cacheFilePath: String
-    ): Long {
-        val bookEntity = BookEntity(
-            bookId = bookID,
-            title = title,
-            coverImagePath = coverImagePath,
-            authors = authors,
-            description = null,
-            totalChapter = totalChapters,
-            currentChapter = 0,
-            currentParagraph = 0,
-            storagePath = cacheFilePath,
-            isEditable = false,
-            fileType = "cbz"
-        )
-        return bookRepository.insertBook(bookEntity)
     }
 
     private suspend fun saveChapterInfo(
@@ -384,7 +358,6 @@ class CBZImportWorker(
         }
     }
 
-    /** Creates the base builder for progress notifications. */
     private fun createProgressNotificationBuilder(
         fileName: String,
         message: String
@@ -392,14 +365,13 @@ class CBZImportWorker(
         val displayFileName = fileName.substringBeforeLast(".")
         return NotificationCompat.Builder(context, PROGRESS_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
-            .setContentTitle("Importing: ${displayFileName.take(40)}${if (displayFileName.length > 40) "..." else ""}")
+            .setContentTitle(context.getString(R.string.notification_title_importing_fmt, displayFileName.take(40) + if (displayFileName.length > 40) "..." else ""))
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
     }
 
-    /** Updates the ongoing progress notification. */
     private suspend fun updateProgressNotification(
         fileName: String,
         message: String,
@@ -425,21 +397,21 @@ class CBZImportWorker(
         bookTitle: String?,
         failureReason: String? = null
     ) {
-        val title = if (isSuccess) "Import Successful" else "Import Failed"
-        val defaultTitle = bookTitle ?: "File"
+        val title = if (isSuccess) context.getString(R.string.result_success_title) else context.getString(R.string.result_failed_title)
+        val defaultTitle = bookTitle ?: context.getString(R.string.error_default_title)
         val userFriendlyReason = when {
             failureReason == null -> null
-            failureReason.contains("Book already imported") -> "This book is already in your library."
-            failureReason.contains("No valid image entries found") -> "No images could be found in this file."
-            failureReason.contains("Failed to open InputStream") -> "Could not read the selected file."
-            failureReason.contains("OutOfMemoryError") -> "Ran out of memory processing images. Try importing smaller files."
-            else -> failureReason
+            failureReason.contains("Book already imported") -> context.getString(R.string.error_book_already_exists)
+            failureReason.contains("No valid image entries found") -> context.getString(R.string.error_no_content)
+            failureReason.contains("Failed to open InputStream") -> context.getString(R.string.error_read_file)
+            failureReason.contains("OutOfMemoryError") -> context.getString(R.string.error_out_of_memory)
+            else -> context.getString(R.string.error_unexpected)
         }
 
         val text = when {
-            isSuccess -> "'$defaultTitle' added to your library."
-            userFriendlyReason != null -> "Failed to import '$defaultTitle': $userFriendlyReason"
-            else -> "Import failed for '$defaultTitle'."
+            isSuccess -> context.getString(R.string.result_success_msg_fmt, defaultTitle)
+            userFriendlyReason != null -> context.getString(R.string.error_detailed_fmt, defaultTitle, userFriendlyReason)
+            else -> context.getString(R.string.error_generic_fmt, defaultTitle)
         }
         val builder = NotificationCompat.Builder(context, COMPLETION_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
