@@ -2,7 +2,7 @@ package com.inkspire.ebookreader.ui.home.explore.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.inkspire.ebookreader.common.TruyenFullScraper
+import com.inkspire.ebookreader.util.TruyenFullScraper
 import com.inkspire.ebookreader.common.UiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

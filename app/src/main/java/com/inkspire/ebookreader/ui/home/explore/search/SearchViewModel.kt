@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.remoteConfig
-import com.inkspire.ebookreader.common.ConnectivityObserver
-import com.inkspire.ebookreader.common.TruyenFullScraper
+import com.inkspire.ebookreader.util.ConnectivityObserver
+import com.inkspire.ebookreader.util.TruyenFullScraper
 import com.inkspire.ebookreader.common.UiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

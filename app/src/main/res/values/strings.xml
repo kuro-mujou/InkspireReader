@@ -1,5 +1,58 @@
 <resources>
-    <string name="app_name">Inkspire Reader</string>
+    <string name="app_name" translatable="false">Inkspire Reader</string>
+
+    <!-- Notification Channels -->
+    <string name="channel_import_progress_name">Book Import Progress</string>
+    <string name="channel_import_completion_name">Book Import Completion</string>
+    <string name="channel_import_desc">Notifications for book import process</string>
+
+    <!-- Notification Titles -->
+    <string name="notification_title_importing_fmt">Importing: %1$s</string>
+    <string name="notification_title_updating_fmt">Updating: %1$s</string>
+
+    <!-- Progress Status Messages -->
+    <string name="status_starting">Starting import…</string>
+    <string name="status_reading_file">Reading file…</string>
+    <string name="status_processing_cover">Processing cover image…</string>
+    <string name="status_analyzing">Analyzing content…</string>
+    <string name="status_saving_info">Saving book details…</string>
+    <string name="status_saving_content">Saving content…</string>
+    <string name="status_processing_item_fmt">Processing: %1$s</string>
+    <string name="status_processing_progress_fmt">Processing %1$d/%2$d: %3$s</string>
+    <plurals name="status_found_new_chapters">
+        <item quantity="one">Found %1$d new chapter…</item>
+        <item quantity="other">Found %1$d new chapters…</item>
+    </plurals>
+    <string name="status_up_to_date">Book is already up to date.</string>
+
+    <!-- Completion Results -->
+    <string name="result_success_title">Import Successful</string>
+    <string name="result_failed_title">Import Failed</string>
+    <string name="result_success_msg_fmt">\'%1$s\' added to your library.</string>
+    <string name="result_success_update_fmt">Updated \'%1$s\' with %2$d new chapters.</string>
+
+    <!-- Error Messages -->
+    <string name="error_default_title">File</string>
+    <string name="error_generic_fmt">Import failed for \'%1$s\'.</string>
+    <string name="error_detailed_fmt">Failed to import \'%1$s\': %2$s</string>
+    <string name="error_book_already_exists">This book is already in your library.</string>
+    <string name="error_read_file">Could not read the source file.</string>
+    <string name="error_invalid_format">File format is invalid or corrupted.</string>
+    <string name="error_no_content">No valid chapters or content found.</string>
+    <string name="error_out_of_memory">Device ran out of memory processing this file.</string>
+    <string name="error_processing_content">Error processing content.</string>
+    <string name="error_content_load_fmt">Error loading content: %1$s</string>
+    <string name="error_unexpected">An unexpected error occurred.</string>
+
+    <!-- Placeholders & Defaults -->
+    <string name="placeholder_untitled">Untitled</string>
+    <string name="placeholder_author_unknown">Unknown Author</string>
+    <string name="placeholder_chapter_title_fmt">Chapter %1$d</string>
+    <string name="placeholder_chapter_untitled">Untitled Chapter</string>
+    <string name="placeholder_pdf_page_fmt">Page %1$d</string>
+    <string name="placeholder_pdf_page_range_fmt">Pages %1$d - %2$d</string>
+    <string name="placeholder_pdf_content">Document Content</string>
+
     <string name="recents">Recents</string>
     <string name="library">Library</string>
     <string name="explore">Explore</string>

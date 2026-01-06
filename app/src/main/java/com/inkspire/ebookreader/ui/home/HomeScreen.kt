@@ -10,7 +10,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.inkspire.ebookreader.common.BookImporter
+import com.inkspire.ebookreader.util.BookImporter
 import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator

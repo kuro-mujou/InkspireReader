@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.common
+package com.inkspire.ebookreader.util
 
 import kotlinx.coroutines.flow.Flow
 

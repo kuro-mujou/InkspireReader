@@ -17,7 +17,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.ScrapedChapterRef
-import com.inkspire.ebookreader.common.TruyenFullScraper
+import com.inkspire.ebookreader.util.TruyenFullScraper
 import com.inkspire.ebookreader.data.database.model.BookEntity
 import com.inkspire.ebookreader.data.database.model.ChapterContentEntity
 import com.inkspire.ebookreader.data.database.model.TableOfContentEntity
@@ -69,7 +69,6 @@ class TruyenFullImportWorker(
         const val INPUT_BOOK_DESCRIPTION_KEY = "input_description"
         const val INPUT_BOOK_CATEGORY_KEY = "input_categories"
         const val INPUT_BOOK_COVER_URL_KEY = "input_cover_url"
-        const val INPUT_BOOK_INTERNAL_ID_KEY = "input_internal_id"
 
         private const val PROGRESS_CHANNEL_ID = "book_import_progress_channel"
         private const val COMPLETION_CHANNEL_ID = "book_import_completion_channel"
@@ -84,9 +83,9 @@ class TruyenFullImportWorker(
     @RequiresApi(Build.VERSION_CODES.Q)
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val bookUrl = inputData.getString(INPUT_BOOK_URL_KEY) ?: return@withContext Result.failure()
-        finalBookTitle = inputData.getString(INPUT_BOOK_TITLE_KEY) ?: "Unknown Book"
+        finalBookTitle = inputData.getString(INPUT_BOOK_TITLE_KEY) ?: context.getString(R.string.placeholder_untitled)
 
-        val author = inputData.getString(INPUT_BOOK_AUTHOR_KEY) ?: "Unknown"
+        val author = inputData.getString(INPUT_BOOK_AUTHOR_KEY) ?: context.getString(R.string.placeholder_author_unknown)
         val description = inputData.getString(INPUT_BOOK_DESCRIPTION_KEY)
         val categoryString = inputData.getString(INPUT_BOOK_CATEGORY_KEY) ?: ""
         val coverUrl = inputData.getString(INPUT_BOOK_COVER_URL_KEY) ?: ""
@@ -95,16 +94,16 @@ class TruyenFullImportWorker(
 
         val initialNotification = createProgressNotificationBuilder(
             fileName = finalBookTitle,
-            message = "Initializing..."
+            message = context.getString(R.string.status_starting)
         ).build()
         setForeground(getForegroundInfoCompat(initialNotification))
 
         try {
-            updateProgressNotification(finalBookTitle, "Fetching Table of Contents...", 0)
+            updateProgressNotification(finalBookTitle, context.getString(R.string.status_analyzing), 0)
             val remoteTOC = TruyenFullScraper.fetchTOC(bookUrl)
 
             if (remoteTOC.isEmpty()) {
-                sendCompletionNotification(false, finalBookTitle, "No chapters found on server")
+                sendCompletionNotification(false, finalBookTitle, context.getString(R.string.error_no_content))
                 return@withContext Result.failure()
             }
 
@@ -115,7 +114,11 @@ class TruyenFullImportWorker(
 
                 if (remoteTOC.size > localTotal) {
                     val newChaptersCount = remoteTOC.size - localTotal
-                    updateProgressNotification(finalBookTitle, "Found $newChaptersCount new chapters...", 5)
+                    updateProgressNotification(finalBookTitle, context.resources.getQuantityString(
+                        R.plurals.status_found_new_chapters,
+                        newChaptersCount,
+                        newChaptersCount
+                    ), 5)
 
                     val chaptersToDownload = remoteTOC.drop(localTotal)
 
@@ -137,13 +140,13 @@ class TruyenFullImportWorker(
                     bookRepository.saveBookInfoTotalChapter(finalBookId, remoteTOC.size)
                     bookRepository.updateRecentRead(finalBookId)
 
-                    sendCompletionNotification(true, finalBookTitle, "Updated with $newChaptersCount new chapters.")
+                    sendCompletionNotification(true, finalBookTitle, context.getString(R.string.result_success_update_fmt, finalBookTitle, newChaptersCount))
                 } else {
-                    sendCompletionNotification(true, finalBookTitle, "Book is already up to date.")
+                    sendCompletionNotification(true, finalBookTitle, context.getString(R.string.status_up_to_date))
                 }
 
             } else {
-                updateProgressNotification(finalBookTitle, "Downloading cover info...", 0)
+                updateProgressNotification(finalBookTitle, context.getString(R.string.status_processing_cover), 0)
 
                 val coverImagePath = downloadAndSaveImage(coverUrl, "cover_$finalBookId")
 
@@ -212,7 +215,10 @@ class TruyenFullImportWorker(
 
         for ((idx, chapterRef) in chaptersToProcess.withIndex()) {
             val progressPercentage = ((idx + 1).toFloat() / total * 100).toInt()
-            val statusMsg = if (isUpdateMode) "Updating: ${chapterRef.title}" else "Importing: ${chapterRef.title}"
+            val statusMsg = if (isUpdateMode)
+                context.getString(R.string.notification_title_updating_fmt, chapterRef.title)
+            else
+                context.getString(R.string.status_processing_item_fmt, chapterRef.title)
 
             updateProgressNotification(finalBookTitle, statusMsg, progressPercentage)
 
@@ -230,7 +236,7 @@ class TruyenFullImportWorker(
                 if (parsedContentList.isNotEmpty()) {
                     contentToSave.addAll(parsedContentList)
                 } else {
-                    contentToSave.add("Content is empty or failed to parse.")
+                    contentToSave.add(context.getString(R.string.error_processing_content))
                 }
 
                 chapterRepository.saveChapterContent(
@@ -254,7 +260,7 @@ class TruyenFullImportWorker(
                         tocId = chapterRef.index,
                         bookId = finalBookId,
                         chapterTitle = chapterRef.title,
-                        content = listOf("<h2>${chapterRef.title}</h2>", "Error loading chapter content: ${e.message}")
+                        content = listOf("<h2>${chapterRef.title}</h2>", context.getString(R.string.error_content_load_fmt, e.message))
                     )
                 )
                 e.printStackTrace()
@@ -279,7 +285,7 @@ class TruyenFullImportWorker(
                         val imageBytes = Base64.decode(base64Data, Base64.DEFAULT)
                         bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     return@withContext "error_base64_decode"
                 }
             }
@@ -486,7 +492,7 @@ class TruyenFullImportWorker(
     ): NotificationCompat.Builder {
         return NotificationCompat.Builder(context, PROGRESS_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
-            .setContentTitle("Book Info: ${fileName.take(30)}${if (fileName.length > 30) "..." else ""}")
+            .setContentTitle(context.getString(R.string.notification_title_importing_fmt, fileName.take(30) + "..."))
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -513,13 +519,13 @@ class TruyenFullImportWorker(
         bookTitle: String?,
         customMessage: String? = null
     ) {
-        val title = if (isSuccess) "Process Complete" else "Process Failed"
-        val defaultTitle = bookTitle ?: "Book"
+        val title = if (isSuccess) context.getString(R.string.result_success_title) else context.getString(R.string.result_failed_title)
+        val defaultTitle = bookTitle ?: context.getString(R.string.error_default_title)
 
         val text = when {
             customMessage != null -> customMessage
-            isSuccess -> "'$defaultTitle' added to your library."
-            else -> "Failed to process '$defaultTitle'."
+            isSuccess -> context.getString(R.string.result_success_msg_fmt, defaultTitle)
+            else -> context.getString(R.string.error_generic_fmt, defaultTitle)
         }
 
         val builder = NotificationCompat.Builder(context, COMPLETION_CHANNEL_ID).apply {

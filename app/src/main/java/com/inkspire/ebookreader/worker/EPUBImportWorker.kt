@@ -88,7 +88,7 @@ class EPUBImportWorker(
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val initialNotification = createProgressNotificationBuilder(
             fileName = finalBookTitle,
-            message = "Starting import..."
+            message = context.getString(R.string.status_starting)
         ).build()
         setForeground(getForegroundInfoCompat(initialNotification))
 
@@ -96,7 +96,7 @@ class EPUBImportWorker(
             onProgress = { progress, chapterName ->
                 updateProgressNotification(
                     fileName = finalBookTitle,
-                    message = "Processing: $chapterName",
+                    message = context.getString(R.string.status_processing_item_fmt, chapterName),
                     progress = progress
                 )
             }
@@ -141,7 +141,7 @@ class EPUBImportWorker(
         val url = uri.toAbsoluteUrl()
         val asset = assetRetriever.retrieve(url!!).getOrNull() ?: return ImportResult.failure(IOException("Fail to load ebook"))
         val publication = publicationOpener.open(asset, allowUserInteraction = true).getOrNull() ?: return ImportResult.failure(IOException("Fail to open ebook"))
-        onProgress(null, "Processing Book info...")
+        onProgress(null, context.getString(R.string.status_analyzing))
 
         val actualTocToProcess = mergeLinks(publication.readingOrder, publication.tableOfContents)
         if (actualTocToProcess.isEmpty()) {
@@ -157,10 +157,10 @@ class EPUBImportWorker(
             return processBookResult
         }
 
-        onProgress(null, "Saving Chapter List...")
+        onProgress(null, context.getString(R.string.status_saving_content))
         val initialTocEntities = saveAllTableOfContents(finalBookId, actualTocToProcess)
 
-        onProgress(null, "Processing Book content...")
+        onProgress(null, context.getString(R.string.status_saving_content))
         val processContentResult = processAndSaveBookContent(
             publication = publication,
             actualTocToProcess = actualTocToProcess,
@@ -190,7 +190,7 @@ class EPUBImportWorker(
 
             if (!isSplitChapter) {
                 val link = tocLinksInResource.first()
-                val title = link.title ?: "Chapter ${overallChapterIndex + 1}"
+                val title = link.title ?: context.getString(R.string.placeholder_chapter_title_fmt, overallChapterIndex + 1)
 
                 tocEntities.add(
                     TableOfContentEntity(bookId = bookId, title = title, index = overallChapterIndex)
@@ -198,7 +198,7 @@ class EPUBImportWorker(
                 overallChapterIndex++
             } else {
                 for (link in tocLinksInResource) {
-                    val title = link.title ?: "Chapter ${overallChapterIndex + 1}"
+                    val title = link.title ?: context.getString(R.string.placeholder_chapter_title_fmt, overallChapterIndex + 1)
 
                     tocEntities.add(
                         TableOfContentEntity(bookId = bookId, title = title, index = overallChapterIndex)
@@ -219,7 +219,7 @@ class EPUBImportWorker(
     private suspend fun processAndSaveBookContent(
         publication: Publication,
         actualTocToProcess: List<Link>,
-        initialTocEntities: List<TableOfContentEntity>, // Received from Step 1
+        initialTocEntities: List<TableOfContentEntity>,
         onProgress: suspend (progress: Int?, chapterName: String) -> Unit
     ): ImportResult<String> {
         val tocGroupedByResource = actualTocToProcess.groupBy { it.href.toString().substringBefore('#') }
@@ -248,8 +248,8 @@ class EPUBImportWorker(
                 val representativeTocLink = tocLinksInResource.first()
                 val extractedTitle = realDoc.selectFirst("h1, h2, h3, h4, h5, h6")?.text()
                     ?: representativeTocLink.title
-                    ?: realDoc.head().selectFirst("title")?.text()?.let { "$it - Chapter ${overallChapterIndex + 1}" }
-                    ?: "Chapter ${overallChapterIndex + 1}"
+                    ?: realDoc.head().selectFirst("title")?.text()?.let { "$it - " + context.getString(R.string.placeholder_chapter_title_fmt, overallChapterIndex + 1) }
+                    ?: context.getString(R.string.placeholder_chapter_title_fmt, overallChapterIndex + 1)
 
                 val initialEntity = initialTocEntities.getOrNull(overallChapterIndex)
                 if (initialEntity != null && initialEntity.title != extractedTitle) {
@@ -273,7 +273,7 @@ class EPUBImportWorker(
 
                 for (extraIdx in 1 until tocLinksInResource.size) {
                     val extraLink = tocLinksInResource[extraIdx]
-                    val extraTitle = extraLink.title ?: "Chapter ${overallChapterIndex + 1}"
+                    val extraTitle = extraLink.title ?: context.getString(R.string.placeholder_chapter_title_fmt, overallChapterIndex + 1)
                     saveEmptyChapterContent(finalBookId, extraTitle, overallChapterIndex)
                     overallChapterIndex++
                 }
@@ -283,7 +283,7 @@ class EPUBImportWorker(
                     val currentLink = tocLinksInResource[idxInResource]
                     val extractedTitle = currentLink.title
                         ?: realDoc.selectFirst("h1, h2, h3, h4, h5, h6")?.text()
-                        ?: "Chapter ${overallChapterIndex + 1}"
+                        ?: context.getString(R.string.placeholder_chapter_title_fmt, overallChapterIndex + 1)
 
                     val initialEntity = initialTocEntities.getOrNull(overallChapterIndex)
                     if (initialEntity != null && initialEntity.title != extractedTitle) {
@@ -701,7 +701,7 @@ class EPUBImportWorker(
             val importance =
                 if (channelId == PROGRESS_CHANNEL_ID) NotificationManager.IMPORTANCE_LOW else NotificationManager.IMPORTANCE_DEFAULT
             val channel = NotificationChannel(channelId, channelName, importance).apply {
-                description = "Notifications for book import process"
+                description = context.getString(R.string.channel_import_desc)
                 if (channelId == PROGRESS_CHANNEL_ID) setSound(null, null)
             }
             notificationManager.createNotificationChannel(channel)
@@ -714,7 +714,7 @@ class EPUBImportWorker(
     ): NotificationCompat.Builder {
         return NotificationCompat.Builder(context, PROGRESS_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
-            .setContentTitle("Importing EPUB: ${fileName.take(35)}${if (fileName.length > 35) "..." else ""}")
+            .setContentTitle(context.getString(R.string.notification_title_importing_fmt, fileName.take(35) + "..."))
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
@@ -741,21 +741,21 @@ class EPUBImportWorker(
         bookTitle: String?,
         failureReason: String? = null
     ) {
-        val title = if (isSuccess) "Import Successful" else "Import Failed"
-        val defaultTitle = bookTitle ?: "EPUB File"
+        val title = if (isSuccess) context.getString(R.string.result_success_title) else context.getString(R.string.result_failed_title)
+        val defaultTitle = bookTitle ?: context.getString(R.string.error_default_title)
         val userFriendlyReason = when {
             failureReason == null -> null
-            failureReason.contains("Book already imported") -> "This book is already in your library."
-            failureReason.contains("Could not parse EPUB file") -> "The selected file is not a valid EPUB."
-            failureReason.contains("Table of Contents is empty") -> "Could not find chapters in the EPUB."
-            failureReason.contains("Failed to open InputStream") -> "Could not read the selected file."
-            failureReason.contains("OutOfMemoryError") -> "Ran out of memory processing the EPUB."
-            else -> failureReason
+            failureReason.contains("Book already imported") -> context.getString(R.string.error_book_already_exists)
+            failureReason.contains("Could not parse EPUB file") -> context.getString(R.string.error_invalid_format)
+            failureReason.contains("Table of Contents is empty") -> context.getString(R.string.error_no_content)
+            failureReason.contains("Failed to open InputStream") -> context.getString(R.string.error_read_file)
+            failureReason.contains("OutOfMemoryError") -> context.getString(R.string.error_out_of_memory)
+            else -> context.getString(R.string.error_unexpected)
         }
         val text = when {
-            isSuccess -> "'$defaultTitle' added to your library."
-            userFriendlyReason != null -> "Failed to import '$defaultTitle': $userFriendlyReason"
-            else -> "Import failed for '$defaultTitle'."
+            isSuccess -> context.getString(R.string.result_success_msg_fmt, defaultTitle)
+            userFriendlyReason != null -> context.getString(R.string.error_detailed_fmt, defaultTitle, userFriendlyReason)
+            else -> context.getString(R.string.error_generic_fmt, defaultTitle)
         }
         val builder = NotificationCompat.Builder(context, COMPLETION_CHANNEL_ID).apply {
             setSmallIcon(R.mipmap.ic_launcher_foreground)
