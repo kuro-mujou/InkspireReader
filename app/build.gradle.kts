@@ -29,6 +29,9 @@ android {
             keyPassword = keystoreProperties["keyPassword"] as String
         }
     }
+    androidResources {
+        generateLocaleConfig = true
+    }
 
     namespace = "com.inkspire.ebookreader"
     compileSdk {

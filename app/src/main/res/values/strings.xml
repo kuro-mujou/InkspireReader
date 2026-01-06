@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Inkspire Reader</string>
+    <string name="recents">Recents</string>
+    <string name="library">Library</string>
+    <string name="explore">Explore</string>
+    <string name="settings">Settings</string>
 </resources>

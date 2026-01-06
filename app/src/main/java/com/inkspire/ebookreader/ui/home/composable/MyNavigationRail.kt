@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.navigation.Route
@@ -37,10 +38,10 @@ fun MyNavigationRail(
                 icon = {
                     Icon(
                         imageVector = ImageVector.vectorResource(item.icon),
-                        contentDescription = item.label
+                        contentDescription = stringResource(item.label)
                     )
                 },
-                label = { Text(item.label) },
+                label = { Text(stringResource(item.label)) },
                 selected = currentTab == item.route,
                 onClick = {
                     if (navigator.currentScreen is Route.Home.Explore.Detail)
