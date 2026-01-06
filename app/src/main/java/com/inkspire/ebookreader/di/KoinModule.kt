@@ -1,8 +1,8 @@
 package com.inkspire.ebookreader.di
 
 import androidx.room.Room
-import com.inkspire.ebookreader.common.AndroidConnectivityObserver
-import com.inkspire.ebookreader.common.ConnectivityObserver
+import com.inkspire.ebookreader.util.AndroidConnectivityObserver
+import com.inkspire.ebookreader.util.ConnectivityObserver
 import com.inkspire.ebookreader.data.database.LocalBookDatabase
 import com.inkspire.ebookreader.data.repository.BookRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ChapterRepositoryImpl

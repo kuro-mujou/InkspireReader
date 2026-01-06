@@ -3,7 +3,7 @@ package com.inkspire.ebookreader.data.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.inkspire.ebookreader.common.StringListTypeConverter
+import com.inkspire.ebookreader.data.database.converter.StringListTypeConverter
 import com.inkspire.ebookreader.data.database.dao.BookDao
 import com.inkspire.ebookreader.data.database.dao.ChapterDao
 import com.inkspire.ebookreader.data.database.dao.ImagePathDao

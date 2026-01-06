@@ -1,11 +1,11 @@
-package com.inkspire.ebookreader.common
+package com.inkspire.ebookreader.util
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
 import android.net.NetworkCapabilities
 import androidx.core.content.getSystemService
+import com.inkspire.ebookreader.util.ConnectivityObserver
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -18,7 +18,7 @@ class AndroidConnectivityObserver(
 
     override val isConnected: Flow<Boolean>
         get() = callbackFlow {
-            val callback = object : NetworkCallback() {
+            val callback = object : ConnectivityManager.NetworkCallback() {
                 override fun onCapabilitiesChanged(
                     network: Network,
                     networkCapabilities: NetworkCapabilities

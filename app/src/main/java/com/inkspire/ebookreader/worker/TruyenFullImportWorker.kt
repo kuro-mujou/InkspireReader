@@ -17,7 +17,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.ScrapedChapterRef
-import com.inkspire.ebookreader.common.TruyenFullScraper
+import com.inkspire.ebookreader.util.TruyenFullScraper
 import com.inkspire.ebookreader.data.database.model.BookEntity
 import com.inkspire.ebookreader.data.database.model.ChapterContentEntity
 import com.inkspire.ebookreader.data.database.model.TableOfContentEntity
@@ -114,7 +114,11 @@ class TruyenFullImportWorker(
 
                 if (remoteTOC.size > localTotal) {
                     val newChaptersCount = remoteTOC.size - localTotal
-                    updateProgressNotification(finalBookTitle, context.getString(R.string.status_found_new_chapters_fmt, newChaptersCount), 5)
+                    updateProgressNotification(finalBookTitle, context.resources.getQuantityString(
+                        R.plurals.status_found_new_chapters,
+                        newChaptersCount,
+                        newChaptersCount
+                    ), 5)
 
                     val chaptersToDownload = remoteTOC.drop(localTotal)
 

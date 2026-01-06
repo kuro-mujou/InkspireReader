@@ -1,6 +1,6 @@
 package com.inkspire.ebookreader
 
-import com.inkspire.ebookreader.common.TruyenFullScraper
+import com.inkspire.ebookreader.util.TruyenFullScraper
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test

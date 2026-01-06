@@ -1,21 +1,23 @@
-package com.inkspire.ebookreader.common
+package com.inkspire.ebookreader.util
 
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import com.inkspire.ebookreader.domain.model.Book
+import com.inkspire.ebookreader.domain.model.ScrapedBookInfo
 import com.inkspire.ebookreader.ui.sharedviewmodel.AsyncImportBookViewModel
-import com.inkspire.ebookreader.util.FilePickerUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.koin.java.KoinJavaComponent.inject
+import org.koin.java.KoinJavaComponent
 
 class BookImporter(
     private val context: Context,
     private val scope: CoroutineScope,
     private val specialIntent: String,
 ) {
-    val importBookViewModel: AsyncImportBookViewModel by inject(AsyncImportBookViewModel::class.java)
+    val importBookViewModel: AsyncImportBookViewModel by KoinJavaComponent.inject(
+        AsyncImportBookViewModel::class.java
+    )
     fun processIntentUri(uri: Uri?) {
         uri?.let {
             val fileName = FilePickerUtil.getFileName(context, it)

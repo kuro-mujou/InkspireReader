@@ -19,7 +19,10 @@
     <string name="status_saving_content">Saving content…</string>
     <string name="status_processing_item_fmt">Processing: %1$s</string>
     <string name="status_processing_progress_fmt">Processing %1$d/%2$d: %3$s</string>
-    <string name="status_found_new_chapters_fmt">Found %1$d new chapters…</string>
+    <plurals name="status_found_new_chapters">
+        <item quantity="one">Found %1$d new chapter…</item>
+        <item quantity="other">Found %1$d new chapters…</item>
+    </plurals>
     <string name="status_up_to_date">Book is already up to date.</string>
 
     <!-- Completion Results -->

@@ -1,5 +1,7 @@
-package com.inkspire.ebookreader.common
+package com.inkspire.ebookreader.util
 
+import com.inkspire.ebookreader.domain.model.ScrapedBookInfo
+import com.inkspire.ebookreader.domain.model.ScrapedChapterRef
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -38,36 +40,37 @@ object TangThuVienScraper {
      * STEP 2: Fetch TOC
      * UPDATED: Accepts [bookUrl] to determine the correct API domain
      */
-    suspend fun fetchTOC(internalId: String, bookUrl: String): List<ScrapedChapterRef> = withContext(Dispatchers.IO) {
-        // 1. Extract Domain (e.g., https://tangthuvien.net)
-        val uri = URI(bookUrl)
-        val baseUrl = "${uri.scheme}://${uri.host}"
+    suspend fun fetchTOC(internalId: String, bookUrl: String): List<ScrapedChapterRef> =
+        withContext(Dispatchers.IO) {
+            // 1. Extract Domain (e.g., https://tangthuvien.net)
+            val uri = URI(bookUrl)
+            val baseUrl = "${uri.scheme}://${uri.host}"
 
-        // 2. Construct Dynamic API URL
-        // Endpoint: /story/chapters?story_id=33049
-        val apiUrl = "$baseUrl/story/chapters?story_id=$internalId"
+            // 2. Construct Dynamic API URL
+            // Endpoint: /story/chapters?story_id=33049
+            val apiUrl = "$baseUrl/story/chapters?story_id=$internalId"
 
-        val doc = Jsoup.connect(apiUrl)
-            .userAgent(USER_AGENT)
-            .header("X-Requested-With", "XMLHttpRequest") // Required for AJAX
-            .get()
+            val doc = Jsoup.connect(apiUrl)
+                .userAgent(USER_AGENT)
+                .header("X-Requested-With", "XMLHttpRequest") // Required for AJAX
+                .get()
 
-        val links = doc.select("a")
-        val tocList = mutableListOf<ScrapedChapterRef>()
+            val links = doc.select("a")
+            val tocList = mutableListOf<ScrapedChapterRef>()
 
-        links.forEachIndexed { index, element ->
-            val title = element.text()
-            val href = element.attr("href")
+            links.forEachIndexed { index, element ->
+                val title = element.text()
+                val href = element.attr("href")
 
-            // href is usually: "https://tangthuvien.net/doc-truyen/..."
-            // If it's valid, add it.
-            if (href.contains("doc-truyen")) {
-                tocList.add(ScrapedChapterRef(title, href, index))
+                // href is usually: "https://tangthuvien.net/doc-truyen/..."
+                // If it's valid, add it.
+                if (href.contains("doc-truyen")) {
+                    tocList.add(ScrapedChapterRef(title, href, index))
+                }
             }
-        }
 
-        return@withContext tocList
-    }
+            return@withContext tocList
+        }
 
     /**
      * STEP 3: Fetch Content
@@ -88,7 +91,8 @@ object TangThuVienScraper {
 
         // 3. Check for VIP/Login Buttons
         if (contentDiv.select("#btnChapterVip").isNotEmpty() ||
-            contentDiv.select(".btn-vip-read").isNotEmpty()) {
+            contentDiv.select(".btn-vip-read").isNotEmpty()
+        ) {
             return@withContext "<p><em>This chapter is VIP. Please login via WebView to read.</em></p>"
         }
 

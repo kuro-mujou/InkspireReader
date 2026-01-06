@@ -80,7 +80,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavKey
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.common.BookImporter
+import com.inkspire.ebookreader.util.BookImporter
 import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.data.mapper.toNormalBook

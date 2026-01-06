@@ -1,77 +1,51 @@
-package com.inkspire.ebookreader.common
+package com.inkspire.ebookreader.util
 
+import com.inkspire.ebookreader.domain.model.ScrapedBookInfo
+import com.inkspire.ebookreader.domain.model.ScrapedChapterRef
+import com.inkspire.ebookreader.domain.model.ScrapedPageResult
+import com.inkspire.ebookreader.domain.model.ScrapedSearchResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import kotlin.random.Random
 
-@Serializable
-data class ScrapedSearchResult(
-    val title: String,
-    val author: String,
-    val url: String,
-    val coverUrl: String,
-    val latestChapter: String,
-    val isFull: Boolean,
-    val isHot: Boolean
-)
-
-@Serializable
-data class ScrapedPageResult(
-    val data: List<ScrapedSearchResult>,
-    val totalPages: Int
-)
-
-@Serializable
-data class ScrapedBookInfo(
-    val title: String,
-    val author: String,
-    val descriptionHtml: String,
-    val coverUrl: String,
-    val categories: List<String> = emptyList(),
-    val status: String = "Unknown"
-)
-
-@Serializable
-data class ScrapedChapterRef(
-    val title: String,
-    val url: String,
-    val index: Int
-)
-
 object TruyenFullScraper {
     private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-    suspend fun search(baseUrl: String, query: String, page: Int = 1): ScrapedPageResult = withContext(Dispatchers.IO) {
-        val cleanQuery = query.trim().replace(" ", "+")
-        val searchUrl = "$baseUrl/tim-kiem/?tukhoa=$cleanQuery&page=$page"
-        val doc = Jsoup.connect(searchUrl).userAgent(USER_AGENT).timeout(30000).get()
-        val books = parseBookList(doc)
-        val maxPage = parseSearchTotalPages(doc)
-        return@withContext ScrapedPageResult(books, maxPage)
-    }
+    suspend fun search(baseUrl: String, query: String, page: Int = 1): ScrapedPageResult =
+        withContext(Dispatchers.IO) {
+            val cleanQuery = query.trim().replace(" ", "+")
+            val searchUrl = "$baseUrl/tim-kiem/?tukhoa=$cleanQuery&page=$page"
+            val doc = Jsoup.connect(searchUrl).userAgent(USER_AGENT).timeout(30000).get()
+            val books = parseBookList(doc)
+            val maxPage = parseSearchTotalPages(doc)
+            return@withContext ScrapedPageResult(books, maxPage)
+        }
 
-    suspend fun fetchCategoryBooks(baseUrl: String, categorySlug: String, page: Int = 1): ScrapedPageResult = withContext(Dispatchers.IO) {
-        val categoryUrl = if (page <= 1) "$baseUrl/the-loai/$categorySlug/" else "$baseUrl/the-loai/$categorySlug/trang-$page/"
-        val doc = Jsoup.connect(categoryUrl).userAgent(USER_AGENT).timeout(30000).get()
-        val books = parseBookList(doc)
-        val maxPage = parseSearchTotalPages(doc)
-        return@withContext ScrapedPageResult(books, maxPage)
-    }
+    suspend fun fetchCategoryBooks(baseUrl: String, categorySlug: String, page: Int = 1): ScrapedPageResult =
+        withContext(Dispatchers.IO) {
+            val categoryUrl =
+                if (page <= 1) "$baseUrl/the-loai/$categorySlug/" else "$baseUrl/the-loai/$categorySlug/trang-$page/"
+            val doc = Jsoup.connect(categoryUrl).userAgent(USER_AGENT).timeout(30000).get()
+            val books = parseBookList(doc)
+            val maxPage = parseSearchTotalPages(doc)
+            return@withContext ScrapedPageResult(books, maxPage)
+        }
 
     suspend fun fetchBookDetails(bookUrl: String): ScrapedBookInfo = withContext(Dispatchers.IO) {
         val doc = Jsoup.connect(bookUrl).userAgent(USER_AGENT).get()
-        val title = doc.select("h3.title").text().ifEmpty { doc.select("h1").text().replace("&nbsp;", " ") }
+        val title =
+            doc.select("h3.title").text().ifEmpty { doc.select("h1").text().replace("&nbsp;", " ") }
         val author = doc.select(".info a[itemprop='author']").text().replace("&nbsp;", " ")
         val descHtml = doc.select(".desc-text").html().replace("&nbsp;", " ")
         val coverUrl = doc.select(".book img").attr("src")
-        val categories = doc.select(".info a[itemprop='genre']").map { it.text().replace("&nbsp;", " ") }
+        val categories =
+            doc.select(".info a[itemprop='genre']").map { it.text().replace("&nbsp;", " ") }
         val status = doc.select(".info span.text-success").text().ifEmpty {
             if (doc.select(".info span.text-primary").isNotEmpty()) "Đang ra" else "Unknown"
         }
@@ -96,10 +70,12 @@ object TruyenFullScraper {
                     val deferredResults = chunk.map { page ->
                         async {
                             try {
-                                delay(Random.nextLong(100, 500))
+                                delay(Random.Default.nextLong(100, 500))
 
                                 val pageUrl = "$cleanUrl/trang-$page/"
-                                val doc = Jsoup.connect(pageUrl).userAgent(USER_AGENT).timeout(30000).get()
+                                val doc =
+                                    Jsoup.connect(pageUrl).userAgent(USER_AGENT).timeout(30000)
+                                        .get()
                                 parseChaptersFromDoc(doc)
                             } catch (e: Exception) {
                                 e.printStackTrace()
@@ -111,7 +87,7 @@ object TruyenFullScraper {
                 }
 
                 if (chunk != pageChunks.last()) {
-                    delay(Random.nextLong(200, 500))
+                    delay(Random.Default.nextLong(200, 500))
                 }
             }
         }
@@ -207,7 +183,17 @@ object TruyenFullScraper {
                 val isFull = element.select(".label-full").isNotEmpty()
                 val isHot = element.select(".label-hot").isNotEmpty()
 
-                results.add(ScrapedSearchResult(title, author, url, coverUrl, latestChapter, isFull, isHot))
+                results.add(
+                    ScrapedSearchResult(
+                        title,
+                        author,
+                        url,
+                        coverUrl,
+                        latestChapter,
+                        isFull,
+                        isHot
+                    )
+                )
             } catch (e: Exception) { e.printStackTrace() }
         }
         return results

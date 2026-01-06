@@ -3,7 +3,7 @@ package com.inkspire.ebookreader.data.database.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
-import com.inkspire.ebookreader.common.StringListTypeConverter
+import com.inkspire.ebookreader.data.database.converter.StringListTypeConverter
 
 @Entity(tableName = "books")
 @TypeConverters(StringListTypeConverter::class)
