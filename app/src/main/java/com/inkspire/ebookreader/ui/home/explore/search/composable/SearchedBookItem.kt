@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.inkspire.ebookreader.common.ScrapedSearchResult
+import com.inkspire.ebookreader.domain.model.ScrapedSearchResult
 import com.inkspire.ebookreader.ui.home.explore.search.SearchAction
 
 @Composable

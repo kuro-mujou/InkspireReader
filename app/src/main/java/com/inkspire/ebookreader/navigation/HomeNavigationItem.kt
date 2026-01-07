@@ -29,5 +29,10 @@ val homeNavItems = listOf(
         label = R.string.settings,
         icon = R.drawable.ic_setting,
         route = Route.Home.Settings
+    ),
+    HomeNavItem(
+        label = R.string.settings,
+        icon = R.drawable.ic_setting,
+        route = Route.Home.Test
     )
 )

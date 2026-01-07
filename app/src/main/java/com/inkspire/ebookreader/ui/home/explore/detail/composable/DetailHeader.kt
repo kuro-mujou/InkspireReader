@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.DeviceConfiguration
-import com.inkspire.ebookreader.common.ScrapedBookInfo
+import com.inkspire.ebookreader.domain.model.ScrapedBookInfo
 import com.inkspire.ebookreader.ui.home.explore.detail.DetailAction
 
 @Composable

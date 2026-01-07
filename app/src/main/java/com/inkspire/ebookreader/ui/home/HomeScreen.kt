@@ -10,7 +10,6 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.inkspire.ebookreader.util.BookImporter
 import com.inkspire.ebookreader.navigation.Navigator
 import com.inkspire.ebookreader.navigation.Route
 import com.inkspire.ebookreader.navigation.rememberNavigator
@@ -24,6 +23,8 @@ import com.inkspire.ebookreader.ui.home.explore.search.SearchViewModel
 import com.inkspire.ebookreader.ui.home.libary.LibraryRootScreen
 import com.inkspire.ebookreader.ui.home.recentbook.RecentBookRootScreen
 import com.inkspire.ebookreader.ui.home.setting.SettingRootScreen
+import com.inkspire.ebookreader.ui.home.test.CustomToolbarContent
+import com.inkspire.ebookreader.util.BookImporter
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -105,6 +106,9 @@ fun HomeScreen(
                 }
                 entry<Route.Home.Settings> {
                     SettingRootScreen()
+                }
+                entry<Route.Home.Test> {
+                    CustomToolbarContent()
                 }
             }
         )

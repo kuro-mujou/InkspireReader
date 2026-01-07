@@ -8,8 +8,8 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.inkspire.ebookreader.common.ScrapedBookInfo
 import com.inkspire.ebookreader.domain.model.Book
+import com.inkspire.ebookreader.domain.model.ScrapedBookInfo
 import com.inkspire.ebookreader.worker.CBZImportWorker
 import com.inkspire.ebookreader.worker.EPUBImportWorker
 import com.inkspire.ebookreader.worker.PDFImportWorker
