@@ -6,6 +6,7 @@ import androidx.room.TypeConverters
 import com.inkspire.ebookreader.data.database.converter.StringListTypeConverter
 import com.inkspire.ebookreader.data.database.dao.BookDao
 import com.inkspire.ebookreader.data.database.dao.ChapterDao
+import com.inkspire.ebookreader.data.database.dao.HighlightDao
 import com.inkspire.ebookreader.data.database.dao.ImagePathDao
 import com.inkspire.ebookreader.data.database.dao.LibraryDao
 import com.inkspire.ebookreader.data.database.dao.MusicPathDao
@@ -15,6 +16,7 @@ import com.inkspire.ebookreader.data.database.model.BookCategoryCrossRef
 import com.inkspire.ebookreader.data.database.model.BookEntity
 import com.inkspire.ebookreader.data.database.model.CategoryEntity
 import com.inkspire.ebookreader.data.database.model.ChapterContentEntity
+import com.inkspire.ebookreader.data.database.model.HighlightEntity
 import com.inkspire.ebookreader.data.database.model.ImagePathEntity
 import com.inkspire.ebookreader.data.database.model.MusicPathEntity
 import com.inkspire.ebookreader.data.database.model.NoteEntity
@@ -29,10 +31,11 @@ import com.inkspire.ebookreader.data.database.model.TableOfContentEntity
         MusicPathEntity::class,
         NoteEntity::class,
         CategoryEntity::class,
-        BookCategoryCrossRef::class
+        BookCategoryCrossRef::class,
+        HighlightEntity::class
     ],
     exportSchema = false,
-    version = 1
+    version = 2
 )
 @TypeConverters(StringListTypeConverter::class)
 abstract class LocalBookDatabase : RoomDatabase() {
@@ -43,6 +46,7 @@ abstract class LocalBookDatabase : RoomDatabase() {
     abstract val imagePathDao: ImagePathDao
     abstract val musicPathDao: MusicPathDao
     abstract val noteDao: NoteDao
+    abstract val highlightDao: HighlightDao
 
     companion object {
         const val DATABASE_NAME = "local_book_database"

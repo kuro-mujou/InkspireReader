@@ -152,7 +152,8 @@ fun BookChapterContent(
             }
         }
         is UiState.Success -> {
-            val chapterData by remember { derivedStateOf { uiState.data() } }
+//            val chapterData by remember { derivedStateOf { uiState.data() } }
+            val chapterData = uiState.data()
             val paragraphs = chapterData.content
             val listState = rememberLazyListState(
                 initialFirstVisibleItemIndex = initialParagraphIndex()
@@ -471,11 +472,13 @@ fun BookChapterContent(
                         items = paragraphs,
                         key = { index, _ -> index }
                     ) { index, paragraph ->
+                        val highlightsForParagraph = chapterData.highlights[index] ?: emptyList()
                         ChapterContent(
                             index = index,
                             paragraph = paragraph,
                             currentChapterIndex = { currentChapterIndex },
-                            isHighlightedProvider = { isCurrentChapter() && currentTTSState.isActivated && currentTTSState.paragraphIndex == index },
+                            isTTSHighlightProvider = { isCurrentChapter() && currentTTSState.isActivated && currentTTSState.paragraphIndex == index },
+                            highlights = { highlightsForParagraph },
                             onRequestScrollToOffset = { lineBottomY ->
                                 coroutineScope.launch {
                                     if (currentTTSState.isActivated && !listState.isScrollInProgress && isCurrentChapter()) {

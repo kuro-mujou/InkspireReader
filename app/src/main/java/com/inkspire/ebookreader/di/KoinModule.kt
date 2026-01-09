@@ -7,6 +7,7 @@ import com.inkspire.ebookreader.data.database.LocalBookDatabase
 import com.inkspire.ebookreader.data.repository.BookRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ChapterRepositoryImpl
 import com.inkspire.ebookreader.data.repository.DatastoreRepositoryImpl
+import com.inkspire.ebookreader.data.repository.HighlightRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ImagePathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.MusicPathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.NoteRepositoryImpl
@@ -14,6 +15,7 @@ import com.inkspire.ebookreader.data.repository.TableOfContentRepositoryImpl
 import com.inkspire.ebookreader.domain.repository.BookRepository
 import com.inkspire.ebookreader.domain.repository.ChapterRepository
 import com.inkspire.ebookreader.domain.repository.DatastoreRepository
+import com.inkspire.ebookreader.domain.repository.HighlightRepository
 import com.inkspire.ebookreader.domain.repository.ImagePathRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
 import com.inkspire.ebookreader.domain.repository.NoteRepository
@@ -93,6 +95,7 @@ object KoinModule {
         single { get<LocalBookDatabase>().imagePathDao }
         single { get<LocalBookDatabase>().musicPathDao }
         single { get<LocalBookDatabase>().noteDao }
+        single { get<LocalBookDatabase>().highlightDao }
     }
 
     val repositoryModule = module {
@@ -103,6 +106,7 @@ object KoinModule {
         singleOf(::MusicPathRepositoryImpl).bind<MusicPathRepository>()
         singleOf(::NoteRepositoryImpl).bind<NoteRepository>()
         singleOf(::DatastoreRepositoryImpl).bind<DatastoreRepository>()
+        singleOf(::HighlightRepositoryImpl).bind<HighlightRepository>()
     }
 
     val useCaseModule = module {

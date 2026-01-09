@@ -90,7 +90,11 @@ class BookContentStylingViewModel(
             bgV < 0.3f && txtV < 0.3f -> 0.7f
             else -> rawV
         }
-        return Color.hsv(h, s, v).copy(alpha = 0.8f)
+        val output = Color(h, s, v)
+        return if (output.isDark())
+            output.darken(0.05f)
+        else
+            output.lighten(0.05f)
     }
 
     private fun circularHueAverage(h1: Float, h2: Float): Float {

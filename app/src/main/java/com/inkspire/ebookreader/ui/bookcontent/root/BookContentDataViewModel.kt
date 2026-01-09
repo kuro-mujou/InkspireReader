@@ -88,6 +88,12 @@ class BookContentDataViewModel(
                     bookContentUseCase.saveBookInfoParagraphIndex(bookId, action.paragraphIndex)
                 }
             }
+            is BookContentDataAction.AddHighlightForParagraph -> {
+                viewModelScope.launch {
+                    val correctHighlightItem = action.highlightInfo.copy(bookId = bookId)
+                    bookContentUseCase.addHighlight(correctHighlightItem)
+                }
+            }
         }
     }
 

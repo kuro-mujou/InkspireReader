@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.FontFamily
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.domain.model.ContentThemeColor
 import com.inkspire.ebookreader.domain.model.StylePreferences
+import com.inkspire.ebookreader.util.ColorUtil.isDark
 
 @Immutable
 data class StylingState(
@@ -16,6 +17,22 @@ data class StylingState(
     val textBackgroundColor: Color = Color(0xFFFFFFFF),
     val containerColor: Color = Color(0xFFFFFFFF),
     val drawerContainerColor: Color = Color(0xFFFFFFFF),
+    val textHighlightColorLight: List<Color> = listOf(
+        Color(0XFFFFF3B0),
+        Color(0XFFD6E9FF),
+        Color(0XFFE1F4E8),
+        Color(0XFFF9D7E3),
+        Color(0XFFE9DDF9),
+        Color(0XFFE6E6E6),
+    ),
+    val textHighlightColorDark: List<Color> = listOf(
+        Color(0XFF665C00),
+        Color(0XFF1E3A5F),
+        Color(0XFF1F4D3A),
+        Color(0XFF5A2A3C),
+        Color(0XFF3D2A5F),
+        Color(0XFF2E2E2E),
+    ),
 
     val fontFamilies: List<FontFamily> = listOf(
         FontFamily(Font(R.font.cormorant)),//serif
@@ -114,3 +131,10 @@ data class StylingState(
         ),
     )
 )
+
+fun StylingState.getHighlightColors(): List<Color> {
+    return if (stylePreferences.backgroundColor.isDark())
+        textHighlightColorDark
+    else
+        textHighlightColorLight
+}

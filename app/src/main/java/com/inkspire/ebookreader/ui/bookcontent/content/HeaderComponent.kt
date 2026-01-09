@@ -47,7 +47,7 @@ import com.inkspire.ebookreader.util.HeaderTextSizeUtil.calculateHeaderSize
 fun HeaderComponent(
     index: Int,
     text: String,
-    isHighlighted: () -> Boolean,
+    isTTSHighlighted: () -> Boolean,
     headerLevel: Int,
     currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
@@ -61,7 +61,7 @@ fun HeaderComponent(
     val readingOffset by ttsVM.currentReadingWordOffset.collectAsStateWithLifecycle()
 
     val currentHighlightRange by rememberUpdatedState(
-        if (isHighlighted()) {
+        if (isTTSHighlighted()) {
             highlightRange
         } else {
             TextRange.Zero
@@ -69,19 +69,19 @@ fun HeaderComponent(
     )
 
     val currentReadingOffset by rememberUpdatedState(
-        if (isHighlighted()) {
+        if (isTTSHighlighted()) {
             readingOffset
         } else {
             0
         }
     )
 
-    val paragraphBgColor = if (isHighlighted()) stylingState.drawerContainerColor else Color.Transparent
+    val paragraphBgColor = if (isTTSHighlighted()) stylingState.drawerContainerColor else Color.Transparent
 
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
 
-    val displayedText = remember(text, isHighlighted(), currentHighlightRange) {
-        if (!isHighlighted() || currentHighlightRange.start == currentHighlightRange.end) {
+    val displayedText = remember(text, isTTSHighlighted(), currentHighlightRange) {
+        if (!isTTSHighlighted() || currentHighlightRange.start == currentHighlightRange.end) {
             val builder = AnnotatedString.Builder(text)
             builder.toAnnotatedString()
         } else {
@@ -102,8 +102,8 @@ fun HeaderComponent(
     }
 
     var isOpenDialog by remember { mutableStateOf(false) }
-    LaunchedEffect(currentReadingOffset, isHighlighted, textLayoutResult) {
-        if (isHighlighted() && textLayoutResult != null) {
+    LaunchedEffect(currentReadingOffset, isTTSHighlighted, textLayoutResult) {
+        if (isTTSHighlighted() && textLayoutResult != null) {
             val layout = textLayoutResult!!
             val coercedWordOffset = { currentReadingOffset.fastCoerceIn(0, layout.layoutInput.text.length) }
             val cursorRect = layout.getCursorRect(coercedWordOffset())

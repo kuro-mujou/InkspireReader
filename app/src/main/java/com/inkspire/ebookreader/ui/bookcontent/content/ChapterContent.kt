@@ -2,6 +2,7 @@ package com.inkspire.ebookreader.ui.bookcontent.content
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
+import com.inkspire.ebookreader.domain.model.Highlight
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.headerLevel
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.headerPatten
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.htmlTagPattern
@@ -13,7 +14,8 @@ import com.inkspire.ebookreader.ui.bookcontent.common.convertToAnnotatedStrings
 fun ChapterContent(
     index: Int,
     paragraph: String,
-    isHighlightedProvider: () -> Boolean,
+    isTTSHighlightProvider: () -> Boolean,
+    highlights: () -> List<Highlight>,
     currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
     onMagnifierChange: (Offset) -> Unit
@@ -30,7 +32,7 @@ fun ChapterContent(
             HeaderComponent(
                 index = index,
                 text = cleanText,
-                isHighlighted = isHighlightedProvider,
+                isTTSHighlighted = isTTSHighlightProvider,
                 currentChapterIndex = currentChapterIndex,
                 headerLevel = headerLevel.find(paragraph)!!.groupValues[1].toInt(),
                 onRequestScrollToOffset = onRequestScrollToOffset,
@@ -42,7 +44,8 @@ fun ChapterContent(
             ParagraphComponent(
                 index = index,
                 text = convertToAnnotatedStrings(paragraph),
-                isHighlighted = isHighlightedProvider,
+                isTTSHighlighted = isTTSHighlightProvider,
+                highlights = highlights,
                 currentChapterIndex = currentChapterIndex,
                 onRequestScrollToOffset = onRequestScrollToOffset,
                 onMagnifierChange = onMagnifierChange

@@ -11,7 +11,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -166,13 +165,13 @@ fun BookChapterContentRootScreen(
                     userScrollEnabled = bookChapterContentState.enablePagerScroll && !ttsPlaybackState.isActivated,
                     beyondViewportPageCount = 1
                 ) { pageIndex ->
-                    val currentChapterUIState by remember{ derivedStateOf { bookContentDataState.chapterStates[pageIndex] ?: UiState.Empty } }
+//                    val currentChapterUIState by remember{ derivedStateOf {  } }
                     BookChapterContent(
                         bookInfoProvider = bookInfoProvider,
                         initialParagraphIndex = { if (pageIndex == bookChapterContentState.currentChapterIndex) bookChapterContentState.firstVisibleItemIndex else 0 },
                         isCurrentChapter = { pageIndex == pagerState.currentPage },
                         currentChapter = { pageIndex },
-                        chapterUiState = { currentChapterUIState },
+                        chapterUiState = { bookContentDataState.chapterStates[pageIndex] ?: UiState.Empty },
                         onListStateLoaded = { loadedState ->
                             lazyListStates[pageIndex] = loadedState
                         },

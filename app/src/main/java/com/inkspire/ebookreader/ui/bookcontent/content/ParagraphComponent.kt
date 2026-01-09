@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -37,11 +38,16 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.window.Popup
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.inkspire.ebookreader.domain.model.Highlight
+import com.inkspire.ebookreader.domain.model.HighlightToInsert
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
+import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
+import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
 import kotlin.math.max
 import kotlin.math.min
 
@@ -49,7 +55,8 @@ import kotlin.math.min
 fun ParagraphComponent(
     index: Int,
     text: AnnotatedString,
-    isHighlighted: () -> Boolean,
+    isTTSHighlighted: () -> Boolean,
+    highlights: () -> List<Highlight>,
     currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
     onMagnifierChange: (Offset) -> Unit
@@ -57,6 +64,7 @@ fun ParagraphComponent(
     val styleVM = LocalStylingViewModel.current
     val noteVM = LocalNoteViewModel.current
     val ttsVM = LocalTTSViewModel.current
+    val dataVM = LocalDataViewModel.current
     val density = LocalDensity.current
 
     val stylingState by styleVM.state.collectAsStateWithLifecycle()
@@ -72,10 +80,10 @@ fun ParagraphComponent(
     var dragStartOffset by remember { mutableStateOf<Offset?>(null) }
 
     val activeTtsRange by rememberUpdatedState(
-        if (isHighlighted()) ttsHighlightRange else TextRange.Zero
+        if (isTTSHighlighted()) ttsHighlightRange else TextRange.Zero
     )
 
-    val paragraphBgColor = if (isHighlighted()) stylingState.drawerContainerColor else Color.Transparent
+    val paragraphBgColor = if (isTTSHighlighted()) stylingState.drawerContainerColor else Color.Transparent
     val textStyle = remember(stylingState.stylePreferences) {
         TextStyle(
             textIndent = if (stylingState.stylePreferences.textIndent)
@@ -108,12 +116,26 @@ fun ParagraphComponent(
                 .drawBehind {
                     val layout = textLayoutResult ?: return@drawBehind
 
+                    if (stylingState.stylePreferences.enableHighlight) {
+                        highlights().forEach {
+                            val highlightPath = layout.getPathForRange(
+                                it.startOffset.fastCoerceIn(0, text.length),
+                                it.endOffset.fastCoerceIn(0, text.length)
+                            )
+                            drawPath(highlightPath, color = stylingState.getHighlightColors()[it.colorIndex])
+                        }
+                    }
+
                     if (activeTtsRange.start != activeTtsRange.end) {
                         val ttsPath = layout.getPathForRange(
                             activeTtsRange.start.fastCoerceIn(0, text.length),
                             activeTtsRange.end.fastCoerceIn(0, text.length)
                         )
-                        drawPath(ttsPath, color = stylingState.textBackgroundColor)
+                        drawPath(
+                            path = ttsPath,
+                            color = stylingState.textBackgroundColor,
+                            blendMode = BlendMode.SrcOver
+                        )
                     }
 
                     userSelectionRange?.let { range ->
@@ -197,7 +219,22 @@ fun ParagraphComponent(
                 onDismissRequest = { showSelectionPopup = false }
             ) {
                 SelectionMenu(
-                    onHighlight = { showSelectionPopup = false },
+                    stylingState = stylingState,
+                    onHighlight = { colorIndex ->
+                        userSelectionRange?.let { range ->
+                            dataVM.onAction(BookContentDataAction.AddHighlightForParagraph(
+                                HighlightToInsert(
+                                    bookId = "",
+                                    tocId = currentChapterIndex(),
+                                    paragraphIndex = index,
+                                    startOffset = range.start,
+                                    endOffset = range.end,
+                                    colorIndex = colorIndex,
+                                    createdTime = System.currentTimeMillis()
+                                )
+                            ))
+                        }
+                    },
                     onAddNote = { isOpenDialog = true }
                 )
             }
@@ -210,8 +247,8 @@ fun ParagraphComponent(
         }
     }
 
-    LaunchedEffect(readingOffset, isHighlighted(), textLayoutResult) {
-        if (isHighlighted() && textLayoutResult != null) {
+    LaunchedEffect(readingOffset, isTTSHighlighted(), textLayoutResult) {
+        if (isTTSHighlighted() && textLayoutResult != null) {
             val layout = textLayoutResult!!
             val coercedOffset = readingOffset.fastCoerceIn(0, layout.layoutInput.text.length)
             val cursorRect = layout.getCursorRect(coercedOffset)

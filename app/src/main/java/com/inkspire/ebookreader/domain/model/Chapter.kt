@@ -9,4 +9,5 @@ data class Chapter(
     val bookId: String,
     val chapterTitle: String,
     val content: List<String>,
+    val highlights: Map<Int, List<Highlight>> = emptyMap()
 )
