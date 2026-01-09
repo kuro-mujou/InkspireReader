@@ -9,7 +9,7 @@ data class StylePreferences(
     val textColor: Color = Color(0xFF1B310E),
     val selectedColorSet: Int = 0,
     val fontSize: Int = 20,
-    val textAlign: Boolean = true,
+    val enableHighlight: Boolean = true,
     val textIndent: Boolean = true,
     val lineSpacing: Int = 14,
     val fontFamily: Int = 0,

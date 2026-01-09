@@ -31,7 +31,7 @@ interface DatastoreRepository {
     suspend fun setTextColor(value: Int)
     suspend fun setSelectedColorSet(value: Int)
     suspend fun setFontSize(value: Int)
-    suspend fun setTextAlign(value: Boolean)
+    suspend fun setTextHighlight(value: Boolean)
     suspend fun setTextIndent(value: Boolean)
     suspend fun setLineSpacing(value: Int)
     suspend fun setFontFamily(value: Int)

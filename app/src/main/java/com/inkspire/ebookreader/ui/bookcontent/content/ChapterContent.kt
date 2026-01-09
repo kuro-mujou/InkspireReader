@@ -1,6 +1,7 @@
 package com.inkspire.ebookreader.ui.bookcontent.content
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.geometry.Offset
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.headerLevel
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.headerPatten
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.htmlTagPattern
@@ -15,6 +16,7 @@ fun ChapterContent(
     isHighlightedProvider: () -> Boolean,
     currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
+    onMagnifierChange: (Offset) -> Unit
 ) {
     if (linkPattern.containsMatchIn(paragraph) || linkPatternDebug.containsMatchIn(paragraph)) {
         ImageComponent(
@@ -43,6 +45,7 @@ fun ChapterContent(
                 isHighlighted = isHighlightedProvider,
                 currentChapterIndex = currentChapterIndex,
                 onRequestScrollToOffset = onRequestScrollToOffset,
+                onMagnifierChange = onMagnifierChange
             )
         }
     }

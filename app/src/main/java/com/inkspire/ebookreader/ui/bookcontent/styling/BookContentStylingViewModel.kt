@@ -56,7 +56,7 @@ class BookContentStylingViewModel(
                 is BookContentStylingAction.UpdateLineSpacing -> datastoreUseCase.setLineSpacing(action.lineSpacing)
                 is BookContentStylingAction.UpdateSelectedColorSet -> datastoreUseCase.setSelectedColorSet(action.index)
                 is BookContentStylingAction.UpdateSelectedFontFamilyIndex -> datastoreUseCase.setFontFamily(action.index)
-                is BookContentStylingAction.UpdateTextAlign -> datastoreUseCase.setTextAlign(!_state.value.stylePreferences.textAlign)
+                is BookContentStylingAction.UpdateTextHighlight -> datastoreUseCase.setTextHighlight(!_state.value.stylePreferences.enableHighlight)
                 is BookContentStylingAction.UpdateTextColor -> datastoreUseCase.setTextColor(action.color)
                 is BookContentStylingAction.UpdateTextIndent -> datastoreUseCase.setTextIndent(!_state.value.stylePreferences.textIndent)
             }

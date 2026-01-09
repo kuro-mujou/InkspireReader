@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import java.util.Locale
 
-
 private val Context.datastore by preferencesDataStore("user_preferences")
 class DatastoreRepositoryImpl(private val context: Context) : DatastoreRepository {
     companion object Keys {
@@ -48,7 +47,7 @@ class DatastoreRepositoryImpl(private val context: Context) : DatastoreRepositor
         private val TEXT_COLOR = intPreferencesKey("TEXT_COLOR")
         private val SELECTED_COLOR_SET = intPreferencesKey("SELECTED_COLOR_SET")
         private val FONT_SIZE = intPreferencesKey("FONT_SIZE")
-        private val TEXT_ALIGN = booleanPreferencesKey("TEXT_ALIGN")
+        private val TEXT_HIGHLIGHT = booleanPreferencesKey("TEXT_HIGHLIGHT")
         private val TEXT_INDENT = booleanPreferencesKey("TEXT_INDENT")
         private val LINE_SPACING = intPreferencesKey("LINE_SPACING")
         private val FONT_FAMILY = intPreferencesKey("FONT_FAMILY")
@@ -97,7 +96,7 @@ class DatastoreRepositoryImpl(private val context: Context) : DatastoreRepositor
                 textColor = Color(prefs[TEXT_COLOR] ?: Color(0xFF1B310E).toArgb()),
                 selectedColorSet = prefs[SELECTED_COLOR_SET] ?: 0,
                 fontSize = prefs[FONT_SIZE] ?: 20,
-                textAlign = prefs[TEXT_ALIGN] ?: true,
+                enableHighlight = prefs[TEXT_HIGHLIGHT] ?: true,
                 textIndent = prefs[TEXT_INDENT] ?: true,
                 lineSpacing = prefs[LINE_SPACING] ?: 14,
                 fontFamily = prefs[FONT_FAMILY] ?: 0,
@@ -207,9 +206,9 @@ class DatastoreRepositoryImpl(private val context: Context) : DatastoreRepositor
         }
     }
 
-    override suspend fun setTextAlign(value: Boolean) {
+    override suspend fun setTextHighlight(value: Boolean) {
         context.datastore.edit { preferences ->
-            preferences[TEXT_ALIGN] = value
+            preferences[TEXT_HIGHLIGHT] = value
         }
     }
 

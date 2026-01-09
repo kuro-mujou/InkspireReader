@@ -1,15 +1,12 @@
 package com.inkspire.ebookreader.ui.bookcontent.content
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,31 +14,37 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextIndent
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCoerceIn
+import androidx.compose.ui.window.Popup
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
-import com.inkspire.ebookreader.ui.bookcontent.common.customPopupPositionProvider
 import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
+import kotlin.math.max
+import kotlin.math.min
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParagraphComponent(
     index: Int,
@@ -49,119 +52,189 @@ fun ParagraphComponent(
     isHighlighted: () -> Boolean,
     currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
+    onMagnifierChange: (Offset) -> Unit
 ) {
     val styleVM = LocalStylingViewModel.current
     val noteVM = LocalNoteViewModel.current
     val ttsVM = LocalTTSViewModel.current
+    val density = LocalDensity.current
 
     val stylingState by styleVM.state.collectAsStateWithLifecycle()
-    val highlightRange by ttsVM.currentHighlightRange.collectAsStateWithLifecycle()
+    val ttsHighlightRange by ttsVM.currentHighlightRange.collectAsStateWithLifecycle()
     val readingOffset by ttsVM.currentReadingWordOffset.collectAsStateWithLifecycle()
 
-    val currentHighlightRange by rememberUpdatedState(
-        if (isHighlighted()) {
-            highlightRange
-        } else {
-            TextRange.Zero
-        }
-    )
-
-    val currentReadingOffset by rememberUpdatedState(
-        if (isHighlighted()) {
-            readingOffset
-        } else {
-            0
-        }
-    )
-
-    var isOpenDialog by remember { mutableStateOf(false) }
-    val paragraphBgColor = if (isHighlighted()) stylingState.drawerContainerColor else Color.Transparent
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    val displayedText = remember(text, isHighlighted(), currentHighlightRange) {
-        if (!isHighlighted() || currentHighlightRange.start == currentHighlightRange.end) {
-            text
-        } else {
-            val builder = AnnotatedString.Builder(text)
-            val start = currentHighlightRange.start.fastCoerceIn(0, text.length)
-            val end = currentHighlightRange.end.fastCoerceIn(0, text.length)
-            if (start < end) {
-                builder.addStyle(
-                    style = SpanStyle(background = stylingState.textBackgroundColor),
-                    start = start,
-                    end = end
+    var userSelectionRange by remember { mutableStateOf<TextRange?>(null) }
+    var showSelectionPopup by remember { mutableStateOf(false) }
+    var isOpenDialog by remember { mutableStateOf(false) }
+
+    var layoutCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var dragStartOffset by remember { mutableStateOf<Offset?>(null) }
+
+    val activeTtsRange by rememberUpdatedState(
+        if (isHighlighted()) ttsHighlightRange else TextRange.Zero
+    )
+
+    val paragraphBgColor = if (isHighlighted()) stylingState.drawerContainerColor else Color.Transparent
+    val textStyle = remember(stylingState.stylePreferences) {
+        TextStyle(
+            textIndent = if (stylingState.stylePreferences.textIndent)
+                TextIndent(firstLine = (stylingState.stylePreferences.fontSize * 2).sp)
+            else TextIndent.None,
+            fontSize = stylingState.stylePreferences.fontSize.sp,
+            fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
+            color = stylingState.stylePreferences.textColor,
+            lineHeight = (stylingState.stylePreferences.fontSize + stylingState.stylePreferences.lineSpacing).sp,
+            textAlign = TextAlign.Start,
+            hyphens = Hyphens.Auto,
+            lineBreak = LineBreak.Paragraph
+        )
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(paragraphBgColor)
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+    ) {
+        Text(
+            text = text,
+            style = textStyle,
+            onTextLayout = { layout -> textLayoutResult = layout },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coordinates ->
+                    layoutCoordinates = coordinates
+                }
+                .drawBehind {
+                    val layout = textLayoutResult ?: return@drawBehind
+
+                    if (activeTtsRange.start != activeTtsRange.end) {
+                        val ttsPath = layout.getPathForRange(
+                            activeTtsRange.start.fastCoerceIn(0, text.length),
+                            activeTtsRange.end.fastCoerceIn(0, text.length)
+                        )
+                        drawPath(ttsPath, color = stylingState.textBackgroundColor)
+                    }
+
+                    userSelectionRange?.let { range ->
+                        if (!range.collapsed) {
+                            val selectionPath = layout.getPathForRange(range.start, range.end)
+                            drawPath(selectionPath, color = Color(0xFF2196F3).copy(alpha = 0.3f))
+                        }
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = { startOffset ->
+                            val layout = textLayoutResult ?: return@detectDragGesturesAfterLongPress
+                            dragStartOffset = startOffset
+                            val globalPos = layoutCoordinates?.localToRoot(startOffset) ?: Offset.Unspecified
+                            onMagnifierChange(globalPos)
+
+                            val index = layout.getOffsetForPosition(startOffset)
+                            val wordRange = layout.getWordBoundary(index)
+                            userSelectionRange = TextRange(wordRange.start, wordRange.end)
+
+                            showSelectionPopup = false
+                        },
+                        onDrag = { change, _ ->
+                            val layout = textLayoutResult ?: return@detectDragGesturesAfterLongPress
+                            val start = dragStartOffset ?: return@detectDragGesturesAfterLongPress
+
+                            val globalPos = layoutCoordinates?.localToRoot(change.position) ?: Offset.Unspecified
+                            onMagnifierChange(globalPos)
+
+                            val startIndex = layout.getOffsetForPosition(start)
+                            val endIndex = layout.getOffsetForPosition(change.position)
+
+                            userSelectionRange = TextRange(
+                                min(startIndex, endIndex),
+                                max(startIndex, endIndex)
+                            )
+                        },
+                        onDragEnd = {
+                            onMagnifierChange(Offset.Unspecified)
+                            dragStartOffset = null
+                            if (userSelectionRange != null && !userSelectionRange!!.collapsed) {
+                                showSelectionPopup = true
+                            } else {
+                                userSelectionRange = null
+                            }
+                        },
+                        onDragCancel = {
+                            onMagnifierChange(Offset.Unspecified)
+                            dragStartOffset = null
+                            userSelectionRange = null
+                        }
+                    )
+                }
+                .then(
+                    if (userSelectionRange != null) {
+                        Modifier.pointerInput(Unit) {
+                            detectTapGestures(onTap = {
+                                userSelectionRange = null
+                                showSelectionPopup = false
+                            })
+                        }
+                    } else {
+                        Modifier
+                    }
+                )
+
+        )
+        if (showSelectionPopup && userSelectionRange != null && textLayoutResult != null) {
+            val range = userSelectionRange!!
+            val layout = textLayoutResult!!
+            val startRect = layout.getBoundingBox(range.start)
+            val popupOffsetY = with(density) { 60.dp.toPx() }
+
+            Popup(
+                alignment = Alignment.TopStart,
+                offset = IntOffset(
+                    x = startRect.left.toInt(),
+                    y = (startRect.top - popupOffsetY).toInt()
+                ),
+                onDismissRequest = { showSelectionPopup = false }
+            ) {
+                SelectionMenu(
+                    onHighlight = { showSelectionPopup = false },
+                    onAddNote = { isOpenDialog = true }
                 )
             }
-            builder.toAnnotatedString()
         }
     }
 
-    LaunchedEffect(currentReadingOffset, isHighlighted(), textLayoutResult) {
+    LaunchedEffect(showSelectionPopup) {
+        if (!showSelectionPopup) {
+            userSelectionRange = null
+        }
+    }
+
+    LaunchedEffect(readingOffset, isHighlighted(), textLayoutResult) {
         if (isHighlighted() && textLayoutResult != null) {
             val layout = textLayoutResult!!
-            val coercedWordOffset =
-                { currentReadingOffset.fastCoerceIn(0, layout.layoutInput.text.length) }
-            val cursorRect = layout.getCursorRect(coercedWordOffset())
+            val coercedOffset = readingOffset.fastCoerceIn(0, layout.layoutInput.text.length)
+            val cursorRect = layout.getCursorRect(coercedOffset)
             onRequestScrollToOffset(cursorRect.bottom)
         }
     }
 
-    val tooltipState = rememberTooltipState()
-    TooltipBox(
-        positionProvider = customPopupPositionProvider(),
-        tooltip = {
-            IconButton(
-                modifier = Modifier.background(
-                    color = stylingState.textBackgroundColor,
-                    shape = CircleShape
-                ),
-                onClick = {
-                    isOpenDialog = true
-                }
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_comment),
-                    contentDescription = null
-                )
-            }
-        },
-        state = tooltipState,
-        enableUserInput = !isHighlighted()
-    ) {
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-            text = displayedText,
-            onTextLayout = { textLayoutResult = it },
-            style = TextStyle(
-                textIndent = if (stylingState.stylePreferences.textIndent) TextIndent(firstLine = (stylingState.stylePreferences.fontSize * 2).sp) else TextIndent.None,
-                fontSize = stylingState.stylePreferences.fontSize.sp,
-                fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily],
-                textAlign = if (stylingState.stylePreferences.textAlign) TextAlign.Justify else TextAlign.Left,
-                color = stylingState.stylePreferences.textColor,
-                background = paragraphBgColor,
-                lineBreak = LineBreak.Paragraph,
-                lineHeight = (stylingState.stylePreferences.fontSize + stylingState.stylePreferences.lineSpacing).sp
-            )
-        )
-    }
-
     if (isOpenDialog) {
+        val selectedText = userSelectionRange?.let { text.substring(it.start, it.end) } ?: text.text
         NoteDialog(
             stylingState = stylingState,
-            note = text.text,
-            onDismiss = {
-                isOpenDialog = false
-            },
+            note = selectedText,
+            onDismiss = { isOpenDialog = false },
             onNoteChanged = { noteInput ->
                 noteVM.onAction(
                     NoteAction.AddNote(
-                        noteBody = text.text,
+                        noteBody = selectedText,
                         noteInput = noteInput,
                         tocId = currentChapterIndex(),
                         contentId = index
                     )
                 )
+                userSelectionRange = null
             }
         )
     }

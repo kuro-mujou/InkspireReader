@@ -339,23 +339,18 @@ fun BottomBarTheme(
                     )
                     OutlinedIconButton(
                         onClick = {
-                            stylingVM.onAction(BookContentStylingAction.UpdateTextAlign)
+                            stylingVM.onAction(BookContentStylingAction.UpdateTextHighlight)
                         },
                         modifier = Modifier.size(40.dp),
                         colors = IconButtonDefaults.outlinedIconButtonColors(
-                            containerColor = stylingState.stylePreferences.textColor
+                            if (stylingState.stylePreferences.enableHighlight) stylingState.stylePreferences.textColor else Color.Transparent
                         ),
                         border = BorderStroke(width = 2.dp, color = stylingState.stylePreferences.textColor)
                     ) {
                         Icon(
-                            imageVector = ImageVector.vectorResource(
-                                id = if (stylingState.stylePreferences.textAlign)
-                                    R.drawable.ic_align_justify
-                                else
-                                    R.drawable.ic_align_left
-                            ),
+                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_text_highlight),
                             contentDescription = null,
-                            tint = stylingState.stylePreferences.backgroundColor
+                            tint = if (stylingState.stylePreferences.enableHighlight) stylingState.stylePreferences.backgroundColor else stylingState.stylePreferences.textColor
                         )
                     }
                 }

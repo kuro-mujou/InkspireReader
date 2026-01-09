@@ -39,6 +39,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.magnifier
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -71,7 +72,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.inkspire.ebookreader.util.BookImporter
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Book
 import com.inkspire.ebookreader.domain.model.Chapter
@@ -85,6 +85,7 @@ import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.content.ChapterContent
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
+import com.inkspire.ebookreader.util.BookImporter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -117,6 +118,7 @@ fun BookChapterContent(
     var size by remember { mutableStateOf(IntSize.Zero) }
     var originalZoom by remember { mutableFloatStateOf(1f) }
     val coroutineScope = rememberCoroutineScope()
+    var globalMagnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
 
     LaunchedEffect(currentChapter) {
         dataVM.onAction(BookContentDataAction.LoadChapter(currentChapter()))
@@ -323,6 +325,11 @@ fun BookChapterContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .magnifier(
+                        sourceCenter = { globalMagnifierCenter },
+                        zoom = 2f,
+                        cornerRadius = 50.dp
+                    )
                     .then(
                         if (!currentAutoScrollState.isActivated) {
                             Modifier.clickable(
@@ -488,6 +495,9 @@ fun BookChapterContent(
                                     }
                                 }
                             },
+                            onMagnifierChange = { globalOffset ->
+                                globalMagnifierCenter = globalOffset
+                            }
                         )
                     }
                     item {

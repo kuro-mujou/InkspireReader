@@ -12,7 +12,7 @@ class BookContentStylingDatastoreUseCase(
     suspend fun setFontSize(fontSize: Int) = datastoreRepository.setFontSize(fontSize)
     suspend fun setFontFamily(fontFamily: Int) = datastoreRepository.setFontFamily(fontFamily)
     suspend fun setLineSpacing(lineSpacing: Int) = datastoreRepository.setLineSpacing(lineSpacing)
-    suspend fun setTextAlign(textAlign: Boolean) = datastoreRepository.setTextAlign(textAlign)
+    suspend fun setTextHighlight(textHighlight: Boolean) = datastoreRepository.setTextHighlight(textHighlight)
     suspend fun setTextIndent(textIndent: Boolean) = datastoreRepository.setTextIndent(textIndent)
     suspend fun setImagePaddingState(value: Boolean) = datastoreRepository.setImagePaddingState(value)
 }

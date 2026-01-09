@@ -8,6 +8,6 @@ sealed interface BookContentStylingAction {
     data class UpdateFontSize(val fontSize: Int) : BookContentStylingAction
     data class UpdateLineSpacing(val lineSpacing: Int) : BookContentStylingAction
     data object UpdateTextIndent : BookContentStylingAction
-    data object UpdateTextAlign : BookContentStylingAction
+    data object UpdateTextHighlight : BookContentStylingAction
     data object UpdateImagePaddingState : BookContentStylingAction
 }
