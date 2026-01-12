@@ -80,7 +80,8 @@ fun MusicSetting(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    WindowInsets.safeContent
+                    WindowInsets.systemBars
+                        .union(WindowInsets.displayCutout)
                         .only(WindowInsetsSides.Horizontal)
                         .asPaddingValues()
                 ),

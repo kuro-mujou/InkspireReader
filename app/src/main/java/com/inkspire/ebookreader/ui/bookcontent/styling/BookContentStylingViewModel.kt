@@ -90,7 +90,7 @@ class BookContentStylingViewModel(
             bgV < 0.3f && txtV < 0.3f -> 0.7f
             else -> rawV
         }
-        val output = Color(h, s, v)
+        val output = Color.hsv(h, s, v)
         return if (output.isDark())
             output.darken(0.05f)
         else

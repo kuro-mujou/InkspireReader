@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,7 +28,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -80,7 +82,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavKey
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.util.BookImporter
 import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.data.mapper.toNormalBook
@@ -92,6 +93,7 @@ import com.inkspire.ebookreader.ui.home.libary.composable.MyBookMenuBottomSheet
 import com.inkspire.ebookreader.ui.home.libary.composable.MyExpandableFab
 import com.inkspire.ebookreader.ui.home.libary.composable.MyGridBookView
 import com.inkspire.ebookreader.ui.home.libary.composable.MyListBookView
+import com.inkspire.ebookreader.util.BookImporter
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -241,11 +243,13 @@ fun LibraryScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(
-                                    top = WindowInsets.safeContent
+                                    top = WindowInsets.systemBars
+                                        .union(WindowInsets.displayCutout)
                                         .only(WindowInsetsSides.Top)
                                         .asPaddingValues()
                                         .calculateTopPadding(),
-                                    end = WindowInsets.safeContent
+                                    end = WindowInsets.systemBars
+                                        .union(WindowInsets.displayCutout)
                                         .only(WindowInsetsSides.End)
                                         .asPaddingValues()
                                         .calculateEndPadding(LayoutDirection.Ltr)
@@ -299,11 +303,13 @@ fun LibraryScreen(
                     Column(
                         modifier = Modifier
                             .padding(
-                                top = WindowInsets.safeContent
+                                top = WindowInsets.systemBars
+                                    .union(WindowInsets.displayCutout)
                                     .only(WindowInsetsSides.Top)
                                     .asPaddingValues()
                                     .calculateTopPadding(),
-                                end = WindowInsets.safeContent
+                                end = WindowInsets.systemBars
+                                    .union(WindowInsets.displayCutout)
                                     .only(WindowInsetsSides.End)
                                     .asPaddingValues()
                                     .calculateEndPadding(LayoutDirection.Ltr)

@@ -21,11 +21,14 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -92,7 +95,8 @@ fun MyExpandableFab(
                         modifier = Modifier
                             .padding(
                                 bottom = 4.dp,
-                                start = 16.dp + WindowInsets.safeContent
+                                start = 16.dp + WindowInsets.systemBars
+                                    .union(WindowInsets.displayCutout)
                                     .only(WindowInsetsSides.Start)
                                     .asPaddingValues()
                                     .calculateStartPadding(LayoutDirection.Rtl)
@@ -122,7 +126,8 @@ fun MyExpandableFab(
                 modifier = Modifier
                     .padding(
                         top = 4.dp,
-                        end = 16.dp + WindowInsets.safeContent
+                        end = 16.dp + WindowInsets.systemBars
+                            .union(WindowInsets.displayCutout)
                             .only(WindowInsetsSides.End)
                             .asPaddingValues()
                             .calculateEndPadding(LayoutDirection.Ltr),

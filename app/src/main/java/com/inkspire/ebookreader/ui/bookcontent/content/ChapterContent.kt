@@ -36,6 +36,8 @@ fun ChapterContent(
                 currentChapterIndex = currentChapterIndex,
                 headerLevel = headerLevel.find(paragraph)!!.groupValues[1].toInt(),
                 onRequestScrollToOffset = onRequestScrollToOffset,
+                highlights = highlights,
+                onMagnifierChange = onMagnifierChange
             )
         }
     } else {

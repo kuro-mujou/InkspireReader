@@ -18,20 +18,24 @@ data class StylingState(
     val containerColor: Color = Color(0xFFFFFFFF),
     val drawerContainerColor: Color = Color(0xFFFFFFFF),
     val textHighlightColorLight: List<Color> = listOf(
-        Color(0XFFFFF3B0),
-        Color(0XFFD6E9FF),
-        Color(0XFFE1F4E8),
-        Color(0XFFF9D7E3),
-        Color(0XFFE9DDF9),
-        Color(0XFFE6E6E6),
+        Color(0xFFFFF59D),
+        Color(0xFFA5D6A7),
+        Color(0xFF90CAF9),
+        Color(0xFFF48FB1),
+        Color(0xFFCE93D8),
+        Color(0xFFFFCC80),
+        Color(0xFF80DEEA),
+        Color(0xFFCFD8DC)
     ),
     val textHighlightColorDark: List<Color> = listOf(
-        Color(0XFF665C00),
-        Color(0XFF1E3A5F),
-        Color(0XFF1F4D3A),
-        Color(0XFF5A2A3C),
-        Color(0XFF3D2A5F),
-        Color(0XFF2E2E2E),
+        Color(0xFF655E12),
+        Color(0xFF264D29),
+        Color(0xFF244368),
+        Color(0xFF6E283F),
+        Color(0xFF543663),
+        Color(0xFF754316),
+        Color(0xFF1B545C),
+        Color(0xFF455A64)
     ),
 
     val fontFamilies: List<FontFamily> = listOf(

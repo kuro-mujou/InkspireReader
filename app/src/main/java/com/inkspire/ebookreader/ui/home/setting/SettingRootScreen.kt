@@ -5,10 +5,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,11 +44,13 @@ fun SettingRootScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    top = WindowInsets.safeContent
+                    top = WindowInsets.systemBars
+                        .union(WindowInsets.displayCutout)
                         .only(WindowInsetsSides.Top)
                         .asPaddingValues()
                         .calculateTopPadding(),
-                    end = WindowInsets.safeContent
+                    end = WindowInsets.systemBars
+                        .union(WindowInsets.displayCutout)
                         .only(WindowInsetsSides.End)
                         .asPaddingValues()
                         .calculateRightPadding(LayoutDirection.Ltr)

@@ -11,12 +11,15 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -63,11 +66,13 @@ fun BottomBarAutoScroll(
             .fillMaxWidth()
             .padding(
                 PaddingValues(
-                    start = WindowInsets.safeContent
+                    start = WindowInsets.systemBars
+                        .union(WindowInsets.displayCutout)
                         .only(WindowInsetsSides.Start)
                         .asPaddingValues()
                         .calculateStartPadding(LayoutDirection.Ltr),
-                    end = WindowInsets.safeContent
+                    end = WindowInsets.systemBars
+                        .union(WindowInsets.displayCutout)
                         .only(WindowInsetsSides.End)
                         .asPaddingValues()
                         .calculateEndPadding(LayoutDirection.Ltr),

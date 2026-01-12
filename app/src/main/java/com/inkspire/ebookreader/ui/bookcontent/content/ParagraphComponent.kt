@@ -233,6 +233,7 @@ fun ParagraphComponent(
                                     createdTime = System.currentTimeMillis()
                                 )
                             ))
+                            showSelectionPopup = false
                         }
                     },
                     onAddNote = { isOpenDialog = true }

@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -92,7 +95,8 @@ fun BookContentTopBar(
                 )
                 .padding(
                     PaddingValues(
-                        start = WindowInsets.safeContent
+                        start = WindowInsets.systemBars
+                            .union(WindowInsets.displayCutout)
                             .only(WindowInsetsSides.Start)
                             .asPaddingValues()
                             .calculateStartPadding(LayoutDirection.Ltr),
@@ -100,7 +104,8 @@ fun BookContentTopBar(
                             .only(WindowInsetsSides.Top)
                             .asPaddingValues()
                             .calculateTopPadding(),
-                        end = WindowInsets.safeContent
+                        end = WindowInsets.systemBars
+                            .union(WindowInsets.displayCutout)
                             .only(WindowInsetsSides.End)
                             .asPaddingValues()
                             .calculateEndPadding(LayoutDirection.Ltr),

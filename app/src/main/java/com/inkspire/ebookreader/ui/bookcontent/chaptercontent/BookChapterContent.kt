@@ -370,7 +370,8 @@ fun BookChapterContent(
                             .statusBarsPadding()
                             .padding(
                                 PaddingValues(
-                                    start = WindowInsets.safeContent
+                                    start = WindowInsets.systemBars
+                                        .union(WindowInsets.displayCutout)
                                         .only(WindowInsetsSides.Start)
                                         .asPaddingValues()
                                         .calculateStartPadding(LayoutDirection.Ltr),
@@ -391,7 +392,8 @@ fun BookChapterContent(
                             .statusBarsPadding()
                             .padding(
                                 PaddingValues(
-                                    end = WindowInsets.safeContent
+                                    end = WindowInsets.systemBars
+                                        .union(WindowInsets.displayCutout)
                                         .only(WindowInsetsSides.End)
                                         .asPaddingValues()
                                         .calculateEndPadding(LayoutDirection.Ltr),
@@ -560,7 +562,8 @@ fun BookChapterContent(
                         modifier = Modifier
                             .padding(
                                 PaddingValues(
-                                    start = WindowInsets.safeContent
+                                    start = WindowInsets.systemBars
+                                        .union(WindowInsets.displayCutout)
                                         .only(WindowInsetsSides.Start)
                                         .asPaddingValues()
                                         .calculateStartPadding(LayoutDirection.Ltr),
