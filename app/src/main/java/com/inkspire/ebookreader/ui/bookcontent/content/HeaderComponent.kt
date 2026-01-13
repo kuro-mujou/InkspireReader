@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -49,6 +48,7 @@ import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
 import com.inkspire.ebookreader.util.HeaderTextSizeUtil.calculateHeaderSize
+import com.inkspire.ebookreader.util.drawRoundedBackground
 import kotlin.math.max
 import kotlin.math.min
 
@@ -116,24 +116,29 @@ fun HeaderComponent(
                     val layout = textLayoutResult ?: return@drawBehind
 
                     if (stylingState.stylePreferences.enableHighlight) {
-                        highlights().forEach {
-                            val highlightPath = layout.getPathForRange(
-                                it.startOffset.fastCoerceIn(0, text.length),
-                                it.endOffset.fastCoerceIn(0, text.length)
+                        highlights().forEach { highlight ->
+                            val start = highlight.startOffset.fastCoerceIn(0, text.length)
+                            val end = highlight.endOffset.fastCoerceIn(0, text.length)
+                            val baseColor = stylingState.getHighlightColors()[highlight.colorIndex]
+                            drawRoundedBackground(
+                                layoutResult = layout,
+                                startOffset = start,
+                                endOffset = end,
+                                color = baseColor,
+                                padding = 0f,
+                                defaultRadius = 8.dp.toPx()
                             )
-                            drawPath(highlightPath, color = stylingState.getHighlightColors()[it.colorIndex])
                         }
                     }
 
                     if (activeTtsRange.start != activeTtsRange.end) {
-                        val ttsPath = layout.getPathForRange(
-                            activeTtsRange.start.fastCoerceIn(0, text.length),
-                            activeTtsRange.end.fastCoerceIn(0, text.length)
-                        )
-                        drawPath(
-                            path = ttsPath,
+                        drawRoundedBackground(
+                            layoutResult = layout,
+                            startOffset = activeTtsRange.start.fastCoerceIn(0, text.length),
+                            endOffset = activeTtsRange.end.fastCoerceIn(0, text.length),
                             color = stylingState.textBackgroundColor,
-                            blendMode = BlendMode.SrcOver
+                            padding = 4.dp.toPx(),
+                            defaultRadius = 8.dp.toPx()
                         )
                     }
 

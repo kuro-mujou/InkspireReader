@@ -36,6 +36,7 @@ import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBar
 import com.inkspire.ebookreader.ui.bookcontent.tts.TTSAction
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -92,8 +93,8 @@ fun BookChapterContentRootScreen(
         chapterContentVM.onAction(BookChapterContentAction.UpdateCurrentChapterIndex(pagerState.targetPage))
     }
 
-    LaunchedEffect(chapterContentVM.event) {
-        chapterContentVM.event.collect { event ->
+    LaunchedEffect(Unit) {
+        chapterContentVM.event.collectLatest { event ->
             when (event) {
                 is BookChapterContentEvent.ScrollToChapter -> {
                     pagerState.scrollToPage(event.page)
