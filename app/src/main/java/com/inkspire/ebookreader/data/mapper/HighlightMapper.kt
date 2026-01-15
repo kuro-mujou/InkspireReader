@@ -6,6 +6,7 @@ import com.inkspire.ebookreader.domain.model.HighlightToInsert
 
 fun HighlightEntity.toDataClass() : Highlight {
     return Highlight(
+        id = highlightId,
         paragraphIndex = paragraphIndex,
         startOffset = startOffset,
         endOffset = endOffset,
@@ -26,3 +27,14 @@ fun HighlightToInsert.toEntity() : HighlightEntity {
         note = note
     )
 }
+
+fun Highlight.toInsertModel() = HighlightToInsert(
+    bookId = "",
+    tocId = 0,
+    paragraphIndex = paragraphIndex,
+    startOffset = startOffset,
+    endOffset = endOffset,
+    colorIndex = colorIndex,
+    note = note,
+    createdTime = createdTime
+)

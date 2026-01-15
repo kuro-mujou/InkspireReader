@@ -50,7 +50,7 @@ import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
 import com.inkspire.ebookreader.util.HeaderTextSizeUtil.calculateHeaderSize
-import com.inkspire.ebookreader.util.createRoundedSelectionPath
+import com.inkspire.ebookreader.util.HighlightUtil
 import kotlin.math.max
 import kotlin.math.min
 
@@ -151,7 +151,7 @@ fun HeaderComponent(
                                         )
                                     }
                                 }
-                                val highlightPath = createRoundedSelectionPath(
+                                val highlightPath = HighlightUtil.createRoundedSelectionPath(
                                     rect = rect,
                                     cornerRadius = 6.dp.toPx(),
                                     snapThreshold = 15.dp.toPx()
@@ -249,19 +249,18 @@ fun HeaderComponent(
             val layout = textLayoutResult!!
             val startRect = layout.getBoundingBox(range.start)
             val popupOffsetY = with(density) { 60.dp.toPx() }
-
-            Popup(
-                alignment = Alignment.TopStart,
-                offset = IntOffset(
-                    x = startRect.left.toInt(),
-                    y = (startRect.top - popupOffsetY).toInt()
-                ),
-                onDismissRequest = { showSelectionPopup = false }
-            ) {
-                SelectionMenu(
-                    stylingState = stylingState,
-                    onHighlight = { colorIndex ->
-                        userSelectionRange?.let { range ->
+            userSelectionRange?.let { range ->
+                Popup(
+                    alignment = Alignment.TopStart,
+                    offset = IntOffset(
+                        x = startRect.left.toInt(),
+                        y = (startRect.top - popupOffsetY).toInt()
+                    ),
+                    onDismissRequest = { showSelectionPopup = false }
+                ) {
+                    SelectionMenu(
+                        stylingState = stylingState,
+                        onHighlight = { colorIndex ->
                             dataVM.onAction(
                                 BookContentDataAction.AddHighlightForParagraph(
                                     HighlightToInsert(
@@ -276,10 +275,21 @@ fun HeaderComponent(
                                 )
                             )
                             showSelectionPopup = false
-                        }
-                    },
-                    onAddNote = { isOpenDialog = true }
-                )
+                        },
+                        onDeleteSelected = {
+                            dataVM.onAction(
+                                BookContentDataAction.DeleteHighlightRange(
+                                    tocId = currentChapterIndex(),
+                                    paragraphIndex = index,
+                                    start = range.start,
+                                    end = range.end
+                                )
+                            )
+                            showSelectionPopup = false
+                        },
+                        onAddNote = { isOpenDialog = true }
+                    )
+                }
             }
         }
     }

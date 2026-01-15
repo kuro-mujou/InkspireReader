@@ -36,5 +36,6 @@ class BookContentUseCase(
 
     suspend fun saveBookInfoChapterIndex(bookId: String, chapterIndex: Int) = bookRepository.saveBookInfoChapterIndex(bookId, chapterIndex)
     suspend fun saveBookInfoParagraphIndex(bookId: String, paragraphIndex: Int) = bookRepository.saveBookInfoParagraphIndex(bookId, paragraphIndex)
-    suspend fun addHighlight(highlight: HighlightToInsert) = highlightRepository.insertHighlight(highlight)
+    suspend fun replaceHighlightsForParagraph(bookId: String, tocId: Int, paragraphIndex: Int, newHighlights: List<HighlightToInsert>) = highlightRepository.replaceHighlightsForParagraph(bookId, tocId, paragraphIndex, newHighlights)
+    suspend fun getHighlightsForParagraph(bookId: String, tocId: Int, paragraphIndex: Int) = highlightRepository.getHighlightsForParagraph(bookId, tocId, paragraphIndex)
 }

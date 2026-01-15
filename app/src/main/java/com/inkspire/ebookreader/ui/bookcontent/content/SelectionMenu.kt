@@ -1,6 +1,7 @@
 package com.inkspire.ebookreader.ui.bookcontent.content
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
@@ -26,6 +27,7 @@ import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
 fun SelectionMenu(
     stylingState: StylingState,
     onHighlight: (Int) -> Unit,
+    onDeleteSelected: () -> Unit,
     onAddNote: () -> Unit,
 ) {
     Card(
@@ -35,17 +37,29 @@ fun SelectionMenu(
     ) {
         Row {
             LazyRow(
-                modifier = Modifier.width(100.dp)
+                modifier = Modifier.width(120.dp)
             ) {
                 itemsIndexed(stylingState.getHighlightColors()){ index, it ->
                     IconButton(onClick = { onHighlight(index) }) {
                         Box(
                             modifier = Modifier
                                 .size(24.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = stylingState.stylePreferences.textColor,
+                                    shape = CircleShape
+                                )
                                 .background(it, shape = CircleShape)
                         )
                     }
                 }
+            }
+            IconButton(onClick = onDeleteSelected) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_delete),
+                    contentDescription = "Delete",
+                    tint = stylingState.stylePreferences.textColor
+                )
             }
             IconButton(onClick = onAddNote) {
                 Icon(

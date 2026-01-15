@@ -1,11 +1,9 @@
 package com.inkspire.ebookreader.data.database.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import com.inkspire.ebookreader.data.database.model.HighlightEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -21,10 +19,12 @@ interface HighlightDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHighlight(highlight: HighlightEntity)
 
-    @Delete
-    suspend fun deleteHighlight(highlight: HighlightEntity)
+    @Query("DELETE FROM highlights WHERE bookId = :bookId AND tocId = :tocId AND paragraphIndex = :paragraphIndex")
+    suspend fun deleteAllForParagraph(bookId: String, tocId: Int, paragraphIndex: Int)
 
-    // Efficiently update a highlight (e.g. changing color)
-    @Update
-    suspend fun updateHighlight(highlight: HighlightEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertHighlights(highlights: List<HighlightEntity>)
+
+    @Query("SELECT * FROM highlights WHERE bookId = :bookId AND tocId = :tocId AND paragraphIndex = :paragraphIndex")
+    suspend fun getHighlightsForParagraphSync(bookId: String, tocId: Int, paragraphIndex: Int): List<HighlightEntity>
 }

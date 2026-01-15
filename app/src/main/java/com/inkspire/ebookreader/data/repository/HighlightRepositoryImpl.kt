@@ -18,7 +18,25 @@ class HighlightRepositoryImpl(
         }
     }
 
+    override suspend fun getHighlightsForParagraph(
+        bookId: String,
+        tocId: Int,
+        paragraphIndex: Int
+    ): List<Highlight> {
+        return highlightDao.getHighlightsForParagraphSync(bookId, tocId, paragraphIndex).map { it.toDataClass() }
+    }
+
     override suspend fun insertHighlight(highlight: HighlightToInsert) {
         highlightDao.insertHighlight(highlight.toEntity())
+    }
+
+    override suspend fun replaceHighlightsForParagraph(
+        bookId: String,
+        tocId: Int,
+        paragraphIndex: Int,
+        newHighlights: List<HighlightToInsert>
+    ) {
+        highlightDao.deleteAllForParagraph(bookId, tocId, paragraphIndex)
+        highlightDao.insertHighlights(newHighlights.map { it.copy(bookId = bookId, tocId = tocId).toEntity() })
     }
 }

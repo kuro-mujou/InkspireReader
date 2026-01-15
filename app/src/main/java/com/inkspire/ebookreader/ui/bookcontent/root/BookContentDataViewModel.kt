@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Chapter
 import com.inkspire.ebookreader.domain.usecase.BookContentUseCase
+import com.inkspire.ebookreader.util.HighlightUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -90,8 +91,33 @@ class BookContentDataViewModel(
             }
             is BookContentDataAction.AddHighlightForParagraph -> {
                 viewModelScope.launch {
-                    val correctHighlightItem = action.highlightInfo.copy(bookId = bookId)
-                    bookContentUseCase.addHighlight(correctHighlightItem)
+                    val newHighlight = action.highlightInfo
+
+                    val current = bookContentUseCase.getHighlightsForParagraph(
+                        bookId, newHighlight.tocId, newHighlight.paragraphIndex
+                    )
+
+                    val resultList = HighlightUtil.addHighlight(newHighlight, current)
+
+                    bookContentUseCase.replaceHighlightsForParagraph(
+                        bookId, newHighlight.tocId, newHighlight.paragraphIndex, resultList
+                    )
+                }
+            }
+            is BookContentDataAction.DeleteHighlightRange -> {
+
+                viewModelScope.launch {
+                    val current = bookContentUseCase.getHighlightsForParagraph(
+                        bookId, action.tocId, action.paragraphIndex
+                    )
+
+                    val resultList = HighlightUtil.removeRange(
+                        action.start, action.end, current
+                    )
+
+                    bookContentUseCase.replaceHighlightsForParagraph(
+                        bookId, action.tocId, action.paragraphIndex, resultList
+                    )
                 }
             }
         }

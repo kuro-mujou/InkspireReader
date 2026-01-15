@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 data class Highlight(
+    val id: Long,
     val paragraphIndex: Int,
     val startOffset: Int,
     val endOffset: Int,

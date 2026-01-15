@@ -49,7 +49,7 @@ import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
-import com.inkspire.ebookreader.util.createRoundedSelectionPath
+import com.inkspire.ebookreader.util.HighlightUtil
 import kotlin.math.max
 import kotlin.math.min
 
@@ -152,7 +152,7 @@ fun ParagraphComponent(
                                         )
                                     }
                                 }
-                                val highlightPath = createRoundedSelectionPath(
+                                val highlightPath = HighlightUtil.createRoundedSelectionPath(
                                     rect = rect,
                                     cornerRadius = 6.dp.toPx(),
                                     snapThreshold = 15.dp.toPx()
@@ -247,37 +247,63 @@ fun ParagraphComponent(
         if (showSelectionPopup && userSelectionRange != null && textLayoutResult != null) {
             val range = userSelectionRange!!
             val layout = textLayoutResult!!
-            val startRect = layout.getBoundingBox(range.start)
-            val popupOffsetY = with(density) { 60.dp.toPx() }
 
-            Popup(
-                alignment = Alignment.TopStart,
-                offset = IntOffset(
-                    x = startRect.left.toInt(),
-                    y = (startRect.top - popupOffsetY).toInt()
-                ),
-                onDismissRequest = { showSelectionPopup = false }
-            ) {
-                SelectionMenu(
-                    stylingState = stylingState,
-                    onHighlight = { colorIndex ->
-                        userSelectionRange?.let { range ->
-                            dataVM.onAction(BookContentDataAction.AddHighlightForParagraph(
-                                HighlightToInsert(
-                                    bookId = "",
+            val startLine = layout.getLineForOffset(range.start)
+            val endLine = layout.getLineForOffset(range.end)
+
+            val xStart = layout.getHorizontalPosition(range.start, true)
+            val xEnd = if (startLine == endLine) {
+                layout.getHorizontalPosition(range.end, true)
+            } else {
+                layout.getLineRight(startLine)
+            }
+            val actualStart = minOf(xStart, xEnd)
+            val actualEnd = maxOf(xStart, xEnd)
+            val centerX = (actualStart + actualEnd) / 2
+
+            val popupHalfWidth = with(density) { 108.dp.toPx() }
+            val popupHeightOffset = with(density) { 60.dp.toPx() }
+            userSelectionRange?.let { range ->
+                Popup(
+                    alignment = Alignment.TopStart,
+                    offset = IntOffset(
+                        x = (centerX - popupHalfWidth).toInt(),
+                        y = (layout.getLineTop(startLine) - popupHeightOffset).toInt()
+                    ),
+                    onDismissRequest = { showSelectionPopup = false }
+                ) {
+                    SelectionMenu(
+                        stylingState = stylingState,
+                        onHighlight = { colorIndex ->
+                            dataVM.onAction(
+                                BookContentDataAction.AddHighlightForParagraph(
+                                    HighlightToInsert(
+                                        bookId = "",
+                                        tocId = currentChapterIndex(),
+                                        paragraphIndex = index,
+                                        startOffset = range.start,
+                                        endOffset = range.end,
+                                        colorIndex = colorIndex,
+                                        createdTime = System.currentTimeMillis()
+                                    )
+                                )
+                            )
+                            showSelectionPopup = false
+                        },
+                        onDeleteSelected = {
+                            dataVM.onAction(
+                                BookContentDataAction.DeleteHighlightRange(
                                     tocId = currentChapterIndex(),
                                     paragraphIndex = index,
-                                    startOffset = range.start,
-                                    endOffset = range.end,
-                                    colorIndex = colorIndex,
-                                    createdTime = System.currentTimeMillis()
+                                    start = range.start,
+                                    end = range.end
                                 )
-                            ))
+                            )
                             showSelectionPopup = false
-                        }
-                    },
-                    onAddNote = { isOpenDialog = true }
-                )
+                        },
+                        onAddNote = { isOpenDialog = true }
+                    )
+                }
             }
         }
     }

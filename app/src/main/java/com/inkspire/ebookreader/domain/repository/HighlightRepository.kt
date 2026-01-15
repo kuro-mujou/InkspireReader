@@ -6,5 +6,12 @@ import kotlinx.coroutines.flow.Flow
 
 interface HighlightRepository {
     fun getHighlightsForChapterFlow(bookId: String, tocId: Int): Flow<List<Highlight>>
+    suspend fun getHighlightsForParagraph(bookId: String, tocId: Int, paragraphIndex: Int): List<Highlight>
     suspend fun insertHighlight(highlight: HighlightToInsert)
+    suspend fun replaceHighlightsForParagraph(
+        bookId: String,
+        tocId: Int,
+        paragraphIndex: Int,
+        newHighlights: List<HighlightToInsert>
+    )
 }
