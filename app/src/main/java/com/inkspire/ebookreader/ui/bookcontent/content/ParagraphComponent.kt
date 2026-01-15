@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -47,7 +49,7 @@ import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
-import com.inkspire.ebookreader.util.drawRoundedBackground
+import com.inkspire.ebookreader.util.createRoundedSelectionPath
 import kotlin.math.max
 import kotlin.math.min
 
@@ -118,28 +120,61 @@ fun ParagraphComponent(
 
                     if (stylingState.stylePreferences.enableHighlight) {
                         highlights().forEach { highlight ->
-                            val start = highlight.startOffset.fastCoerceIn(0, text.length)
-                            val end = highlight.endOffset.fastCoerceIn(0, text.length)
-                            val baseColor = stylingState.getHighlightColors()[highlight.colorIndex]
-                            drawRoundedBackground(
-                                layoutResult = layout,
-                                startOffset = start,
-                                endOffset = end,
-                                color = baseColor,
-                                padding = 0f,
-                                defaultRadius = 8.dp.toPx()
-                            )
+                            val startOffset = highlight.startOffset.fastCoerceIn(0, text.length)
+                            val endOffset = highlight.endOffset.fastCoerceIn(0, text.length)
+
+                            if (startOffset < endOffset) {
+                                val rect = mutableListOf<Rect>()
+                                val startLine = layout.getLineForOffset(startOffset)
+                                val endLine = layout.getLineForOffset(endOffset)
+
+                                for (line in startLine..endLine) {
+                                    val left = if (line == startLine) {
+                                        layout.getHorizontalPosition(startOffset, true)
+                                    } else {
+                                        layout.getLineLeft(line)
+                                    }
+                                    val right = if (line == endLine) {
+                                        layout.getHorizontalPosition(endOffset, true)
+                                    } else {
+                                        layout.getLineRight(line)
+                                    }
+                                    val actualLeft = minOf(left, right)
+                                    val actualRight = maxOf(left, right)
+                                    if (actualRight - actualLeft > 1) {
+                                        rect.add(
+                                            Rect(
+                                                left = actualLeft,
+                                                top = layout.getLineTop(line),
+                                                right = actualRight,
+                                                bottom = layout.getLineBottom(line)
+                                            )
+                                        )
+                                    }
+                                }
+                                val highlightPath = createRoundedSelectionPath(
+                                    rect = rect,
+                                    cornerRadius = 6.dp.toPx(),
+                                    snapThreshold = 15.dp.toPx()
+                                )
+
+                                drawPath(
+                                    path = highlightPath,
+                                    color = stylingState.getHighlightColors()[highlight.colorIndex]
+                                )
+                            }
                         }
                     }
 
                     if (activeTtsRange.start != activeTtsRange.end) {
-                        drawRoundedBackground(
-                            layoutResult = layout,
-                            startOffset = activeTtsRange.start.fastCoerceIn(0, text.length),
-                            endOffset = activeTtsRange.end.fastCoerceIn(0, text.length),
+                        val ttsPath = layout.getPathForRange(
+                            activeTtsRange.start.fastCoerceIn(0, text.length),
+                            activeTtsRange.end.fastCoerceIn(0, text.length)
+                        )
+                        drawPath(
+                            path = ttsPath,
                             color = stylingState.textBackgroundColor,
-                            padding = 4.dp.toPx(),
-                            defaultRadius = 8.dp.toPx()
+                            blendMode = BlendMode.SrcOver
                         )
                     }
 
