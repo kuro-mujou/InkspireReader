@@ -91,6 +91,7 @@ fun BookContentRootScreen(
             override fun navigateToChapter(chapterIndex: Int) {
                 drawerViewModel.onAction(DrawerAction.CloseDrawer)
                 chapterContentViewModel.onAction(BookChapterContentAction.RequestScrollToChapter(chapterIndex))
+                ttsViewModel.onAction(TTSAction.OnNavigateToRandomChapter(chapterIndex))
             }
 
             override fun navigateToParagraph(chapterIndex: Int, paragraphIndex: Int) {

@@ -6,6 +6,7 @@ sealed interface TTSAction {
     data class SetBookInfo(val bookInfo: Book) : TTSAction
     data class UpdateCurrentChapterData(val chapterIndexToLoadData: Int, val realCurrentChapterIndex: Int) : TTSAction
 
+    data class OnNavigateToRandomChapter(val chapterIndex: Int) : TTSAction
     data class StartTTS(val paragraphIndex: Int) : TTSAction
     data object OnPlayPreviousChapterClick : TTSAction
     data object OnPlayNextChapterClick : TTSAction

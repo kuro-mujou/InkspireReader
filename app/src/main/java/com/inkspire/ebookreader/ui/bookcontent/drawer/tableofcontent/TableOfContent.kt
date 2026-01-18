@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -250,29 +251,29 @@ fun TableOfContentScreen() {
                     )
                 }
             }
-//            LaunchedEffect(lazyColumnState) {
-//                snapshotFlow { lazyColumnState.layoutInfo.visibleItemsInfo.firstOrNull()?.index }
-//                    .collect { index ->
-//                        tocVM.onAction(TableOfContentAction.UpdateFirstVisibleTocIndex(index ?: 0))
-//                    }
-//            }
-//            LaunchedEffect(lazyColumnState) {
-//                snapshotFlow { lazyColumnState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-//                    .collect { index ->
-//                        tocVM.onAction(TableOfContentAction.UpdateLastVisibleTocIndex(index ?: 0))
-//                    }
-//            }
-//            LaunchedEffect(
-//                tableOfContentState.firstVisibleTocIndex,
-//                tableOfContentState.lastVisibleTocIndex
-//            ) {
-//                tocVM.onAction(
-//                    TableOfContentAction.ChangeFabVisibility(
-//                        bookChapterContentState.currentChapterIndex !in
-//                            tableOfContentState.firstVisibleTocIndex..tableOfContentState.lastVisibleTocIndex
-//                    )
-//                )
-//            }
+            LaunchedEffect(lazyColumnState) {
+                snapshotFlow { lazyColumnState.layoutInfo.visibleItemsInfo.firstOrNull()?.index }
+                    .collect { index ->
+                        tocVM.onAction(TableOfContentAction.UpdateFirstVisibleTocIndex(index ?: 0))
+                    }
+            }
+            LaunchedEffect(lazyColumnState) {
+                snapshotFlow { lazyColumnState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+                    .collect { index ->
+                        tocVM.onAction(TableOfContentAction.UpdateLastVisibleTocIndex(index ?: 0))
+                    }
+            }
+            LaunchedEffect(
+                tableOfContentState.firstVisibleTocIndex,
+                tableOfContentState.lastVisibleTocIndex
+            ) {
+                tocVM.onAction(
+                    TableOfContentAction.ChangeFabVisibility(
+                        bookChapterContentState.currentChapterIndex !in
+                            tableOfContentState.firstVisibleTocIndex..tableOfContentState.lastVisibleTocIndex
+                    )
+                )
+            }
         }
         if (tableOfContentState.fabVisibility) {
             IconButton(

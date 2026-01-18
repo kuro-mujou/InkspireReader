@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.domain.model.Highlight
 import com.inkspire.ebookreader.domain.model.HighlightToInsert
@@ -45,7 +46,6 @@ import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
-import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
@@ -76,7 +76,6 @@ fun ParagraphComponent(
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var userSelectionRange by remember { mutableStateOf<TextRange?>(null) }
     var showSelectionPopup by remember { mutableStateOf(false) }
-    var isOpenDialog by remember { mutableStateOf(false) }
 
     var layoutCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     var dragStartOffset by remember { mutableStateOf<Offset?>(null) }
@@ -270,7 +269,8 @@ fun ParagraphComponent(
                         x = (centerX - popupHalfWidth).toInt(),
                         y = (layout.getLineTop(startLine) - popupHeightOffset).toInt()
                     ),
-                    onDismissRequest = { showSelectionPopup = false }
+                    onDismissRequest = { showSelectionPopup = false },
+                    properties = PopupProperties(focusable = true)
                 ) {
                     SelectionMenu(
                         stylingState = stylingState,
@@ -290,7 +290,7 @@ fun ParagraphComponent(
                             )
                             showSelectionPopup = false
                         },
-                        onDeleteSelected = {
+                        onClearHighlight = {
                             dataVM.onAction(
                                 BookContentDataAction.DeleteHighlightRange(
                                     tocId = currentChapterIndex(),
@@ -301,7 +301,17 @@ fun ParagraphComponent(
                             )
                             showSelectionPopup = false
                         },
-                        onAddNote = { isOpenDialog = true }
+                        onAddNote = { noteInput ->
+                            val selectedText = userSelectionRange?.let { text.substring(it.start, it.end) } ?: text.text
+                            noteVM.onAction(
+                                NoteAction.AddNote(
+                                    noteBody = selectedText,
+                                    noteInput = noteInput,
+                                    tocId = currentChapterIndex(),
+                                    contentId = index
+                                )
+                            )
+                        }
                     )
                 }
             }
@@ -323,23 +333,23 @@ fun ParagraphComponent(
         }
     }
 
-    if (isOpenDialog) {
-        val selectedText = userSelectionRange?.let { text.substring(it.start, it.end) } ?: text.text
-        NoteDialog(
-            stylingState = stylingState,
-            note = selectedText,
-            onDismiss = { isOpenDialog = false },
-            onNoteChanged = { noteInput ->
-                noteVM.onAction(
-                    NoteAction.AddNote(
-                        noteBody = selectedText,
-                        noteInput = noteInput,
-                        tocId = currentChapterIndex(),
-                        contentId = index
-                    )
-                )
-                userSelectionRange = null
-            }
-        )
-    }
+//    if (isOpenDialog) {
+//        val selectedText = userSelectionRange?.let { text.substring(it.start, it.end) } ?: text.text
+//        NoteDialog(
+//            stylingState = stylingState,
+//            note = selectedText,
+//            onDismiss = { isOpenDialog = false },
+//            onNoteChanged = { noteInput ->
+//                noteVM.onAction(
+//                    NoteAction.AddNote(
+//                        noteBody = selectedText,
+//                        noteInput = noteInput,
+//                        tocId = currentChapterIndex(),
+//                        contentId = index
+//                    )
+//                )
+//                userSelectionRange = null
+//            }
+//        )
+//    }
 }

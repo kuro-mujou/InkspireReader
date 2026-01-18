@@ -196,6 +196,15 @@ class TTSViewModel(
             TTSAction.OnPlayNextParagraphClick -> playParagraphOffset(1)
             TTSAction.OnPlayPreviousParagraphClick -> playParagraphOffset(-1)
             is TTSAction.UpdateCurrentChapterData -> handleChapterDataUpdate(action)
+            is TTSAction.OnNavigateToRandomChapter -> {
+                if (_state.value.isActivated) {
+                    _state.update { it.copy(chapterIndex = action.chapterIndex, paragraphIndex = 0) }
+                    viewModelScope.launch {
+                        contentUseCase.saveBookInfoParagraphIndex(bookInfo.id, 0)
+                        loadChapterData(action.chapterIndex, true)
+                    }
+                }
+            }
         }
     }
 

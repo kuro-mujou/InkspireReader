@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.domain.model.Highlight
 import com.inkspire.ebookreader.domain.model.HighlightToInsert
@@ -256,7 +257,8 @@ fun HeaderComponent(
                         x = startRect.left.toInt(),
                         y = (startRect.top - popupOffsetY).toInt()
                     ),
-                    onDismissRequest = { showSelectionPopup = false }
+                    onDismissRequest = { showSelectionPopup = false },
+                    properties = PopupProperties(focusable = true)
                 ) {
                     SelectionMenu(
                         stylingState = stylingState,
@@ -276,7 +278,7 @@ fun HeaderComponent(
                             )
                             showSelectionPopup = false
                         },
-                        onDeleteSelected = {
+                        onClearHighlight = {
                             dataVM.onAction(
                                 BookContentDataAction.DeleteHighlightRange(
                                     tocId = currentChapterIndex(),
