@@ -115,14 +115,12 @@ object HighlightUtil {
 
         val path = Path()
 
-        // 1. Pre-process: Snap Right Sides
         val snapped = rect.map { it }.toMutableList()
 
         for (i in 0 until snapped.size - 1) {
             val current = snapped[i]
             val next = snapped[i + 1]
 
-            // If right edges are close, snap to the widest one
             if (abs(current.right - next.right) < snapThreshold) {
                 val maxRight = max(current.right, next.right)
                 snapped[i] = current.copy(right = maxRight)
@@ -130,17 +128,14 @@ object HighlightUtil {
             }
         }
 
-        // 2. Draw Path (Clockwise)
         val first = snapped.first()
         val last = snapped.last()
 
-        // Top
         path.moveTo(first.left, first.top + cornerRadius)
         path.quadraticTo(first.left, first.top, first.left + cornerRadius, first.top)
         path.lineTo(first.right - cornerRadius, first.top)
         path.quadraticTo(first.right, first.top, first.right, first.top + cornerRadius)
 
-        // Right Side (Down)
         for (i in 0 until snapped.size - 1) {
             val current = snapped[i]
             val next = snapped[i + 1]
@@ -150,15 +145,13 @@ object HighlightUtil {
             val effectiveRadius = min(cornerRadius, abs(delta) / 2f)
 
             if (abs(delta) < 1f) {
-                path.lineTo(current.right, next.top) // Vertical Merge
+                path.lineTo(current.right, next.top)
             } else if (delta > 0) {
-                // Step Out (Concave)
                 path.lineTo(current.right, boundaryY - effectiveRadius)
                 path.quadraticTo(current.right, boundaryY, current.right + effectiveRadius, boundaryY)
                 path.lineTo(next.right - effectiveRadius, boundaryY)
                 path.quadraticTo(next.right, boundaryY, next.right, boundaryY + effectiveRadius)
             } else {
-                // Step In (Convex)
                 path.lineTo(current.right, boundaryY - effectiveRadius)
                 path.quadraticTo(current.right, boundaryY, current.right - effectiveRadius, boundaryY)
                 path.lineTo(next.right + effectiveRadius, boundaryY)
@@ -166,13 +159,11 @@ object HighlightUtil {
             }
         }
 
-        // Bottom
         path.lineTo(last.right, last.bottom - cornerRadius)
         path.quadraticTo(last.right, last.bottom, last.right - cornerRadius, last.bottom)
         path.lineTo(last.left + cornerRadius, last.bottom)
         path.quadraticTo(last.left, last.bottom, last.left, last.bottom - cornerRadius)
 
-        // Left Side (Up)
         for (i in snapped.indices.reversed()) {
             if (i == 0) break
             val current = snapped[i]
@@ -183,15 +174,13 @@ object HighlightUtil {
             val effectiveRadius = min(cornerRadius, abs(delta) / 2f)
 
             if (abs(delta) < 1f) {
-                path.lineTo(current.left, boundaryY) // Vertical Merge
+                path.lineTo(current.left, boundaryY)
             } else if (delta < 0) {
-                // Step Out (Concave)
                 path.lineTo(current.left, boundaryY + effectiveRadius)
                 path.quadraticTo(current.left, boundaryY, current.left - effectiveRadius, boundaryY)
                 path.lineTo(above.left + effectiveRadius, boundaryY)
                 path.quadraticTo(above.left, boundaryY, above.left, boundaryY - effectiveRadius)
             } else {
-                // Step In (Convex)
                 path.lineTo(current.left, boundaryY + effectiveRadius)
                 path.quadraticTo(current.left, boundaryY, current.left + effectiveRadius, boundaryY)
                 path.lineTo(above.left - effectiveRadius, boundaryY)
@@ -201,5 +190,49 @@ object HighlightUtil {
 
         path.close()
         return path
+    }
+
+    /**
+     * Recalculates highlights after a portion of the text is replaced.
+     * @param rawEditStart The start index in the RAW string.
+     * @param rawEditEnd The end index in the RAW string.
+     */
+    fun recalculateHighlightsAfterEdit(
+        highlights: List<Highlight>,
+        rawEditStart: Int,
+        rawEditEnd: Int,
+        newTextLength: Int
+    ): List<Highlight> {
+        val originalLength = rawEditEnd - rawEditStart
+        val lengthDiff = newTextLength - originalLength
+
+        return highlights.mapNotNull { h ->
+            if (h.endOffset <= rawEditStart) {
+                return@mapNotNull h
+            }
+
+            if (h.startOffset >= rawEditEnd) {
+                return@mapNotNull h.copy(
+                    startOffset = h.startOffset + lengthDiff,
+                    endOffset = h.endOffset + lengthDiff
+                )
+            }
+
+            if (h.startOffset <= rawEditStart && h.endOffset >= rawEditEnd) {
+                return@mapNotNull h.copy(
+                    endOffset = h.endOffset + lengthDiff
+                )
+            }
+
+            if (h.startOffset >= rawEditStart && h.endOffset <= rawEditEnd) {
+                return@mapNotNull null
+            }
+
+            if (h.startOffset < rawEditStart) {
+                return@mapNotNull h.copy(endOffset = rawEditStart)
+            }
+
+            return@mapNotNull null
+        }
     }
 }

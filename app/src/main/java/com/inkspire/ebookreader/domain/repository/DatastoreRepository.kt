@@ -1,6 +1,6 @@
 package com.inkspire.ebookreader.domain.repository
 
-import com.inkspire.ebookreader.common.BookmarkStyle
+import com.inkspire.ebookreader.ui.setting.bookmark.common.BookmarkStyle
 import com.inkspire.ebookreader.domain.model.AutoScrollPreferences
 import com.inkspire.ebookreader.domain.model.LibrarySettingPreferences
 import com.inkspire.ebookreader.domain.model.MusicPreferences

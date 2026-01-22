@@ -11,27 +11,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NoteDao {
     @Transaction
-    @Query("SELECT * FROM notes WHERE bookId = :bookId")
+    @Query("SELECT * FROM notes WHERE bookId = :bookId ORDER BY tocId ASC, contentId ASC, timestamp DESC")
     fun getNotes(bookId: String): Flow<List<NoteEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addNote(note: NoteEntity)
 
     @Query("UPDATE notes SET noteInput = :noteInput WHERE noteId = :noteId")
-    suspend fun updateNote(noteId: Int, noteInput: String)
-
-    @Query("SELECT * FROM notes WHERE bookId = :bookId AND tocId = :tocId AND contentId = :contentId LIMIT 1")
-    suspend fun findNoteByIds(tocId: Int, bookId: String, contentId: Int): NoteEntity?
-
-    @Transaction
-    suspend fun upsertBasedOnIds(note: NoteEntity) {
-        val existingNote = findNoteByIds(note.tocId, note.bookId, note.contentId)
-        if (existingNote != null) {
-            updateNote(existingNote.noteId, note.noteInput)
-        } else {
-            addNote(note)
-        }
-    }
+    suspend fun updateNoteComment(noteId: Int, noteInput: String)
 
     @Query("DELETE FROM notes WHERE noteId = :noteId")
     suspend fun deleteNote(noteId: Int)

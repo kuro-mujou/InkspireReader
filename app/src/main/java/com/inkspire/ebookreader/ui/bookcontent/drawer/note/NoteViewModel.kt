@@ -17,7 +17,7 @@ class NoteViewModel(
     private val bookId: String,
     private val noteRepository: NoteRepository
 ): ViewModel() {
-    private val dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm  dd-MM-yyyy")
+    private val dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss  dd-MM-yyyy")
     private val _state = MutableStateFlow(NoteState())
     val state = _state
         .stateIn(

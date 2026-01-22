@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.common
+package com.inkspire.ebookreader.ui.setting.bookmark.common
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect

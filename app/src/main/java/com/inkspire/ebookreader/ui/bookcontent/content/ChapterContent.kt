@@ -8,7 +8,7 @@ import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.headerPatte
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.htmlTagPattern
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.linkPattern
 import com.inkspire.ebookreader.ui.bookcontent.common.ContentPattern.linkPatternDebug
-import com.inkspire.ebookreader.ui.bookcontent.common.convertToAnnotatedStrings
+import com.inkspire.ebookreader.util.TextMapper
 
 @Composable
 fun ChapterContent(
@@ -45,7 +45,7 @@ fun ChapterContent(
         if (cleanText.isNotEmpty()) {
             ParagraphComponent(
                 index = index,
-                text = convertToAnnotatedStrings(paragraph),
+                text = TextMapper.convertToAnnotatedStrings(paragraph),
                 isTTSHighlighted = isTTSHighlightProvider,
                 highlights = highlights,
                 currentChapterIndex = currentChapterIndex,

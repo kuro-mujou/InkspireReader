@@ -1,7 +1,7 @@
 package com.inkspire.ebookreader.domain.model
 
 import androidx.compose.runtime.Immutable
-import com.inkspire.ebookreader.common.BookmarkStyle
+import com.inkspire.ebookreader.ui.setting.bookmark.common.BookmarkStyle
 
 @Immutable
 data class ReaderSettingPreferences(

@@ -8,18 +8,21 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.inkspire.ebookreader.common.DeviceConfiguration
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalAutoScrollViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalSettingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
@@ -47,8 +50,21 @@ fun BottomBarSetting(
     val autoScrollState by autoScrollVM.state.collectAsStateWithLifecycle()
 
     val style = HazeMaterials.thin(stylingState.containerColor)
+    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val deviceConfiguration = DeviceConfiguration.fromWindowSizeClass(windowSizeClass)
+
     SettingScreen(
         modifier = Modifier
+            .then(
+                when(deviceConfiguration) {
+                    DeviceConfiguration.PHONE_PORTRAIT,
+                    DeviceConfiguration.TABLET_PORTRAIT -> Modifier
+                    DeviceConfiguration.PHONE_LANDSCAPE -> Modifier
+                        .heightIn(max = 200.dp)
+                    DeviceConfiguration.TABLET_LANDSCAPE -> Modifier
+                        .heightIn(max = 350.dp)
+                }
+            )
             .wrapContentHeight()
             .then(
                 if (hazeEnableProvider()) {

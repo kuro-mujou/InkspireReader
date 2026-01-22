@@ -120,6 +120,23 @@ class BookContentDataViewModel(
                     )
                 }
             }
+            is BookContentDataAction.EditParagraphContent ->{
+                viewModelScope.launch {
+                    bookContentUseCase.updateParagraphContent(
+                        bookId = bookId,
+                        tocId = action.tocId,
+                        paragraphIndex = action.paragraphIndex,
+                        visualStart = action.selectionStart,
+                        visualEnd = action.selectionEnd,
+                        replacementText = action.replacementText
+                    )
+                }
+            }
+            is BookContentDataAction.AddHiddenText -> {
+                viewModelScope.launch {
+                    bookContentUseCase.addHiddenText(action.text)
+                }
+            }
         }
     }
 

@@ -41,9 +41,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.inkspire.ebookreader.R
-import com.inkspire.ebookreader.common.BookmarkShape
-import com.inkspire.ebookreader.common.BookmarkStyle
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.ui.setting.bookmark.common.BookmarkShape
+import com.inkspire.ebookreader.ui.setting.bookmark.common.BookmarkStyle
 import com.inkspire.ebookreader.util.ColorUtil.darken
 import com.inkspire.ebookreader.util.ColorUtil.isDark
 import com.inkspire.ebookreader.util.ColorUtil.lighten

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,9 +28,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.inkspire.ebookreader.common.BookmarkStyle
 import com.inkspire.ebookreader.domain.model.BookmarkMenuItem
 import com.inkspire.ebookreader.ui.bookcontent.styling.StylingState
+import com.inkspire.ebookreader.ui.setting.bookmark.common.BookmarkStyle
 import com.inkspire.ebookreader.ui.setting.bookmark.composable.MyBookmarkItemView
 import org.koin.compose.viewmodel.koinViewModel
 

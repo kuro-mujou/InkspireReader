@@ -46,6 +46,9 @@ import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
+import com.inkspire.ebookreader.ui.bookcontent.composable.EditContentDialog
+import com.inkspire.ebookreader.ui.bookcontent.composable.FilterConfirmDialog
+import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
@@ -76,6 +79,9 @@ fun ParagraphComponent(
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var userSelectionRange by remember { mutableStateOf<TextRange?>(null) }
     var showSelectionPopup by remember { mutableStateOf(false) }
+    var showAddNoteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showFilterDialog by remember { mutableStateOf(false) }
 
     var layoutCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     var dragStartOffset by remember { mutableStateOf<Offset?>(null) }
@@ -301,16 +307,12 @@ fun ParagraphComponent(
                             )
                             showSelectionPopup = false
                         },
-                        onAddNote = { noteInput ->
-                            val selectedText = userSelectionRange?.let { text.substring(it.start, it.end) } ?: text.text
-                            noteVM.onAction(
-                                NoteAction.AddNote(
-                                    noteBody = selectedText,
-                                    noteInput = noteInput,
-                                    tocId = currentChapterIndex(),
-                                    contentId = index
-                                )
-                            )
+                        onAddNote = { showAddNoteDialog = true },
+                        onAddingGlobalRegex = {
+                            showFilterDialog = true
+                        },
+                        onEditSelectedText = {
+                            showEditDialog = true
                         }
                     )
                 }
@@ -333,23 +335,67 @@ fun ParagraphComponent(
         }
     }
 
-//    if (isOpenDialog) {
-//        val selectedText = userSelectionRange?.let { text.substring(it.start, it.end) } ?: text.text
-//        NoteDialog(
-//            stylingState = stylingState,
-//            note = selectedText,
-//            onDismiss = { isOpenDialog = false },
-//            onNoteChanged = { noteInput ->
-//                noteVM.onAction(
-//                    NoteAction.AddNote(
-//                        noteBody = selectedText,
-//                        noteInput = noteInput,
-//                        tocId = currentChapterIndex(),
-//                        contentId = index
-//                    )
-//                )
-//                userSelectionRange = null
-//            }
-//        )
-//    }
+    if (showAddNoteDialog) {
+        val selectedText = userSelectionRange?.let { text.substring(it.start, it.end) } ?: text.text
+        NoteDialog (
+            stylingState = stylingState,
+            note = selectedText,
+            onDismiss = { showAddNoteDialog = false },
+            onNoteChanged = { noteInput ->
+                noteVM.onAction(
+                    NoteAction.AddNote(
+                        noteBody = selectedText,
+                        noteInput = noteInput,
+                        tocId = currentChapterIndex(),
+                        contentId = index
+                    )
+                )
+                userSelectionRange = null
+            }
+        )
+    }
+
+    if (showEditDialog) {
+        val range = userSelectionRange ?: TextRange.Zero
+        // 1. Get the text the user actually sees
+        val selectedText = if(range.start != range.end) text.text.substring(range.start, range.end) else ""
+
+        EditContentDialog(
+            originalText = selectedText,
+            stylingState = stylingState,
+            onDismiss = { showEditDialog = false },
+            onSubmit = { newText ->
+                // 2. Send the VISUAL range to the VM.
+                // The VM/UseCase will use the Mapper to find the Raw indices.
+                dataVM.onAction(
+                    BookContentDataAction.EditParagraphContent(
+                        tocId = currentChapterIndex(),
+                        paragraphIndex = index,
+                        selectionStart = range.start,
+                        selectionEnd = range.end,
+                        replacementText = newText
+                    )
+                )
+                showEditDialog = false
+                userSelectionRange = null
+            }
+        )
+    }
+
+    if (showFilterDialog) {
+        val range = userSelectionRange ?: TextRange.Zero
+        // Get the visual text the user selected
+        val selectedText = if(range.start != range.end) text.text.substring(range.start, range.end) else ""
+
+        FilterConfirmDialog(
+            selectedText = selectedText,
+            stylingState = stylingState,
+            onDismiss = { showFilterDialog = false },
+            onConfirm = {
+                dataVM.onAction(BookContentDataAction.AddHiddenText(selectedText))
+                showFilterDialog = false
+                userSelectionRange = null
+            }
+        )
+    }
 }

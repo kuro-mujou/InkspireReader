@@ -7,4 +7,5 @@ sealed interface SettingAction {
     data class OpenBackgroundMusicMenu(val open: Boolean) : SettingAction
     data class OpenBookmarkThemeMenu(val open: Boolean) : SettingAction
     data class OpenCategoryMenu(val open: Boolean) : SettingAction
+    data class OpenHiddenTextMenu(val open: Boolean) : SettingAction
 }

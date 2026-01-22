@@ -38,6 +38,9 @@ class SettingViewModel(
             is SettingAction.OpenCategoryMenu -> {
                 _state.update { it.copy(openCategoryMenu = action.open) }
             }
+            is SettingAction.OpenHiddenTextMenu -> {
+                _state.update { it.copy(openHiddenTextMenu = action.open) }
+            }
 
             is SettingAction.KeepScreenOn -> {
                 viewModelScope.launch {

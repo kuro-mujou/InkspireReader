@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.common
+package com.inkspire.ebookreader.ui.setting.bookmark.common
 
 enum class BookmarkStyle {
     WAVE_WITH_BIRDS,

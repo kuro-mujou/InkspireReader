@@ -1,12 +1,11 @@
 package com.inkspire.ebookreader.di
 
 import androidx.room.Room
-import com.inkspire.ebookreader.util.AndroidConnectivityObserver
-import com.inkspire.ebookreader.util.ConnectivityObserver
 import com.inkspire.ebookreader.data.database.LocalBookDatabase
 import com.inkspire.ebookreader.data.repository.BookRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ChapterRepositoryImpl
 import com.inkspire.ebookreader.data.repository.DatastoreRepositoryImpl
+import com.inkspire.ebookreader.data.repository.HiddenTextRepositoryImpl
 import com.inkspire.ebookreader.data.repository.HighlightRepositoryImpl
 import com.inkspire.ebookreader.data.repository.ImagePathRepositoryImpl
 import com.inkspire.ebookreader.data.repository.MusicPathRepositoryImpl
@@ -15,6 +14,7 @@ import com.inkspire.ebookreader.data.repository.TableOfContentRepositoryImpl
 import com.inkspire.ebookreader.domain.repository.BookRepository
 import com.inkspire.ebookreader.domain.repository.ChapterRepository
 import com.inkspire.ebookreader.domain.repository.DatastoreRepository
+import com.inkspire.ebookreader.domain.repository.HiddenTextRepository
 import com.inkspire.ebookreader.domain.repository.HighlightRepository
 import com.inkspire.ebookreader.domain.repository.ImagePathRepository
 import com.inkspire.ebookreader.domain.repository.MusicPathRepository
@@ -61,9 +61,12 @@ import com.inkspire.ebookreader.ui.setting.SettingViewModel
 import com.inkspire.ebookreader.ui.setting.autoscroll.AutoScrollSettingViewModel
 import com.inkspire.ebookreader.ui.setting.bookcategory.BookCategorySettingViewModel
 import com.inkspire.ebookreader.ui.setting.bookmark.BookmarkSettingViewModel
+import com.inkspire.ebookreader.ui.setting.hiddentext.HiddenTextViewModel
 import com.inkspire.ebookreader.ui.setting.music.MusicSettingViewModel
 import com.inkspire.ebookreader.ui.setting.tts.TTSSettingViewModel
 import com.inkspire.ebookreader.ui.sharedviewmodel.AsyncImportBookViewModel
+import com.inkspire.ebookreader.util.AndroidConnectivityObserver
+import com.inkspire.ebookreader.util.ConnectivityObserver
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -96,6 +99,7 @@ object KoinModule {
         single { get<LocalBookDatabase>().musicPathDao }
         single { get<LocalBookDatabase>().noteDao }
         single { get<LocalBookDatabase>().highlightDao }
+        single { get<LocalBookDatabase>().hiddenTextDao }
     }
 
     val repositoryModule = module {
@@ -107,6 +111,7 @@ object KoinModule {
         singleOf(::NoteRepositoryImpl).bind<NoteRepository>()
         singleOf(::DatastoreRepositoryImpl).bind<DatastoreRepository>()
         singleOf(::HighlightRepositoryImpl).bind<HighlightRepository>()
+        singleOf(::HiddenTextRepositoryImpl).bind<HiddenTextRepository>()
     }
 
     val useCaseModule = module {
@@ -139,6 +144,7 @@ object KoinModule {
         viewModelOf(::BookCategorySettingViewModel)
         viewModelOf(::BookmarkSettingViewModel)
         viewModelOf(::MusicSettingViewModel)
+        viewModelOf(::HiddenTextViewModel)
         viewModelOf(::RecentBookViewModel)
         viewModelOf(::SearchViewModel)
         viewModel{

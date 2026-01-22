@@ -1,6 +1,6 @@
 package com.inkspire.ebookreader.domain.usecase
 
-import com.inkspire.ebookreader.common.BookmarkStyle
+import com.inkspire.ebookreader.ui.setting.bookmark.common.BookmarkStyle
 import com.inkspire.ebookreader.domain.repository.DatastoreRepository
 
 class BookmarkSettingDatastoreUseCase(

@@ -48,6 +48,7 @@ import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import com.inkspire.ebookreader.ui.setting.autoscroll.AutoScrollSetting
 import com.inkspire.ebookreader.ui.setting.bookcategory.BookCategorySetting
 import com.inkspire.ebookreader.ui.setting.bookmark.BookmarkSetting
+import com.inkspire.ebookreader.ui.setting.hiddentext.HiddenTextSetting
 import com.inkspire.ebookreader.ui.setting.music.MusicSetting
 import com.inkspire.ebookreader.ui.setting.tts.TTSSetting
 import com.inkspire.ebookreader.util.ColorUtil.isDark
@@ -65,6 +66,7 @@ fun SettingScreen(
     val musicMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val bookmarkMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val categoryMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val hiddenTextMenuSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     if (settingState.openTTSVoiceMenu) {
         TTSSetting(
@@ -310,6 +312,45 @@ fun SettingScreen(
                     tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.secondary
                 )
             }
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.outlineVariant
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .clickable {
+                        onAction(SettingAction.OpenHiddenTextMenu(true))
+                    },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .padding(start = 8.dp, end = 8.dp)
+                        .size(24.dp),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_filter),
+                    contentDescription = "auto scroll up",
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.secondary
+                )
+                Text(
+                    text = "Filter Text",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
+                    )
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    modifier = Modifier
+                        .padding(start = 8.dp, end = 8.dp)
+                        .size(30.dp),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_arrow_right),
+                    contentDescription = null,
+                    tint = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.secondary
+                )
+            }
             if (stylingState == null) {
                 HorizontalDivider(
                     thickness = 1.dp,
@@ -452,6 +493,48 @@ fun SettingScreen(
                 }
             }
             BookCategorySetting()
+        }
+    }
+    if (settingState.openHiddenTextMenu) {
+        ModalBottomSheet(
+            modifier = Modifier.fillMaxSize(),
+            sheetState = bookmarkMenuSheetState,
+            onDismissRequest = { onAction(SettingAction.OpenHiddenTextMenu(false)) },
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+            containerColor = stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.surface,
+            dragHandle = {
+                Surface(
+                    modifier = Modifier.padding(vertical = 22.dp),
+                    color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface,
+                    shape = MaterialTheme.shapes.extraLarge,
+                ) {
+                    Box(Modifier.size(width = 32.dp, height = 4.dp))
+                }
+            }
+        ) {
+            val view = LocalView.current
+            val isLightTheme = !(stylingState?.stylePreferences?.backgroundColor ?: MaterialTheme.colorScheme.surfaceContainer).isDark()
+
+            DisposableEffect(view, isLightTheme) {
+                val window = (view.parent as? DialogWindowProvider)?.window
+                    ?: (view.context as? Activity)?.window
+
+                window?.let { w ->
+                    val controller = WindowCompat.getInsetsController(w, view)
+
+                    controller.isAppearanceLightStatusBars = isLightTheme
+                    controller.isAppearanceLightNavigationBars = isLightTheme
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        w.isNavigationBarContrastEnforced = false
+                    }
+                }
+
+                onDispose { }
+            }
+            HiddenTextSetting(
+                stylingState = stylingState
+            )
         }
     }
 }

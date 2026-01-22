@@ -289,7 +289,13 @@ fun HeaderComponent(
                             )
                             showSelectionPopup = false
                         },
-                        onAddNote = { isOpenDialog = true }
+                        onAddNote = { isOpenDialog = true },
+                        onAddingGlobalRegex = {
+
+                        },
+                        onEditSelectedText = {
+
+                        }
                     )
                 }
             }

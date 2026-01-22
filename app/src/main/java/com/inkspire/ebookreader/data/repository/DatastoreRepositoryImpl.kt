@@ -9,7 +9,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.inkspire.ebookreader.common.BookmarkStyle
+import com.inkspire.ebookreader.ui.setting.bookmark.common.BookmarkStyle
 import com.inkspire.ebookreader.domain.model.AutoScrollPreferences
 import com.inkspire.ebookreader.domain.model.LibrarySettingPreferences
 import com.inkspire.ebookreader.domain.model.MusicPreferences

@@ -13,14 +13,18 @@ class NoteRepositoryImpl(
 ) : NoteRepository {
     override suspend fun getNotes(bookId: String): Flow<List<Note>> {
         return noteDao.getNotes(bookId).map { noteEntityList ->
-            noteEntityList.reversed().map { noteEntity ->
+            noteEntityList.map { noteEntity ->
                 noteEntity.toDataClass()
             }
         }
     }
 
     override suspend fun upsertNote(note: Note) {
-        noteDao.upsertBasedOnIds(note.toEntity())
+        if (note.noteId == 0) {
+            noteDao.addNote(note.toEntity())
+        } else {
+            noteDao.updateNoteComment(note.noteId, note.noteInput)
+        }
     }
 
     override suspend fun deleteNote(noteId: Int) {
