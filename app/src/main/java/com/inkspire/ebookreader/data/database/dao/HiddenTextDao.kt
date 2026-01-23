@@ -10,7 +10,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface HiddenTextDao {
     @Query("SELECT * FROM hidden_texts")
-    fun getHiddenTexts(): Flow<List<HiddenTextEntity>>
+    fun getHiddenTextsFlow(): Flow<List<HiddenTextEntity>>
+
+    @Query("SELECT * FROM hidden_texts")
+    suspend fun getHiddenTexts(): List<HiddenTextEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHiddenText(regex: HiddenTextEntity)

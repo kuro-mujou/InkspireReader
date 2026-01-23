@@ -17,4 +17,7 @@ sealed interface BookContentDataAction {
         val replacementText: String
     ) : BookContentDataAction
     data class AddHiddenText(val text: String) : BookContentDataAction
+    data class SearchBook(val query: String, val isCaseSensitive: Boolean) : BookContentDataAction
+    data class FindAndReplace(val find: String, val replace: String, val isCaseSensitive: Boolean) : BookContentDataAction
+    data object LoadAllHighlights : BookContentDataAction
 }

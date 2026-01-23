@@ -9,11 +9,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class HiddenTextRepositoryImpl(private val dao: HiddenTextDao) : HiddenTextRepository {
-    override fun getHiddenTexts(): Flow<List<HiddenText>> {
-        return dao.getHiddenTexts().map {
+    override fun getHiddenTextsFlow(): Flow<List<HiddenText>> {
+        return dao.getHiddenTextsFlow().map {
             it.map { entity ->
                 entity.toModel()
             }
+        }
+    }
+
+    override suspend fun getHiddenTexts(): List<HiddenText> {
+        return dao.getHiddenTexts().map {
+            it.toModel()
         }
     }
 

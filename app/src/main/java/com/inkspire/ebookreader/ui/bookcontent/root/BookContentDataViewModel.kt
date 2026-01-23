@@ -137,6 +137,27 @@ class BookContentDataViewModel(
                     bookContentUseCase.addHiddenText(action.text)
                 }
             }
+            is BookContentDataAction.FindAndReplace -> {
+                viewModelScope.launch {
+                    bookContentUseCase.findAndReplaceInBook(bookId, action.find, action.replace, action.isCaseSensitive)
+                }
+            }
+            is BookContentDataAction.SearchBook -> {
+                viewModelScope.launch {
+                    val results = bookContentUseCase.searchInBook(bookId, action.query, action.isCaseSensitive)
+                    _state.update {
+                        it.copy(searchResults = results)
+                    }
+                }
+            }
+            is BookContentDataAction.LoadAllHighlights -> {
+                viewModelScope.launch {
+                    val results = bookContentUseCase.getAllHighlightsInBook(bookId)
+                    _state.update {
+                        it.copy(allHighlights = results)
+                    }
+                }
+            }
         }
     }
 

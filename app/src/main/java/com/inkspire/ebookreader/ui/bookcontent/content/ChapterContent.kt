@@ -18,7 +18,6 @@ fun ChapterContent(
     highlights: () -> List<Highlight>,
     currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
-    onMagnifierChange: (Offset) -> Unit
 ) {
     if (linkPattern.containsMatchIn(paragraph) || linkPatternDebug.containsMatchIn(paragraph)) {
         ImageComponent(
@@ -37,7 +36,6 @@ fun ChapterContent(
                 headerLevel = headerLevel.find(paragraph)!!.groupValues[1].toInt(),
                 onRequestScrollToOffset = onRequestScrollToOffset,
                 highlights = highlights,
-                onMagnifierChange = onMagnifierChange
             )
         }
     } else {
@@ -50,7 +48,6 @@ fun ChapterContent(
                 highlights = highlights,
                 currentChapterIndex = currentChapterIndex,
                 onRequestScrollToOffset = onRequestScrollToOffset,
-                onMagnifierChange = onMagnifierChange
             )
         }
     }

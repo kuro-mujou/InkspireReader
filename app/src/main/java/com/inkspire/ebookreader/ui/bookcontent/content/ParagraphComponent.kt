@@ -42,6 +42,8 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.domain.model.Highlight
 import com.inkspire.ebookreader.domain.model.HighlightToInsert
+import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalChapterContentViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
@@ -64,12 +66,12 @@ fun ParagraphComponent(
     highlights: () -> List<Highlight>,
     currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
-    onMagnifierChange: (Offset) -> Unit
 ) {
     val styleVM = LocalStylingViewModel.current
     val noteVM = LocalNoteViewModel.current
     val ttsVM = LocalTTSViewModel.current
     val dataVM = LocalDataViewModel.current
+    val contentVM = LocalChapterContentViewModel.current
     val density = LocalDensity.current
 
     val stylingState by styleVM.state.collectAsStateWithLifecycle()
@@ -196,7 +198,7 @@ fun ParagraphComponent(
                             val layout = textLayoutResult ?: return@detectDragGesturesAfterLongPress
                             dragStartOffset = startOffset
                             val globalPos = layoutCoordinates?.localToRoot(startOffset) ?: Offset.Unspecified
-                            onMagnifierChange(globalPos)
+                            contentVM.onAction(BookChapterContentAction.UpdateGlobalMagnifierCenter(globalPos))
 
                             val index = layout.getOffsetForPosition(startOffset)
                             val wordRange = layout.getWordBoundary(index)
@@ -209,7 +211,7 @@ fun ParagraphComponent(
                             val start = dragStartOffset ?: return@detectDragGesturesAfterLongPress
 
                             val globalPos = layoutCoordinates?.localToRoot(change.position) ?: Offset.Unspecified
-                            onMagnifierChange(globalPos)
+                            contentVM.onAction(BookChapterContentAction.UpdateGlobalMagnifierCenter(globalPos))
 
                             val startIndex = layout.getOffsetForPosition(start)
                             val endIndex = layout.getOffsetForPosition(change.position)
@@ -220,7 +222,7 @@ fun ParagraphComponent(
                             )
                         },
                         onDragEnd = {
-                            onMagnifierChange(Offset.Unspecified)
+                            contentVM.onAction(BookChapterContentAction.UpdateGlobalMagnifierCenter(Offset.Unspecified))
                             dragStartOffset = null
                             if (userSelectionRange != null && !userSelectionRange!!.collapsed) {
                                 showSelectionPopup = true
@@ -229,7 +231,7 @@ fun ParagraphComponent(
                             }
                         },
                         onDragCancel = {
-                            onMagnifierChange(Offset.Unspecified)
+                            contentVM.onAction(BookChapterContentAction.UpdateGlobalMagnifierCenter(Offset.Unspecified))
                             dragStartOffset = null
                             userSelectionRange = null
                         }
@@ -357,7 +359,6 @@ fun ParagraphComponent(
 
     if (showEditDialog) {
         val range = userSelectionRange ?: TextRange.Zero
-        // 1. Get the text the user actually sees
         val selectedText = if(range.start != range.end) text.text.substring(range.start, range.end) else ""
 
         EditContentDialog(
@@ -365,8 +366,6 @@ fun ParagraphComponent(
             stylingState = stylingState,
             onDismiss = { showEditDialog = false },
             onSubmit = { newText ->
-                // 2. Send the VISUAL range to the VM.
-                // The VM/UseCase will use the Mapper to find the Raw indices.
                 dataVM.onAction(
                     BookContentDataAction.EditParagraphContent(
                         tocId = currentChapterIndex(),
@@ -384,7 +383,6 @@ fun ParagraphComponent(
 
     if (showFilterDialog) {
         val range = userSelectionRange ?: TextRange.Zero
-        // Get the visual text the user selected
         val selectedText = if(range.start != range.end) text.text.substring(range.start, range.end) else ""
 
         FilterConfirmDialog(

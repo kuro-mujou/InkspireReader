@@ -21,6 +21,15 @@ class BookContentTopBarViewModel() : ViewModel() {
             is BookContentTopBarAction.ChangeTopBarVisibility -> {
                 _state.update { it.copy(topBarVisibility = !it.topBarVisibility) }
             }
+            is BookContentTopBarAction.ShowFindAndReplace -> {
+                _state.update { it.copy(showFindAndReplace = action.show) }
+            }
+            is BookContentTopBarAction.ShowHighlightList -> {
+                _state.update { it.copy(showHighlightList = action.show) }
+            }
+            is BookContentTopBarAction.ShowSearchResultsSheet -> {
+                _state.update { it.copy(showSearchResultsSheet = action.show) }
+            }
         }
     }
 }

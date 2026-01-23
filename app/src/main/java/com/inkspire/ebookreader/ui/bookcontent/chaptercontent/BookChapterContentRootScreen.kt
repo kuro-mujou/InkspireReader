@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.magnifier
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.common.isSuccess
@@ -157,7 +159,12 @@ fun BookChapterContentRootScreen(
             Surface(
                 modifier = Modifier
                     .fillMaxSize()
-                    .hazeSource(hazeState),
+                    .hazeSource(hazeState)
+                    .magnifier(
+                        sourceCenter = { bookChapterContentState.globalMagnifierCenter },
+                        zoom = 2f,
+                        cornerRadius = 50.dp
+                    ),
                 color = stylingState.stylePreferences.backgroundColor
             ) {
                 HorizontalPager(
@@ -166,7 +173,6 @@ fun BookChapterContentRootScreen(
                     userScrollEnabled = bookChapterContentState.enablePagerScroll && !ttsPlaybackState.isActivated,
                     beyondViewportPageCount = 1
                 ) { pageIndex ->
-//                    val currentChapterUIState by remember{ derivedStateOf {  } }
                     BookChapterContent(
                         bookInfoProvider = bookInfoProvider,
                         initialParagraphIndex = { if (pageIndex == bookChapterContentState.currentChapterIndex) bookChapterContentState.firstVisibleItemIndex else 0 },

@@ -67,6 +67,9 @@ class BookChapterContentViewModel: ViewModel() {
                     _state.update { it.copy(firstVisibleItemIndex = 0) }
                 }
             }
+            is BookChapterContentAction.UpdateGlobalMagnifierCenter -> {
+                _state.update { it.copy(globalMagnifierCenter = action.offset) }
+            }
         }
     }
 }

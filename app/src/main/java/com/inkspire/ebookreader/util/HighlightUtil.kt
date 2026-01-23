@@ -148,12 +148,22 @@ object HighlightUtil {
                 path.lineTo(current.right, next.top)
             } else if (delta > 0) {
                 path.lineTo(current.right, boundaryY - effectiveRadius)
-                path.quadraticTo(current.right, boundaryY, current.right + effectiveRadius, boundaryY)
+                path.quadraticTo(
+                    current.right,
+                    boundaryY,
+                    current.right + effectiveRadius,
+                    boundaryY
+                )
                 path.lineTo(next.right - effectiveRadius, boundaryY)
                 path.quadraticTo(next.right, boundaryY, next.right, boundaryY + effectiveRadius)
             } else {
                 path.lineTo(current.right, boundaryY - effectiveRadius)
-                path.quadraticTo(current.right, boundaryY, current.right - effectiveRadius, boundaryY)
+                path.quadraticTo(
+                    current.right,
+                    boundaryY,
+                    current.right - effectiveRadius,
+                    boundaryY
+                )
                 path.lineTo(next.right + effectiveRadius, boundaryY)
                 path.quadraticTo(next.right, boundaryY, next.right, boundaryY + effectiveRadius)
             }
@@ -234,5 +244,81 @@ object HighlightUtil {
 
             return@mapNotNull null
         }
+    }
+
+    /**
+     * Performs a batch Find & Replace on text and updates highlights accordingly.
+     *
+     * @param originalText The raw DB text.
+     * @param find The string to search for.
+     * @param replace The string to replace with.
+     * @param highlights The list of existing highlights for this paragraph.
+     * @return A Pair of (New Text, New Highlights).
+     */
+    fun batchFindAndReplace(
+        originalText: String,
+        find: String,
+        replace: String,
+        highlights: List<Highlight>,
+        isCaseSensitive: Boolean
+    ): Pair<String, List<Highlight>> {
+        if (find.isEmpty() || originalText.isEmpty()) {
+            return originalText to highlights
+        }
+
+        val matchIndices = mutableListOf<Int>()
+        var index = originalText.indexOf(find, ignoreCase = !isCaseSensitive)
+        while (index >= 0) {
+            matchIndices.add(index)
+            index = originalText.indexOf(find, index + find.length, ignoreCase = !isCaseSensitive)
+        }
+
+        if (matchIndices.isEmpty()) {
+            return originalText to highlights
+        }
+
+        val sb = StringBuilder()
+        var lastIndex = 0
+
+        matchIndices.forEach { matchIndex ->
+            sb.append(originalText.substring(lastIndex, matchIndex))
+            sb.append(replace)
+            lastIndex = matchIndex + find.length
+        }
+        if (lastIndex < originalText.length) {
+            sb.append(originalText.substring(lastIndex))
+        }
+
+        val newText = sb.toString()
+
+        val lengthDiff = replace.length - find.length
+        val findLen = find.length
+
+        val newHighlights = highlights.mapNotNull { h ->
+            var startShift = 0
+            var endShift = 0
+
+            for (matchIndex in matchIndices) {
+                val matchEnd = matchIndex + findLen
+
+                if (matchEnd <= h.startOffset) {
+                    startShift += lengthDiff
+                    endShift += lengthDiff
+                }
+                else if (matchIndex >= h.endOffset) {
+                    continue
+                }
+                else {
+                    endShift += lengthDiff
+                }
+            }
+
+            val newStart = h.startOffset + startShift
+            val newEnd = h.endOffset + endShift
+
+            if (newEnd <= newStart) null else h.copy(startOffset = newStart, endOffset = newEnd)
+        }
+
+        return newText to newHighlights
     }
 }

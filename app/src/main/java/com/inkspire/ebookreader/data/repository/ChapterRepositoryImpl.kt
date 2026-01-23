@@ -54,4 +54,11 @@ class ChapterRepositoryImpl(
         return chapterDao.getChapterContentFlow(bookId, chapterIndex)
             .map { it?.toDataClass() }
     }
+
+    override suspend fun getAllChapters(bookId: String): List<ChapterContentEntity> {
+        return chapterDao.getAllChaptersForBook(bookId)
+    }
+    override suspend fun updateChapterContentById(id: Int, content: List<String>) {
+        chapterDao.updateChapterContentById(id, content)
+    }
 }

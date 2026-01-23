@@ -17,12 +17,6 @@ import androidx.room.PrimaryKey
             parentColumns = ["bookId"],
             childColumns = ["bookId"],
             onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = TableOfContentEntity::class,
-            parentColumns = ["tocId"],
-            childColumns = ["tocId"],
-            onDelete = ForeignKey.CASCADE
         )
     ]
 )

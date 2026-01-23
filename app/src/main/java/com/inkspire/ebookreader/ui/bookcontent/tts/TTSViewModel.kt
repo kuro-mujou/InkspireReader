@@ -133,7 +133,7 @@ class TTSViewModel(
                     syncMediaItems()
                     syncPlayerVolume(duck = _state.value.isActivated && !_state.value.isPaused)
                 }
-            }.collect {}
+            }.collectLatest {}
         }
 
         viewModelScope.launch {
@@ -152,7 +152,7 @@ class TTSViewModel(
         }
 
         viewModelScope.launch {
-            ttsManager.events.collect { event ->
+            ttsManager.events.collectLatest { event ->
                 handleTTSEvent(event)
             }
         }

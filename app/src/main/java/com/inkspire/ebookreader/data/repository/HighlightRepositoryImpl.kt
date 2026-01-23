@@ -1,6 +1,7 @@
 package com.inkspire.ebookreader.data.repository
 
 import com.inkspire.ebookreader.data.database.dao.HighlightDao
+import com.inkspire.ebookreader.data.database.model.HighlightEntity
 import com.inkspire.ebookreader.data.mapper.toDataClass
 import com.inkspire.ebookreader.data.mapper.toEntity
 import com.inkspire.ebookreader.domain.model.Highlight
@@ -38,5 +39,13 @@ class HighlightRepositoryImpl(
     ) {
         highlightDao.deleteAllForParagraph(bookId, tocId, paragraphIndex)
         highlightDao.insertHighlights(newHighlights.map { it.copy(bookId = bookId, tocId = tocId).toEntity() })
+    }
+
+    override suspend fun getHighlightsForChapterSync(bookId: String, tocId: Int): List<HighlightEntity> {
+        return highlightDao.getHighlightsForChapterSync(bookId, tocId)
+    }
+
+    override suspend fun getAllHighlightsForBook(bookId: String): List<HighlightEntity> {
+        return highlightDao.getAllHighlightsForBook(bookId)
     }
 }

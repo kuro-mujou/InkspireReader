@@ -69,4 +69,10 @@ interface ChapterDao {
 
     @Query("SELECT * FROM chapter_content WHERE bookId = :bookId AND tocId = :chapterIndex ORDER BY tocId ASC")
     fun getChapterContentFlow(bookId: String, chapterIndex: Int): Flow<ChapterContentEntity?>
+
+    @Query("SELECT * FROM chapter_content WHERE bookId = :bookId")
+    suspend fun getAllChaptersForBook(bookId: String): List<ChapterContentEntity>
+
+    @Query("UPDATE chapter_content SET content = :content WHERE chapterContentId = :id")
+    suspend fun updateChapterContentById(id: Int, content: List<String>)
 }

@@ -14,7 +14,10 @@ interface HighlightDao {
     fun getHighlightsForChapter(bookId: String, tocId: Int): Flow<List<HighlightEntity>>
 
     @Query("SELECT * FROM highlights WHERE bookId = :bookId ORDER BY createdTime DESC")
-    fun getAllHighlightsForBook(bookId: String): Flow<List<HighlightEntity>>
+    fun getAllHighlightsForBookFlow(bookId: String): Flow<List<HighlightEntity>>
+
+    @Query("SELECT * FROM highlights WHERE bookId = :bookId ORDER BY createdTime DESC")
+    suspend fun getAllHighlightsForBook(bookId: String): List<HighlightEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHighlight(highlight: HighlightEntity)
@@ -24,6 +27,9 @@ interface HighlightDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHighlights(highlights: List<HighlightEntity>)
+
+    @Query("SELECT * FROM highlights WHERE bookId = :bookId AND tocId = :tocId")
+    suspend fun getHighlightsForChapterSync(bookId: String, tocId: Int): List<HighlightEntity>
 
     @Query("SELECT * FROM highlights WHERE bookId = :bookId AND tocId = :tocId AND paragraphIndex = :paragraphIndex")
     suspend fun getHighlightsForParagraphSync(bookId: String, tocId: Int, paragraphIndex: Int): List<HighlightEntity>

@@ -1,5 +1,7 @@
 package com.inkspire.ebookreader.ui.bookcontent.chaptercontent
 
+import androidx.compose.ui.geometry.Offset
+
 sealed interface BookChapterContentAction {
     data class InitFromDatabase(val chapter: Int, val paragraph: Int) : BookChapterContentAction
     data class UpdateCurrentChapterIndex(val index: Int) : BookChapterContentAction
@@ -11,4 +13,5 @@ sealed interface BookChapterContentAction {
     data class RequestScrollToChapter(val index: Int) : BookChapterContentAction
     data class RequestAnimatedScrollToChapter(val index: Int) : BookChapterContentAction
     data class RequestScrollToParagraph(val chapterIndex: Int, val paragraphIndex: Int) : BookChapterContentAction
+    data class UpdateGlobalMagnifierCenter(val offset: Offset) : BookChapterContentAction
 }

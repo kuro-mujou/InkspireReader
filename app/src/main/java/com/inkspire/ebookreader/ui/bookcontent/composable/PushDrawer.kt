@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -87,9 +87,17 @@ fun PushDrawer(
     val insetsController = rememberInsetsController()
     val shouldUseDarkIcons = !stylingState.drawerContainerColor.isDark()
 
-    SideEffect {
+    DisposableEffect(insetsController, shouldUseDarkIcons) {
+        val previousStatus = insetsController?.isAppearanceLightStatusBars
+        val previousNav = insetsController?.isAppearanceLightNavigationBars
+
         insetsController?.isAppearanceLightStatusBars = shouldUseDarkIcons
         insetsController?.isAppearanceLightNavigationBars = shouldUseDarkIcons
+
+        onDispose {
+            insetsController?.isAppearanceLightStatusBars = previousStatus == true
+            insetsController?.isAppearanceLightNavigationBars = previousNav == true
+        }
     }
     LaunchedEffect(drawerState.visibility) {
         if (drawerState.fromUser) {

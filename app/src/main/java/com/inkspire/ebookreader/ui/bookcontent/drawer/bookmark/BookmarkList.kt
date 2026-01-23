@@ -1,5 +1,7 @@
 package com.inkspire.ebookreader.ui.bookcontent.drawer.bookmark
 
+import android.app.Activity
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,14 +26,18 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.UiState
@@ -44,6 +50,7 @@ import com.inkspire.ebookreader.ui.bookcontent.common.LocalDrawerViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.setting.bookmark.BookmarkSetting
 import com.inkspire.ebookreader.ui.setting.bookmark.composable.MyBookmarkCard
+import com.inkspire.ebookreader.util.ColorUtil.isDark
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -163,6 +170,26 @@ fun BookmarkList(
             },
             containerColor = stylingState.stylePreferences.backgroundColor
         ) {
+            val view = LocalView.current
+            val isLightTheme = !stylingState.stylePreferences.backgroundColor.isDark()
+
+            DisposableEffect(view, isLightTheme) {
+                val window = (view.parent as? DialogWindowProvider)?.window
+                    ?: (view.context as? Activity)?.window
+
+                window?.let { w ->
+                    val controller = WindowCompat.getInsetsController(w, view)
+
+                    controller.isAppearanceLightStatusBars = isLightTheme
+                    controller.isAppearanceLightNavigationBars = isLightTheme
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        w.isNavigationBarContrastEnforced = false
+                    }
+                }
+
+                onDispose { }
+            }
             BookmarkSetting(
                 stylingState
             )

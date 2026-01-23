@@ -42,6 +42,8 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.domain.model.Highlight
 import com.inkspire.ebookreader.domain.model.HighlightToInsert
+import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalChapterContentViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
@@ -65,12 +67,12 @@ fun HeaderComponent(
     headerLevel: Int,
     currentChapterIndex: () -> Int,
     onRequestScrollToOffset: (Float) -> Unit,
-    onMagnifierChange: (Offset) -> Unit
 ) {
     val styleVM = LocalStylingViewModel.current
     val noteVM = LocalNoteViewModel.current
     val ttsVM = LocalTTSViewModel.current
     val dataVM = LocalDataViewModel.current
+    val contentVM = LocalChapterContentViewModel.current
     val density = LocalDensity.current
 
     val stylingState by styleVM.state.collectAsStateWithLifecycle()
@@ -192,7 +194,7 @@ fun HeaderComponent(
                             dragStartOffset = startOffset
 
                             val globalPos = layoutCoordinates?.localToRoot(startOffset) ?: Offset.Unspecified
-                            onMagnifierChange(globalPos)
+                            contentVM.onAction(BookChapterContentAction.UpdateGlobalMagnifierCenter(globalPos))
 
                             val index = layout.getOffsetForPosition(startOffset)
                             val wordRange = layout.getWordBoundary(index)
@@ -205,7 +207,7 @@ fun HeaderComponent(
                             val start = dragStartOffset ?: return@detectDragGesturesAfterLongPress
 
                             val globalPos = layoutCoordinates?.localToRoot(change.position) ?: Offset.Unspecified
-                            onMagnifierChange(globalPos)
+                            contentVM.onAction(BookChapterContentAction.UpdateGlobalMagnifierCenter(globalPos))
 
                             val startIndex = layout.getOffsetForPosition(start)
                             val endIndex = layout.getOffsetForPosition(change.position)
@@ -216,7 +218,7 @@ fun HeaderComponent(
                             )
                         },
                         onDragEnd = {
-                            onMagnifierChange(Offset.Unspecified)
+                            contentVM.onAction(BookChapterContentAction.UpdateGlobalMagnifierCenter(Offset.Unspecified))
                             dragStartOffset = null
                             if (userSelectionRange != null && !userSelectionRange!!.collapsed) {
                                 showSelectionPopup = true
@@ -225,7 +227,7 @@ fun HeaderComponent(
                             }
                         },
                         onDragCancel = {
-                            onMagnifierChange(Offset.Unspecified)
+                            contentVM.onAction(BookChapterContentAction.UpdateGlobalMagnifierCenter(Offset.Unspecified))
                             dragStartOffset = null
                             userSelectionRange = null
                         }

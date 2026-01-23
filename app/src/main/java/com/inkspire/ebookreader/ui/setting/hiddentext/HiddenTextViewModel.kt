@@ -22,7 +22,7 @@ class HiddenTextViewModel(
 
     init {
         viewModelScope.launch {
-            hiddenTextRepository.getHiddenTexts().collectLatest { hiddenTexts ->
+            hiddenTextRepository.getHiddenTextsFlow().collectLatest { hiddenTexts ->
                 _state.update { it.copy(hiddenTexts = hiddenTexts) }
             }
         }

@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
@@ -118,7 +117,6 @@ fun BookChapterContent(
     var size by remember { mutableStateOf(IntSize.Zero) }
     var originalZoom by remember { mutableFloatStateOf(1f) }
     val coroutineScope = rememberCoroutineScope()
-    var globalMagnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
 
     LaunchedEffect(currentChapter) {
         dataVM.onAction(BookContentDataAction.LoadChapter(currentChapter()))
@@ -152,7 +150,6 @@ fun BookChapterContent(
             }
         }
         is UiState.Success -> {
-//            val chapterData by remember { derivedStateOf { uiState.data() } }
             val chapterData = uiState.data()
             val paragraphs = chapterData.content
             val listState = rememberLazyListState(
@@ -326,11 +323,6 @@ fun BookChapterContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .magnifier(
-                        sourceCenter = { globalMagnifierCenter },
-                        zoom = 2f,
-                        cornerRadius = 50.dp
-                    )
                     .then(
                         if (!currentAutoScrollState.isActivated) {
                             Modifier.clickable(
@@ -499,9 +491,6 @@ fun BookChapterContent(
                                         }
                                     }
                                 }
-                            },
-                            onMagnifierChange = { globalOffset ->
-                                globalMagnifierCenter = globalOffset
                             }
                         )
                     }
