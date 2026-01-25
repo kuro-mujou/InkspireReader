@@ -82,7 +82,7 @@ class NoteViewModel(
             is NoteAction.UndoDeleteNote -> {
                 viewModelScope.launch {
                     _state.value.undoNotes.forEach {
-                        noteRepository.upsertNote(it)
+                        noteRepository.undoDeleteNote(it)
                     }
                     _state.update { it.copy(undoNotes = emptyList()) }
                 }

@@ -14,4 +14,5 @@ sealed interface BookChapterContentAction {
     data class RequestAnimatedScrollToChapter(val index: Int) : BookChapterContentAction
     data class RequestScrollToParagraph(val chapterIndex: Int, val paragraphIndex: Int) : BookChapterContentAction
     data class UpdateGlobalMagnifierCenter(val offset: Offset) : BookChapterContentAction
+    data class SetActiveSelectionIndex(val index: Int?) : BookChapterContentAction
 }

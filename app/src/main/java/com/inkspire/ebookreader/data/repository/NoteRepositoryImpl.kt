@@ -30,4 +30,8 @@ class NoteRepositoryImpl(
     override suspend fun deleteNote(noteId: Int) {
         noteDao.deleteNote(noteId)
     }
+
+    override suspend fun undoDeleteNote(note: Note) {
+        noteDao.addNote(note.toEntity())
+    }
 }

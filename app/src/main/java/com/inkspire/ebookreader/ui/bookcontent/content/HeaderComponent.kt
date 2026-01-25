@@ -49,6 +49,7 @@ import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
 import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
+import com.inkspire.ebookreader.ui.bookcontent.composable.SelectionMenu
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
@@ -296,6 +297,9 @@ fun HeaderComponent(
 
                         },
                         onEditSelectedText = {
+
+                        },
+                        onCopy = {
 
                         }
                     )

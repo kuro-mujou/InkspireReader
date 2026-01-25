@@ -329,7 +329,12 @@ class TTSViewModel(
         val nextIndex = _state.value.paragraphIndex + offset
         if (nextIndex in 0 until _state.value.chapterText.size) {
             viewModelScope.launch { contentUseCase.saveBookInfoParagraphIndex(bookInfo.id, nextIndex) }
-            _state.update { it.copy(paragraphIndex = nextIndex) }
+            _state.update {
+                it.copy(
+                    paragraphIndex = nextIndex,
+                    isPaused = false
+                )
+            }
             ttsManager.startReading(nextIndex)
             syncPlayerVolume(duck = true)
         } else if (offset > 0) {

@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.UiState
@@ -38,6 +39,7 @@ import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBar
 import com.inkspire.ebookreader.ui.bookcontent.tts.TTSAction
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 
@@ -103,6 +105,7 @@ fun BookChapterContentRootScreen(
                 }
                 is BookChapterContentEvent.ScrollToParagraph -> {
                     pagerState.scrollToPage(event.page)
+                    delay(200)
                     val currentListState = lazyListStates[event.page]
                     currentListState?.scrollToItem(event.paragraphIndex)
                 }
@@ -162,7 +165,11 @@ fun BookChapterContentRootScreen(
                     .hazeSource(hazeState)
                     .magnifier(
                         sourceCenter = { bookChapterContentState.globalMagnifierCenter },
-                        zoom = 2f,
+                        zoom = 1.2f,
+                        size = DpSize(
+                            width = stylingState.stylePreferences.fontSize.dp * 4,
+                            height = (stylingState.stylePreferences.fontSize * 2).dp
+                        ),
                         cornerRadius = 50.dp
                     ),
                 color = stylingState.stylePreferences.backgroundColor

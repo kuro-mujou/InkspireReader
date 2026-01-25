@@ -7,4 +7,5 @@ interface NoteRepository {
     suspend fun getNotes(bookId: String): Flow<List<Note>>
     suspend fun upsertNote(note: Note)
     suspend fun deleteNote(noteId: Int)
+    suspend fun undoDeleteNote(note: Note)
 }

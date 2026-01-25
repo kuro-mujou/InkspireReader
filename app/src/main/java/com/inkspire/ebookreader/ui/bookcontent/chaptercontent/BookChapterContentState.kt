@@ -12,4 +12,5 @@ data class BookChapterContentState(
     val lastVisibleItemIndex: Int = -1,
     val screenHeight: Int = 0,
     val globalMagnifierCenter: Offset = Offset.Unspecified,
+    val activeSelectionIndex: Int? = null
 )

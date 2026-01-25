@@ -70,6 +70,9 @@ class BookChapterContentViewModel: ViewModel() {
             is BookChapterContentAction.UpdateGlobalMagnifierCenter -> {
                 _state.update { it.copy(globalMagnifierCenter = action.offset) }
             }
+            is BookChapterContentAction.SetActiveSelectionIndex -> {
+                _state.update { it.copy(activeSelectionIndex = action.index) }
+            }
         }
     }
 }
