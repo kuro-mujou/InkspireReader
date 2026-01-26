@@ -14,7 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,9 +41,9 @@ import com.inkspire.ebookreader.ui.bookcontent.topbar.BookContentTopBar
 import com.inkspire.ebookreader.ui.bookcontent.tts.TTSAction
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -78,6 +80,9 @@ fun BookChapterContentRootScreen(
             emptyList()
         }
     }
+    var pendingScroll by remember {
+        mutableStateOf<Pair<Int, Int>?>(null)
+    }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }
@@ -104,10 +109,8 @@ fun BookChapterContentRootScreen(
                     pagerState.scrollToPage(event.page)
                 }
                 is BookChapterContentEvent.ScrollToParagraph -> {
-                    pagerState.scrollToPage(event.page)
-                    delay(200)
-                    val currentListState = lazyListStates[event.page]
-                    currentListState?.scrollToItem(event.paragraphIndex)
+                    pendingScroll = event.page to event.paragraphIndex
+                    pagerState.animateScrollToPage(event.page)
                 }
                 is BookChapterContentEvent.AnimatedScrollToChapter -> {
                     pagerState.animateScrollToPage(event.page)
@@ -121,6 +124,22 @@ fun BookChapterContentRootScreen(
             pagerState.animateScrollToPage(ttsPlaybackState.chapterIndex)
         }
     }
+
+    LaunchedEffect(pagerState.currentPage, pendingScroll) {
+        val scroll = pendingScroll ?: return@LaunchedEffect
+
+        val (page, paragraphIndex) = scroll
+        if (pagerState.currentPage != page) return@LaunchedEffect
+
+        val listState = lazyListStates[page] ?: return@LaunchedEffect
+
+        snapshotFlow { listState.layoutInfo.totalItemsCount }
+            .first { it > 0 }
+
+        listState.animateScrollToItem(paragraphIndex)
+        pendingScroll = null
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {

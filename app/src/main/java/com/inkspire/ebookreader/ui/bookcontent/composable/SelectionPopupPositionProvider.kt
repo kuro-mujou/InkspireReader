@@ -9,7 +9,8 @@ import androidx.compose.ui.window.PopupPositionProvider
 
 class SelectionPopupPositionProvider(
     private val selectionBoundsInWindow: Rect,
-    private val margin: Int = 20
+    private val margin: Int = 20,
+    private val handleHeight: Int = 75
 ) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
@@ -32,7 +33,7 @@ class SelectionPopupPositionProvider(
         val popupY = if (potentialTopY >= 0) {
             potentialTopY
         } else {
-            selectionBottom + margin
+            selectionBottom + margin + handleHeight
         }
 
         return IntOffset(popupX, popupY)
