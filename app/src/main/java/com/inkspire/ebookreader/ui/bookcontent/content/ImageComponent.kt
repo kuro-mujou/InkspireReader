@@ -28,7 +28,7 @@ import coil3.compose.AsyncImage
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
-import com.inkspire.ebookreader.ui.bookcontent.common.customPopupPositionProvider
+import com.inkspire.ebookreader.ui.bookcontent.common.TooltipPopupPositionProvider
 import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 
@@ -47,7 +47,7 @@ fun ImageComponent(
     var isOpenDialog by remember { mutableStateOf(false) }
     val tooltipState = rememberTooltipState()
     TooltipBox(
-        positionProvider = customPopupPositionProvider(),
+        positionProvider = TooltipPopupPositionProvider(),
         tooltip = {
             IconButton(
                 modifier = Modifier.background(color = stylingState.textBackgroundColor, shape = CircleShape),

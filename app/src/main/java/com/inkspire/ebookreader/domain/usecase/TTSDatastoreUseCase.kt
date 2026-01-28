@@ -7,4 +7,6 @@ class TTSDatastoreUseCase(
 ) {
     val ttsPreferences = datastoreRepository.ttsPreferences
     val musicPreferences = datastoreRepository.musicPreferences
+    suspend fun setTTSLocale(value: String) = datastoreRepository.setTTSLocale(value)
+    suspend fun setTTSVoice(value: String) = datastoreRepository.setTTSVoice(value)
 }

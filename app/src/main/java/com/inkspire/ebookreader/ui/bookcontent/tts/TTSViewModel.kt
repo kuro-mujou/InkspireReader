@@ -404,16 +404,64 @@ class TTSViewModel(
         return builder.build()
     }
 
-    private suspend fun updateVoiceConfig(localeName: String, voiceName: String) {
-        val (languages, voices) = ttsManager.getAvailableVoicesAndLanguages()
-        val selectedLocale = languages.find { it.displayName == localeName } ?: Locale.getDefault()
-        val selectedVoice = voices.find {
-            it.name == voiceName && it.locale == selectedLocale
-        } ?: voices.firstOrNull { it.locale == selectedLocale } ?: ttsManager.getTTS().defaultVoice
+    private suspend fun updateVoiceConfig(savedLanguageTag: String, savedVoiceName: String) {
+        val (availableLanguages, availableVoices) = ttsManager.getAvailableVoicesAndLanguages()
 
-        ttsManager.updateLanguage(selectedLocale)
-        ttsManager.updateVoice(selectedVoice)
-        _state.update { it.copy(currentVoiceQuality = selectedVoice.quality.toString()) }
+        // 1. CRITICAL SAFETY: If the engine is initializing or has no voices, stop.
+        if (availableVoices.isEmpty()) return
+
+        // 2. Try to find the exact voice saved in DataStore
+        // If savedVoiceName is "" (first run), this returns null.
+        var selectedVoice = availableVoices.find { it.name == savedVoiceName }
+
+        // 3. If no specific voice is found (First run OR Engine changed), find a suitable fallback
+        if (selectedVoice == null) {
+
+            // Step A: Try to match the saved Locale Name exactly
+            var targetLocale = availableLanguages.find { it.toLanguageTag() == savedLanguageTag }
+
+            // Step B: If exact name fails (Common on Samsung), match by ISO Language Code (e.g., "en" vs "en_US")
+            if (targetLocale == null) {
+                // Parse the saved name or fallback to system default
+                val systemLocale = Locale.getDefault()
+
+                // Try to find ANY locale in the engine that matches the System Language
+                targetLocale = availableLanguages.find {
+                    it.language == systemLocale.language
+                }
+            }
+
+            // Step C: If we found a compatible locale, pick the default voice for that locale
+            if (targetLocale != null) {
+                selectedVoice = availableVoices.find {
+                    it.locale.language == targetLocale.language && !it.isNetworkConnectionRequired
+                }
+            }
+        }
+
+        // 4. Ultimate Fail-safe:
+        // If everything above failed (e.g., System is Vietnamese but Engine only has English),
+        // fallback to the Engine's default voice, or just the FIRST available voice.
+        if (selectedVoice == null) {
+            val engineDefault = try {
+                ttsManager.getTTS().defaultVoice
+            } catch (_: Exception) { null }
+            selectedVoice = engineDefault ?: availableVoices.firstOrNull()
+        }
+
+        // 5. Apply the update (Only if we found a valid voice)
+        selectedVoice?.let { voice ->
+            // If the locale isn't exactly what was requested, update it to the voice's actual locale
+            // so the text processing matches the voice.
+            ttsManager.updateLanguage(voice.locale)
+            ttsManager.updateVoice(voice)
+            _state.update { it.copy(currentVoiceQuality = voice.quality.toString()) }
+
+            // Optional: If this was an auto-selection (savedVoiceName was empty),
+            // you might want to save this new default to DataStore here so it persists.
+//            datastoreUseCase.setTTSLocale(voice.locale.toLanguageTag())
+//            datastoreUseCase.setTTSVoice(voice.name)
+        }
     }
 
     private fun handleChapterDataUpdate(action: TTSAction.UpdateCurrentChapterData) {

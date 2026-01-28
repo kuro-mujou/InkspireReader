@@ -7,6 +7,6 @@ import java.util.Locale
 data class TTSPreferences (
     val speed: Float = 1f,
     val pitch: Float = 1f,
-    val locale: String = Locale.getDefault().displayName,
+    val locale: String = Locale.getDefault().toLanguageTag(),
     val voice: String = "",
 )

@@ -9,7 +9,6 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.inkspire.ebookreader.ui.setting.bookmark.common.BookmarkStyle
 import com.inkspire.ebookreader.domain.model.AutoScrollPreferences
 import com.inkspire.ebookreader.domain.model.LibrarySettingPreferences
 import com.inkspire.ebookreader.domain.model.MusicPreferences
@@ -17,6 +16,7 @@ import com.inkspire.ebookreader.domain.model.ReaderSettingPreferences
 import com.inkspire.ebookreader.domain.model.StylePreferences
 import com.inkspire.ebookreader.domain.model.TTSPreferences
 import com.inkspire.ebookreader.domain.repository.DatastoreRepository
+import com.inkspire.ebookreader.ui.setting.bookmark.common.BookmarkStyle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -59,7 +59,7 @@ class DatastoreRepositoryImpl(private val context: Context) : DatastoreRepositor
     override val ttsPreferences: Flow<TTSPreferences> = context.datastore.data
         .map { prefs ->
             TTSPreferences(
-                locale = prefs[TTS_LOCALE] ?: Locale.getDefault().displayName,
+                locale = prefs[TTS_LOCALE] ?: Locale.getDefault().toLanguageTag(),
                 voice = prefs[TTS_VOICE] ?: "",
                 speed = prefs[TTS_SPEED] ?: 1f,
                 pitch = prefs[TTS_PITCH] ?: 1f

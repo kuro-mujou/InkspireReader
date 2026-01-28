@@ -1,4 +1,4 @@
-package com.inkspire.ebookreader.ui.bookcontent.composable
+package com.inkspire.ebookreader.ui.bookcontent.common
 
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset

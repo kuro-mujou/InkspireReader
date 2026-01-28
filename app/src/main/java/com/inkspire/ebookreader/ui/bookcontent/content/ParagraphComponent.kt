@@ -51,12 +51,12 @@ import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalNoteViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalStylingViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalTTSViewModel
+import com.inkspire.ebookreader.ui.bookcontent.common.SelectionPopupPositionProvider
 import com.inkspire.ebookreader.ui.bookcontent.composable.EditContentDialog
 import com.inkspire.ebookreader.ui.bookcontent.composable.FilterConfirmDialog
 import com.inkspire.ebookreader.ui.bookcontent.composable.NoteDialog
 import com.inkspire.ebookreader.ui.bookcontent.composable.SelectionHandle
 import com.inkspire.ebookreader.ui.bookcontent.composable.SelectionMenu
-import com.inkspire.ebookreader.ui.bookcontent.composable.SelectionPopupPositionProvider
 import com.inkspire.ebookreader.ui.bookcontent.drawer.note.NoteAction
 import com.inkspire.ebookreader.ui.bookcontent.root.BookContentDataAction
 import com.inkspire.ebookreader.ui.bookcontent.styling.getHighlightColors
@@ -187,7 +187,10 @@ fun ParagraphComponent(
                     userSelectionRange?.let { range ->
                         if (!range.collapsed) {
                             val selectionPath = layout.getPathForRange(range.start, range.end)
-                            drawPath(selectionPath, color = Color(0xFF2196F3).copy(alpha = 0.3f))
+                            drawPath(
+                                path = selectionPath,
+                                color = Color(0xFF2196F3).copy(alpha = 0.3f)
+                            )
                         }
                     }
                 }

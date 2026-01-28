@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 class TTSSettingViewModel(
     private val ttsManager: TTSManager,
@@ -38,12 +37,12 @@ class TTSSettingViewModel(
         viewModelScope.launch {
             when (action) {
                 is TTSSettingAction.UpdateLanguage -> {
-                    datastoreUseCase.setTTSLocale(action.language?.displayName.toString())
+                    datastoreUseCase.setTTSLocale(action.language.toLanguageTag())
                     val selectedVoice = action.tts.voices?.find {
                         it.locale == action.language
                     } ?: action.tts.defaultVoice
                     datastoreUseCase.setTTSVoice(selectedVoice.name)
-                    ttsManager.updateLanguage(action.language ?: Locale.getDefault())
+                    ttsManager.updateLanguage(action.language)
                 }
 
                 is TTSSettingAction.UpdatePitch -> {
@@ -57,10 +56,8 @@ class TTSSettingViewModel(
                 }
 
                 is TTSSettingAction.UpdateVoice -> {
-                    if (action.voice != null) {
-                        datastoreUseCase.setTTSVoice(action.voice.name)
-                        ttsManager.updateVoice(action.voice)
-                    }
+                    datastoreUseCase.setTTSVoice(action.voice.name)
+                    ttsManager.updateVoice(action.voice)
                 }
 
                 is TTSSettingAction.UpdateScreenType -> {
