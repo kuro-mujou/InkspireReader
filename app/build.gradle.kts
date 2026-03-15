@@ -42,8 +42,8 @@ android {
         applicationId = "com.inkspire.ebookreader"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0.7"
+        versionCode = 8
+        versionName = "1.0.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -76,9 +76,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-    kotzilla {
-        composeInstrumentation = true
     }
 }
 
@@ -172,4 +169,10 @@ dependencies {
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+tasks.configureEach {
+    if (name.startsWith("ksp") && name.endsWith("Kotlin")) {
+        dependsOn("generateKotzillaConfig")
+    }
 }

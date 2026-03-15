@@ -7,7 +7,7 @@ import com.google.firebase.remoteconfig.remoteConfig
 import com.google.firebase.remoteconfig.remoteConfigSettings
 import com.inkspire.ebookreader.di.KoinModule
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
-import io.kotzilla.sdk.analytics.koin.analytics
+import io.kotzilla.generated.monitoring
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -16,7 +16,7 @@ class App : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@App)
-            analytics()
+            monitoring()
             modules(
                 KoinModule.ttsModule,
                 KoinModule.networkModule,
