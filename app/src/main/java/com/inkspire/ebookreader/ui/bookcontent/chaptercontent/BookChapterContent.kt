@@ -38,7 +38,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.magnifier
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -331,6 +330,7 @@ fun BookChapterContent(
                                 onClick = {
                                     if (!enableUndoButton) {
                                         combineActions.updateSystemBarVisibility()
+                                        chapterContentVM.onAction(BookChapterContentAction.SetActiveSelectionIndex(null))
                                     }
                                 },
                             )
@@ -341,6 +341,7 @@ fun BookChapterContent(
                                 onClick = {
                                     if (!enableUndoButton) {
                                         combineActions.updateSystemBarVisibility()
+                                        chapterContentVM.onAction(BookChapterContentAction.SetActiveSelectionIndex(null))
                                     }
                                 },
                                 onDoubleClick = {

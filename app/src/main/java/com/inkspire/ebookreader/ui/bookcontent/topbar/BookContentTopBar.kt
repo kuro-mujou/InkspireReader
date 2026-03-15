@@ -53,6 +53,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.R
 import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.common.isSuccess
+import com.inkspire.ebookreader.ui.bookcontent.chaptercontent.BookChapterContentAction
+import com.inkspire.ebookreader.ui.bookcontent.common.LocalChapterContentViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalCombineActions
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalDataViewModel
 import com.inkspire.ebookreader.ui.bookcontent.common.LocalDrawerViewModel
@@ -84,6 +86,7 @@ fun BookContentTopBar(
     val tocVM = LocalTableOfContentViewModel.current
     val topBarVM = LocalTopBarViewModel.current
     val dataVM = LocalDataViewModel.current
+    val contentVM = LocalChapterContentViewModel.current
 
     val stylingState by stylingVM.state.collectAsStateWithLifecycle()
     val topBarState by topBarVM.state.collectAsStateWithLifecycle()
@@ -153,6 +156,7 @@ fun BookContentTopBar(
             IconButton(
                 onClick = {
                     drawerVM.onAction(DrawerAction.OpenDrawer)
+                    contentVM.onAction(BookChapterContentAction.SetActiveSelectionIndex(null))
                 }
             ) {
                 Icon(
@@ -228,7 +232,7 @@ fun BookContentTopBar(
             stylingState = stylingState,
             onDismiss = { topBarVM.onAction(BookContentTopBarAction.ShowFindAndReplace(false)) },
             onFind = { query, isCaseSensitive ->
-                dataVM.onAction(BookContentDataAction.SearchBook(query, isCaseSensitive))
+                dataVM.onAction(BookContentDataAction.Find(query, isCaseSensitive))
                 topBarVM.onAction(BookContentTopBarAction.ShowFindAndReplace(false))
                 topBarVM.onAction(BookContentTopBarAction.ShowSearchResultsSheet(true))
             },

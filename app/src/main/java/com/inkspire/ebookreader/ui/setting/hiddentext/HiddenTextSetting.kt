@@ -49,7 +49,7 @@ fun HiddenTextSetting(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Filter Texts",
+                text = "Filtered Texts",
                 style = MaterialTheme.typography.titleMedium,
                 color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurface,
                 fontFamily = stylingState?.fontFamilies[stylingState.stylePreferences.fontFamily]
@@ -73,7 +73,7 @@ fun HiddenTextSetting(
                     contentDescription = null,
                     modifier = Modifier.padding(end = 4.dp).width(16.dp)
                 )
-                Text("Delete (${state.hiddenTexts.filter { it.isSelected }.size})")
+                Text("Remove (${state.hiddenTexts.filter { it.isSelected }.size})")
             }
         }
 

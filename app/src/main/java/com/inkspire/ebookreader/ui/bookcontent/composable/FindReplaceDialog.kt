@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -25,7 +24,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,16 +61,12 @@ fun FindReplaceDialog(
         Surface(
             shape = MaterialTheme.shapes.medium,
             color = stylingState.stylePreferences.backgroundColor,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 2.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -85,37 +79,46 @@ fun FindReplaceDialog(
                             fontFamily = stylingState.fontFamilies[stylingState.stylePreferences.fontFamily]
                         )
                     )
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_text_cancel),
+                            contentDescription = "Cancel",
+                            tint = stylingState.stylePreferences.textColor
+                        )
+                    }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(
-                            value = findText,
-                            onValueChange = { findText = it },
-                            label = { Text("Find") },
-                            textStyle = TextStyle(color = stylingState.stylePreferences.textColor),
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = stylingState.stylePreferences.textColor,
-                                unfocusedBorderColor = stylingState.stylePreferences.textColor,
-                                focusedLabelColor = stylingState.stylePreferences.textColor,
-                                unfocusedLabelColor = stylingState.stylePreferences.textColor
-                            )
-                        )
-
-                        IconButton(
-                            onClick = { isReplaceMode = !isReplaceMode },
-                        ) {
-                            Icon(
-                                imageVector = ImageVector.vectorResource(R.drawable.ic_down),
-                                contentDescription = "Toggle Replace",
-                                tint = stylingState.stylePreferences.textColor,
-                                modifier = Modifier.rotate(rotationState)
-                            )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
+                    OutlinedTextField(
+                        value = findText,
+                        onValueChange = { findText = it },
+                        label = { Text("Find") },
+                        textStyle = TextStyle(color = stylingState.stylePreferences.textColor),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = stylingState.stylePreferences.textColor,
+                            unfocusedBorderColor = stylingState.stylePreferences.textColor,
+                            focusedLabelColor = stylingState.stylePreferences.textColor,
+                            unfocusedLabelColor = stylingState.stylePreferences.textColor
+                        ),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = { isReplaceMode = !isReplaceMode },
+                            ) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(R.drawable.ic_down),
+                                    contentDescription = "Toggle Replace",
+                                    tint = stylingState.stylePreferences.textColor,
+                                    modifier = Modifier.rotate(rotationState)
+                                )
+                            }
                         }
-                    }
-
+                    )
                     AnimatedVisibility(
                         visible = isReplaceMode,
                         enter = expandVertically() + fadeIn(),
@@ -138,37 +141,38 @@ fun FindReplaceDialog(
                             )
                         )
                     }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        Checkbox(
-                            checked = isCaseSensitive,
-                            onCheckedChange = { isCaseSensitive = it },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = stylingState.stylePreferences.textColor,
-                                uncheckedColor = stylingState.stylePreferences.textColor,
-                                checkmarkColor = stylingState.stylePreferences.backgroundColor
-                            )
-                        )
-                        Text(
-                            text = "Match Case",
-                            style = TextStyle(color = stylingState.stylePreferences.textColor),
-                            modifier = Modifier.clickable { isCaseSensitive = !isCaseSensitive }
-                        )
-                    }
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 2.dp,
+                            top = 8.dp,
+                            end = 16.dp,
+                            bottom = 12.dp
+                        ),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Cancel", color = stylingState.stylePreferences.textColor)
-                    }
+                    Checkbox(
+                        checked = isCaseSensitive,
+                        onCheckedChange = { isCaseSensitive = it },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = stylingState.stylePreferences.textColor,
+                            uncheckedColor = stylingState.stylePreferences.textColor,
+                            checkmarkColor = stylingState.stylePreferences.backgroundColor
+                        )
+                    )
+                    Text(
+                        text = "Match Case",
+                        style = TextStyle(color = stylingState.stylePreferences.textColor),
+                        modifier = Modifier.clickable { isCaseSensitive = !isCaseSensitive }
+                    )
+                    Spacer(
+                        modifier = Modifier.weight(1f)
+                    )
                     if (findText.isNotEmpty()) {
-                        Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = {
                                 if (isReplaceMode) {

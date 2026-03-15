@@ -43,7 +43,7 @@ class TTSManager(
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            tts.language = Locale.getDefault()
+            tts.language = Locale.getDefault().stripExtensions()
             tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                 override fun onStart(utteranceId: String?) {
                     updateHighlightAndResume(utteranceId, 0)
@@ -166,7 +166,7 @@ class TTSManager(
         currentChunks.clear()
         currentHighlightedSentenceStart = -1
 
-        val targetLocale = tts.voice?.locale ?: Locale.getDefault()
+        val targetLocale = tts.voice?.locale ?: Locale.getDefault().stripExtensions()
         val iterator = BreakIterator.getSentenceInstance(targetLocale)
         iterator.setText(text)
 

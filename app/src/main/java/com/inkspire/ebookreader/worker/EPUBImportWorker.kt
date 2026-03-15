@@ -545,7 +545,7 @@ class EPUBImportWorker(
     }
 
     private fun flushParagraphWithFormatting(buffer: StringBuilder, list: MutableList<String>) {
-        val paragraphText = buffer.toString()
+        val paragraphText = buffer.toString().trim()
         if (paragraphText.isNotBlank()) {
             list.add(paragraphText)
         }

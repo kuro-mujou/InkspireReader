@@ -100,6 +100,7 @@ fun BookChapterContentRootScreen(
             ))
         }
         chapterContentVM.onAction(BookChapterContentAction.UpdateCurrentChapterIndex(pagerState.targetPage))
+        chapterContentVM.onAction(BookChapterContentAction.SetActiveSelectionIndex(null))
     }
 
     LaunchedEffect(Unit) {

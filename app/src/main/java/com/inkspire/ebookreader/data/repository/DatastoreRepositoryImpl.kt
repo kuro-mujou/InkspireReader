@@ -58,8 +58,10 @@ class DatastoreRepositoryImpl(private val context: Context) : DatastoreRepositor
     }
     override val ttsPreferences: Flow<TTSPreferences> = context.datastore.data
         .map { prefs ->
+            val rawLocale = prefs[TTS_LOCALE] ?: Locale.getDefault().toLanguageTag()
+            val cleanLocale = Locale.forLanguageTag(rawLocale).stripExtensions().toLanguageTag()
             TTSPreferences(
-                locale = prefs[TTS_LOCALE] ?: Locale.getDefault().toLanguageTag(),
+                locale = cleanLocale,
                 voice = prefs[TTS_VOICE] ?: "",
                 speed = prefs[TTS_SPEED] ?: 1f,
                 pitch = prefs[TTS_PITCH] ?: 1f

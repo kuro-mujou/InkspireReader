@@ -1,5 +1,6 @@
 package com.inkspire.ebookreader.ui.bookcontent.root
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inkspire.ebookreader.common.UiState
@@ -55,6 +57,7 @@ import com.inkspire.ebookreader.ui.bookcontent.tts.TTSUiEvent
 import com.inkspire.ebookreader.ui.bookcontent.tts.TTSViewModel
 import com.inkspire.ebookreader.ui.composable.MyLoadingAnimation
 import com.inkspire.ebookreader.ui.setting.SettingViewModel
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -63,6 +66,7 @@ fun BookContentRootScreen(
     bookId: String,
     parentNavigator: Navigator
 ) {
+    val context = LocalContext.current
     val dataViewModel = koinViewModel<BookContentDataViewModel>(parameters = { parametersOf(bookId) })
     val drawerViewModel = koinViewModel<DrawerViewModel>()
     val stylingViewModel = koinViewModel<BookContentStylingViewModel>()
@@ -274,6 +278,15 @@ fun BookContentRootScreen(
                     }
 
                     is UiState.Success -> {
+                        LaunchedEffect(Unit) {
+                            dataViewModel.events.collectLatest { event ->
+                                when (event) {
+                                    is BookContentDataEvent.SendToastAfterFilter -> {
+                                        Toast.makeText(context, "Replaced ${event.amount} entry", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        }
                         PushDrawer(
                             drawerContent = {
                                 DrawerRoot(

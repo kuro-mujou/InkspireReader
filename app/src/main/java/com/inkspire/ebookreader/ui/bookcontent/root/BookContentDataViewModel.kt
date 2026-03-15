@@ -6,9 +6,12 @@ import com.inkspire.ebookreader.common.UiState
 import com.inkspire.ebookreader.domain.model.Chapter
 import com.inkspire.ebookreader.domain.usecase.BookContentUseCase
 import com.inkspire.ebookreader.util.HighlightUtil
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -29,6 +32,10 @@ class BookContentDataViewModel(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = _state.value
     )
+    private val _events = MutableSharedFlow<BookContentDataEvent>(
+        extraBufferCapacity = 64
+    )
+    val events: SharedFlow<BookContentDataEvent> = _events.asSharedFlow()
 
     init {
         bookContentUseCase.getBookAsFlow(bookId)
@@ -139,10 +146,23 @@ class BookContentDataViewModel(
             }
             is BookContentDataAction.FindAndReplace -> {
                 viewModelScope.launch {
-                    bookContentUseCase.findAndReplaceInBook(bookId, action.find, action.replace, action.isCaseSensitive)
+                    val result = bookContentUseCase.findAndReplaceInBook(
+                        bookId = bookId,
+                        find = action.find,
+                        replace = action.replace,
+                        isCaseSensitive = action.isCaseSensitive
+                    )
+                    if (result != 0) {
+                        _state.update {
+                            it.copy(searchResults = emptyList())
+                        }
+                    }
+                    _events.tryEmit(
+                        BookContentDataEvent.SendToastAfterFilter(result)
+                    )
                 }
             }
-            is BookContentDataAction.SearchBook -> {
+            is BookContentDataAction.Find -> {
                 viewModelScope.launch {
                     val results = bookContentUseCase.searchInBook(bookId, action.query, action.isCaseSensitive)
                     _state.update {

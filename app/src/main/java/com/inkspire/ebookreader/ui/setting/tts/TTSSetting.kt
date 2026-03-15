@@ -37,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +64,7 @@ import com.inkspire.ebookreader.ui.bookcontent.tts.TTSPlaybackState
 import com.inkspire.ebookreader.ui.setting.tts.common.TTSSettingScreenType
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,6 +79,25 @@ fun TTSSetting(
 
     val ttsManager = koinInject<TTSManager>()
     val tts = ttsManager.getTTS()
+
+    LaunchedEffect(state.voices, ttsState.ttsPreferences.locale, ttsState.ttsPreferences.voice) {
+        if (state.voices.isNotEmpty()) {
+            val currentVoiceExists = state.voices.any { it.name == ttsState.ttsPreferences.voice }
+
+            if (ttsState.ttsPreferences.voice.isBlank() || !currentVoiceExists) {
+                val targetLocale = ttsState.ttsPreferences.locale
+
+                val defaultVoice = state.voices.find { it.locale.toLanguageTag() == targetLocale }
+                    ?: state.voices.find { it.locale.language == Locale.forLanguageTag(targetLocale).language }
+                    ?: tts.defaultVoice
+                    ?: state.voices.firstOrNull()
+
+                if (defaultVoice != null) {
+                    viewModel.onAction(TTSSettingAction.UpdateVoice(defaultVoice))
+                }
+            }
+        }
+    }
 
     var speedSliderValue by remember { mutableFloatStateOf(ttsState.ttsPreferences.speed) }
     var pitchSliderValue by remember { mutableFloatStateOf(ttsState.ttsPreferences.pitch) }
@@ -210,7 +231,7 @@ fun TTSSetting(
                                             )
                                         }
                                         Text(
-                                            text = ttsState.ttsPreferences.locale,
+                                            text = Locale.forLanguageTag(ttsState.ttsPreferences.locale).displayName,
                                             modifier = Modifier.padding(8.dp),
                                             color = stylingState?.stylePreferences?.textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontFamily = stylingState?.fontFamilies?.get(stylingState.stylePreferences.fontFamily),
@@ -424,7 +445,7 @@ fun TTSSetting(
                                         Row(
                                             modifier = Modifier
                                                 .then(
-                                                    if (language.displayName == ttsState.ttsPreferences.locale) {
+                                                    if (language.toLanguageTag() == ttsState.ttsPreferences.locale) {
                                                         Modifier.background(
                                                             color = stylingState?.textBackgroundColor
                                                                 ?: MaterialTheme.colorScheme.primaryContainer,
@@ -473,7 +494,7 @@ fun TTSSetting(
 
                             TTSSettingScreenType.VOICE_SETTING -> {
                                 val filteredVoices = state.voices.filter {
-                                    it.locale.displayName == ttsState.ttsPreferences.locale
+                                    it.locale.toLanguageTag() == ttsState.ttsPreferences.locale
                                 }
                                 LazyColumn(
                                     modifier = Modifier
